@@ -30,7 +30,15 @@ steps:
     webhook: https://hooks.slack.com/services/...
 {{< / highlight >}}
 
-The great thing about plugins is they are just Docker containers. This means __anyone__ can easily encapsulate logic, bundle as a Docker image, and share with your organization or with the broader community.
+As you can see plugins are just Docker containers. Anyone can encapsulate logic, bundle as a Docker image, and publish to a Docker registry to share with their organization, or with the broader community.
+
+{{< alert "info" >}}
+The Drone community owns the plugins/ namespace in Dockerhub. Any plugin prefixed with plugins/ is actively maintained and vetted by community members.
+{{< / alert >}}
+
+{{< alert "info" >}}
+The Drone community plugins in the plugins/ namespace are maintained by the community. Community plugins are not subject to our Enterprise support policy or service level agreements.
+{{< / alert >}}
 
 # Secrets
 
