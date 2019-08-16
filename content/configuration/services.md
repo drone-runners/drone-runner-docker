@@ -5,7 +5,7 @@ author: bradrydzewski
 weight: 5
 toc: false
 description: |
-  Configure service cotnainers.
+  Configure service containers.
 ---
 
 Drone supports launching detached service containers as part of your pipeline. The typical use case for services is when your unit tests require a running redis server, for example:
