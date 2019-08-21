@@ -3,11 +3,8 @@ languageCode: en-us
 title: Drone Docker Runner
 theme: drone-hugo-theme
 
-#googleAnalytics: "UA-34247933-4"
-
-params:
-  algolia_key: 745aeaa8be75dc0c4de55030703ed3f4
-  algolia_index: drone_io
-
 pygmentsUseClasses: true
 pygmentsCodefences: true
+
+outputs:
+  home: ["HTML", "JSON"]

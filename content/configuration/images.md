@@ -3,7 +3,7 @@ date: 2000-01-01T00:00:00+00:00
 title: Images
 author: bradrydzewski
 weight: 6
-toc: false
+toc: true
 description: |
   Configure pipeline images.
 ---
