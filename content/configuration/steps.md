@@ -98,6 +98,10 @@ Example Slack plugin:
 
 The great thing about plugins is they are just Docker containers. This means you can easily encapsulate logic, bundle in a Docker container, and share your plugin with your organization or with the broader community.
 
+{{< link-to "http://plugins.drone.io" >}}
+Plugin Registry
+{{< / link-to >}}
+
 # Conditions
 
 The when section provides the ability to conditionally limit the execution of steps at runtime. The below example limits step execution by branch, however, you can limit execution by event, reference, status and more.
