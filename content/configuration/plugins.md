@@ -83,3 +83,7 @@ steps:
 # Registry
 
 The community maintains a public registry of Open Source plugins. You can browse the plugin registry at [plugins.drone.io](http://plugins.drone.io).
+
+{{< link-to "http://plugins.drone.io" >}}
+Plugin Registry
+{{< / link-to >}}
