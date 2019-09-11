@@ -8,6 +8,10 @@ description: |
   Install the runner using Docker for Windows
 ---
 
+{{% alert "error" %}}
+Support for Docker pipelines on Windows is considered unstable and is not recommended for production use. For production windows support we recommend Exec pipelines.
+{{% / alert %}}
+
 This article explains how to install the Docker runner on Windows. The Docker runner is packaged as a minimal Docker image distributed on [DockerHub](https://hub.docker.com/r/drone/drone-runner-ssh), and is available for the following kernel versions:
 
 * 1809
