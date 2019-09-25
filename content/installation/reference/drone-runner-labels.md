@@ -5,4 +5,8 @@ author: bradrydzewski
 weight: 1
 ---
 
-Coming Soon.
+Optional string map. Provides a set of labels used to route a pipeline to a specific machine or set of machines.
+
+```
+DRONE_RUNNER_LABELS=foo:bar,baz:qux
+```
