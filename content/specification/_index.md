@@ -143,15 +143,18 @@ The `Step` object defines a pipeline step.
 
 {{< highlight typescript "linenos=table" >}}
 class Step {
-  name:        string;
-  image:       string;
-  detach:      boolean;
-  pull:        Pull;
-  failure:     Failure;
   command:     string[];
-  entrypoint:  string[];
   commands:    string[];
+  detach:      boolean;
+  entrypoint:  string[];
   environment: [string, string];
+  failure:     Failure;
+  image:       string;
+  name:        string;
+  network_mode string;
+  privileged   boolean;
+  pull:        Pull;
+  user         string;
   volumes:     Volume[];
   when:        Conditions;
 }
@@ -192,6 +195,10 @@ Defines a list of shell commands executed inside the Docker container. The comma
 ## The `environment` attribute
 
 Defines a list of environment variables scoped to the pipeline step. This attribute is of type `[string, string]` and is optional.
+
+## The `network_mode` attribute
+
+Overrides the default network to which the Docker container is attached. For example `host` or `bridge`. This attribute is of type `string` and is optional.
 
 ## The `when` section
 
