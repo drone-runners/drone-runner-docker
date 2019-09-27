@@ -160,45 +160,54 @@ class Step {
 }
 {{< / highlight >}}
 
-## The `name` attribute
-
-The name of the step. This value is required and must match [a-zA-Z0-9_-]. This value is displayed in the user interface (non-normative) and is used to identify the step (non-normative). 
-
-## The `image` attribute
-
-The name of the docker image. The image name should include the tag and will default to the latest tag if unspecified. This value is of type `string` and is required.
-
-## The `detach` attribute
-
-The detach attribute instructions the system to start the Docker container and then run in the background. This value is of type `boolean` and is optional.
-
-## The `pull` attribute
-
-Defines how and when the system should pull images. This attribute is of enumeration [`Pull`](#the-pull-enum) and is optional.
-
-## The `failure` attribute
-
-Defines how the system handles failure. The default value is `always` indicating a failed step always fails the overall pipeline. A value of `ignore` indicates the failure is ignored. This attribute is of enumeration [`Failure`](#the-failure-enum) and is optional.
-
-## The `command` attribute
-
-Overrides the image `COMMAND`. This should only be used with service containers and cannot not be used with the `commands` attribute. This attribute is an array of type `[string]` and is optional.
-
-## The `entrypoint` attribute
-
-Overrides the image `ENTRYPOINT`. This should only be used with service containers and cannot not be used with the `commands` attribute. This attribute is an array of type `[string]` and is optional.
 
 ## The `commands` attribute
 
 Defines a list of shell commands executed inside the Docker container. The commands are executed using the default container shell (non-normative) as the container `ENTRYPOINT`. This attribute is an array of type `string` and is required.
 
+## The `command` attribute
+
+Overrides the image `COMMAND`. This should only be used with service containers and cannot not be used with the `commands` attribute. This attribute is an array of type `[string]` and is optional.
+
+## The `detach` attribute
+
+The detach attribute instructions the system to start the Docker container and then run in the background. This value is of type `boolean` and is optional.
+
+## The `entrypoint` attribute
+
+Overrides the image `ENTRYPOINT`. This should only be used with service containers and cannot not be used with the `commands` attribute. This attribute is an array of type `[string]` and is optional.
+
 ## The `environment` attribute
 
 Defines a list of environment variables scoped to the pipeline step. This attribute is of type `[string, string]` and is optional.
 
+## The `failure` attribute
+
+Defines how the system handles failure. The default value is `always` indicating a failed step always fails the overall pipeline. A value of `ignore` indicates the failure is ignored. This attribute is of enumeration [`Failure`](#the-failure-enum) and is optional.
+
+## The `image` attribute
+
+The name of the docker image. The image name should include the tag and will default to the latest tag if unspecified. This value is of type `string` and is required.
+
+## The `name` attribute
+
+The name of the step. This value is required and must match [a-zA-Z0-9_-]. This value is displayed in the user interface (non-normative) and is used to identify the step (non-normative).
+
 ## The `network_mode` attribute
 
 Overrides the default network to which the Docker container is attached. For example `host` or `bridge`. This attribute is of type `string` and is optional.
+
+## The `privileged` attribute
+
+Overrides the default Docker security policy and grants the container nearly full access to the host machine. This attribute is of type `boolean` and is optional.
+
+## The `pull` attribute
+
+Defines how and when the system should pull images. This attribute is of enumeration [`Pull`](#the-pull-enum) and is optional.
+
+## The `user` attribute
+
+Overrides the default username or uid used when executing the pipeline commands or entrypoint. This attribute is of type `string` and is optional.
 
 ## The `when` section
 
