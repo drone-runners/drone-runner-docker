@@ -95,6 +95,8 @@ Note that you cannot use branch triggers with tag events. A tag is not associate
 {{< highlight text "linenos=table,linenostart=12" >}}
 trigger:
   event:
+  - cron
+  - custom
   - push
   - pull_request
   - tag
@@ -295,4 +297,39 @@ trigger:
   target:
     exclude:
     - production
+{{< / highlight >}}
+
+# By Cron
+
+The cron trigger limits step execution based on the cron name that triggered the pipeline. This only applies to cron events.
+
+{{< highlight text "linenos=table,linenostart=12" >}}
+trigger:
+  event:
+  - cron
+  cron:
+  - nightly
+{{< / highlight >}}
+
+Example include syntax:
+
+{{< highlight text "linenos=table,linenostart=12" >}}
+trigger:
+  event:
+  - cron
+  target:
+    include:
+    - weekly
+    - nightly
+{{< / highlight >}}
+
+Example exclude syntax:
+
+{{< highlight text "linenos=table,linenostart=12" >}}
+trigger:
+  event:
+  - cron
+  target:
+    exclude:
+    - nightly
 {{< / highlight >}}

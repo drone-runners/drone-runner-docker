@@ -123,7 +123,6 @@ when:
 
 The reference condition limits step execution based on the git reference name. This can be helpful when you want to glob match branch or tag names.
 
-
 {{< highlight text "linenos=table,linenostart=11" >}}
 when:
   ref:
@@ -295,4 +294,40 @@ when:
   target:
     exclude:
     - production
+{{< / highlight >}}
+
+
+# By Cron
+
+The cron condition limits step execution based on the cron name that triggered the pipeline. This only applies to cron events.
+
+{{< highlight text "linenos=table,linenostart=11" >}}
+when:
+  event:
+  - cron
+  cron:
+  - nightly
+{{< / highlight >}}
+
+Example include syntax:
+
+{{< highlight text "linenos=table,linenostart=11" >}}
+when:
+  event:
+  - cron
+  target:
+    include:
+    - weekly
+    - nightly
+{{< / highlight >}}
+
+Example exclude syntax:
+
+{{< highlight text "linenos=table,linenostart=11" >}}
+when:
+  event:
+  - cron
+  target:
+    exclude:
+    - nightly
 {{< / highlight >}}

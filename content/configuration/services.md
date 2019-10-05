@@ -3,7 +3,7 @@ date: 2000-01-01T00:00:00+00:00
 title: Services
 author: bradrydzewski
 weight: 5
-toc: false
+toc: true
 description: |
   Configure service containers.
 ---
@@ -49,7 +49,7 @@ kind: pipeline
 name: default
 
 steps:
-- name: redis
+- name: cache
   image: redis
   detach: true
 

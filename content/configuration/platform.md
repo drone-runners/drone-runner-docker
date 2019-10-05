@@ -35,8 +35,8 @@ Example windows 1809 pipeline:
 
 {{< highlight text "linenos=table,linenostart=5,hl_lines=4" >}}
 platform:
-  os: linux
-  arch: arm
+  os: windows
+  arch: amd64
   version: 1809
 {{< / highlight >}}
 
