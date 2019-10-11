@@ -1,0 +1,48 @@
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: test
+  image: golang:1.12
+  commands:
+  - go test -cover ./...
+  volumes:
+  - name: go
+    path: /go
+
+- name: build
+  image: golang:1.12
+  commands:
+  - sh scripts/build.sh
+  volumes:
+  - name: go
+    path: /go
+  when:
+    event:
+    - push
+    - tag
+
+- name: publish
+  image: plugins/docker
+  pull: if-not-exists
+  settings:
+    repo: drone/drone-runner-docker
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.linux.amd64
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+  when:
+    ref:
+    - refs/heads/master
+    - refs/tags/*
+
+volumes:
+- name: go
+  temp: {}

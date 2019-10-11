@@ -1,0 +1,20 @@
+kind: pipeline
+type: docker
+name: default
+
+clone:
+  disable: true
+
+server:
+  image: docker-18-04
+  region: nyc1
+  size: s-1vcpu-1gb
+
+token: 3DA541559918A808C2402BBA5012F6C60B27661C
+
+steps:
+- name: build
+  commands:
+  - go build
+  when:
+    status: [ failure ]

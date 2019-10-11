@@ -1,0 +1,63 @@
+{
+  "platform": {},
+  "token": "3DA541559918A808C2402BBA5012F6C60B27661C",
+  "server": {
+    "name": "drone-temp-random",
+    "image": "docker-18-04",
+    "region": "nyc1",
+    "size": "s-1vcpu-1gb",
+    "user": "root"
+  },
+  "root": "/tmp/drone-random",
+  "files": [
+    {
+      "path": "/tmp/drone-random/home",
+      "mode": 448,
+      "is_dir": true
+    },
+    {
+      "path": "/tmp/drone-random/home/drone",
+      "mode": 448,
+      "is_dir": true
+    },
+    {
+      "path": "/tmp/drone-random/drone",
+      "mode": 448,
+      "is_dir": true
+    },
+    {
+      "path": "/tmp/drone-random/drone/src",
+      "mode": 448,
+      "is_dir": true
+    },
+    {
+      "path": "/tmp/drone-random/opt",
+      "mode": 448,
+      "is_dir": true
+    },
+    {
+      "path": "/tmp/drone-random/home/drone/.netrc",
+      "mode": 384,
+      "data": "bWFjaGluZSBnaXRodWIuY29tIGxvZ2luIG9jdG9jYXQgcGFzc3dvcmQgY29ycmVjdC1ob3JzZS1iYXR0ZXJ5LXN0YXBsZQ=="
+    }
+  ],
+  "steps": [
+    {
+      "args": [
+        "-e",
+        "/tmp/drone-random/opt/build"
+      ],
+      "command": "/bin/sh",
+      "files": [
+        {
+          "path": "/tmp/drone-random/opt/build",
+          "mode": 448,
+          "data": "CnNldCAtZQoKZWNobyArICJnbyBidWlsZCIKZ28gYnVpbGQK"
+        }
+      ],
+      "name": "build",
+      "run_policy": 2,
+      "working_dir": "/tmp/drone-random/drone/src"
+    }
+  ]
+}

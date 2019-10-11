@@ -1,0 +1,6 @@
+drone-runner-docker
+drone-runner-docker.exe
+release/*
+.env
+NOTES*
+engine/compiler2
