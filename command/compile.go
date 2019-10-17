@@ -26,9 +26,13 @@ import (
 type compileCommand struct {
 	*internal.Flags
 
-	Source  *os.File
-	Environ map[string]string
-	Secrets map[string]string
+	Source     *os.File
+	Privileged []string
+	Networks   []string
+	Volumes    map[string]string
+	Environ    map[string]string
+	Labels     map[string]string
+	Secrets    map[string]string
 }
 
 func (c *compileCommand) run(*kingpin.ParseContext) error {
@@ -89,15 +93,19 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Pipeline: resource,
-		Manifest: manifest,
-		Build:    c.Build,
-		Netrc:    c.Netrc,
-		Repo:     c.Repo,
-		Stage:    c.Stage,
-		System:   c.System,
-		Environ:  c.Environ,
-		Secret:   secret.StaticVars(c.Secrets),
+		Pipeline:   resource,
+		Manifest:   manifest,
+		Build:      c.Build,
+		Netrc:      c.Netrc,
+		Repo:       c.Repo,
+		Stage:      c.Stage,
+		System:     c.System,
+		Environ:    c.Environ,
+		Labels:     c.Labels,
+		Privileged: append(c.Privileged, compiler.Privileged...),
+		Networks:   c.Networks,
+		Volumes:    c.Volumes,
+		Secret:     secret.StaticVars(c.Secrets),
 	}
 	spec := comp.Compile(nocontext)
 
@@ -113,6 +121,8 @@ func registerCompile(app *kingpin.Application) {
 	c := new(compileCommand)
 	c.Environ = map[string]string{}
 	c.Secrets = map[string]string{}
+	c.Labels = map[string]string{}
+	c.Volumes = map[string]string{}
 
 	cmd := app.Command("compile", "compile the yaml file").
 		Action(c.run)
@@ -126,6 +136,18 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("environ", "environment variables").
 		StringMapVar(&c.Environ)
+
+	cmd.Flag("labels", "container labels").
+		StringMapVar(&c.Labels)
+
+	cmd.Flag("networks", "container networks").
+		StringsVar(&c.Networks)
+
+	cmd.Flag("volumes", "container volumes").
+		StringMapVar(&c.Volumes)
+
+	cmd.Flag("privileged", "privileged docker images").
+		StringsVar(&c.Privileged)
 
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)

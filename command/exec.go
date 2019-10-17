@@ -38,7 +38,13 @@ type execCommand struct {
 	*internal.Flags
 
 	Source     *os.File
+	Include    []string
+	Exclude    []string
+	Privileged []string
+	Networks   []string
+	Volumes    map[string]string
 	Environ    map[string]string
+	Labels     map[string]string
 	Secrets    map[string]string
 	Pretty     bool
 	Procs      int64
@@ -107,17 +113,55 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Pipeline: resource,
-		Manifest: manifest,
-		Build:    c.Build,
-		Netrc:    c.Netrc,
-		Repo:     c.Repo,
-		Stage:    c.Stage,
-		System:   c.System,
-		Environ:  c.Environ,
-		Secret:   secret.StaticVars(c.Secrets),
+		Pipeline:   resource,
+		Manifest:   manifest,
+		Build:      c.Build,
+		Netrc:      c.Netrc,
+		Repo:       c.Repo,
+		Stage:      c.Stage,
+		System:     c.System,
+		Environ:    c.Environ,
+		Labels:     c.Labels,
+		Privileged: append(c.Privileged, compiler.Privileged...),
+		Networks:   c.Networks,
+		Volumes:    c.Volumes,
+		Secret:     secret.StaticVars(c.Secrets),
 	}
 	spec := comp.Compile(nocontext)
+
+	// include only steps that are in the include list,
+	// if the list in non-empty.
+	if len(c.Include) > 0 {
+	I:
+		for _, step := range spec.Steps {
+			if step.Name == "clone" {
+				continue
+			}
+			for _, name := range c.Include {
+				if step.Name == name {
+					continue I
+				}
+			}
+			step.RunPolicy = engine.RunNever
+		}
+	}
+
+	// exclude steps that are in the exclude list,
+	// if the list in non-empty.
+	if len(c.Exclude) > 0 {
+	E:
+		for _, step := range spec.Steps {
+			if step.Name == "clone" {
+				continue
+			}
+			for _, name := range c.Exclude {
+				if step.Name == name {
+					step.RunPolicy = engine.RunNever
+					continue E
+				}
+			}
+		}
+	}
 
 	// create a step object for each pipeline step.
 	for _, step := range spec.Steps {
@@ -201,6 +245,8 @@ func registerExec(app *kingpin.Application) {
 	c := new(execCommand)
 	c.Environ = map[string]string{}
 	c.Secrets = map[string]string{}
+	c.Labels = map[string]string{}
+	c.Volumes = map[string]string{}
 
 	cmd := app.Command("exec", "executes a pipeline").
 		Action(c.run)
@@ -212,8 +258,26 @@ func registerExec(app *kingpin.Application) {
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)
 
+	cmd.Flag("include", "include pipeline steps").
+		StringsVar(&c.Include)
+
+	cmd.Flag("exclude", "exclude pipeline steps").
+		StringsVar(&c.Exclude)
+
 	cmd.Flag("environ", "environment variables").
 		StringMapVar(&c.Environ)
+
+	cmd.Flag("labels", "container labels").
+		StringMapVar(&c.Labels)
+
+	cmd.Flag("networks", "container networks").
+		StringsVar(&c.Networks)
+
+	cmd.Flag("volumes", "container volumes").
+		StringMapVar(&c.Volumes)
+
+	cmd.Flag("privileged", "privileged docker images").
+		StringsVar(&c.Privileged)
 
 	cmd.Flag("public-key", "public key file path").
 		ExistingFileVar(&c.PublicKey)

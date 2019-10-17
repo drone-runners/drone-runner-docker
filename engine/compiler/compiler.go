@@ -25,6 +25,17 @@ import (
 // random generator function
 var random = uniuri.New
 
+// Privileged provides a list of plugins that execute
+// with privileged capabilities in order to run Docker
+// in Docker.
+var Privileged = []string{
+	"plugins/docker",
+	"plugins/acr",
+	"plugins/ecr",
+	"plugins/gcr",
+	"plugins/heroku",
+}
+
 // Compiler compiles the Yaml configuration file to an
 // intermediate representation optimized for simple execution.
 type Compiler struct {
@@ -61,6 +72,22 @@ type Compiler struct {
 	// should be added to each pipeline step by default.
 	Environ map[string]string
 
+	// Labels provides a set of labels that should be added
+	// to each container by default.
+	Labels map[string]string
+
+	// Privileged provides a list of docker images that
+	// are always privileged.
+	Privileged []string
+
+	// Networks provides a set of networks that should be
+	// attached to each pipeline container.
+	Networks []string
+
+	// Volumes provides a set of volumes that should be
+	// mounted to each pipeline container.
+	Volumes map[string]string
+
 	// Netrc provides netrc parameters that can be used by the
 	// default clone step to authenticate to the remote
 	// repository.
@@ -86,15 +113,21 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 
 	// create the workspace volume
 	volume := &engine.VolumeEmptyDir{
-		ID:     random(),
-		Name:   mount.Name,
-		Labels: createLabels(c.Repo, c.Build, c.Stage, nil),
+		ID:   random(),
+		Name: mount.Name,
+		Labels: environ.Combine(
+			c.Labels,
+			createLabels(c.Repo, c.Build, c.Stage),
+		),
 	}
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID:     random(),
-			Labels: createLabels(c.Repo, c.Build, c.Stage, nil),
+			ID: random(),
+			Labels: environ.Combine(
+				c.Labels,
+				createLabels(c.Repo, c.Build, c.Stage),
+			),
 		},
 		Platform: engine.Platform{
 			OS:      c.Pipeline.Platform.OS,
@@ -167,7 +200,10 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
-		step.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
+		step.Labels = environ.Combine(
+			c.Labels,
+			createLabels(c.Repo, c.Build, c.Stage),
+		)
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
 	}
@@ -178,7 +214,10 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
+		dst.Labels = environ.Combine(
+			c.Labels,
+			createLabels(c.Repo, c.Build, c.Stage),
+		)
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -195,7 +234,10 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst := createStep(c.Pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
+		dst.Labels = environ.Combine(
+			c.Labels,
+			createLabels(c.Repo, c.Build, c.Stage),
+		)
 		setupScript(src, dst, full)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -204,6 +246,13 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		// automatically skipped.
 		if !src.When.Match(match) {
 			dst.RunPolicy = engine.RunNever
+		}
+
+		// if the pipeline step has an approved image, it is
+		// automatically defaulted to run with escalalated
+		// privileges.
+		if c.isPrivileged(src) {
+			dst.Privileged = true
 		}
 	}
 
@@ -245,7 +294,57 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		}
 	}
 
+	// append global networks to the steps.
+	for _, step := range spec.Steps {
+		step.Networks = append(step.Networks, c.Networks...)
+	}
+
+	// append global volumes to the steps.
+	for k, v := range c.Volumes {
+		id := random()
+		volume := &engine.Volume{
+			HostPath: &engine.VolumeHostPath{
+				ID:   id,
+				Name: id,
+				Path: k,
+			},
+		}
+		spec.Volumes = append(spec.Volumes, volume)
+		for _, step := range spec.Steps {
+			mount := &engine.VolumeMount{
+				Name: id,
+				Path: v,
+			}
+			step.Volumes = append(step.Volumes, mount)
+		}
+	}
+
 	return spec
+}
+
+func (c *Compiler) isPrivileged(step *resource.Step) bool {
+	// privileged-by-default containers are only
+	// enabled for plugins steps that do not define
+	// commands, command, or entrypoint.
+	if len(step.Commands) > 0 {
+		return false
+	}
+	if len(step.Command) > 0 {
+		return false
+	}
+	if len(step.Entrypoint) > 0 {
+		return false
+	}
+	// if the container image matches any image
+	// in the whitelist, return true.
+	for _, img := range c.Privileged {
+		a := img
+		b := step.Image
+		if image.Match(a, b) {
+			return true
+		}
+	}
+	return false
 }
 
 // helper function attempts to find and return the named secret.

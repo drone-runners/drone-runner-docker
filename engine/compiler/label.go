@@ -15,9 +15,8 @@ func createLabels(
 	repo *drone.Repo,
 	build *drone.Build,
 	stage *drone.Stage,
-	step *drone.Step,
 ) map[string]string {
-	labels := map[string]string{
+	return map[string]string{
 		"io.drone":                "true",
 		"io.drone.build.number":   fmt.Sprint(build.Number),
 		"io.drone.repo.namespace": repo.Namespace,
@@ -29,9 +28,6 @@ func createLabels(
 		"io.drone.created":        fmt.Sprint(time.Now().Unix()),
 		"io.drone.protected":      "false",
 	}
-	if step != nil {
-		labels["io.drone.step.name"] = step.Name
-		labels["io.drone.step.number"] = fmt.Sprint(step.Number)
-	}
-	return labels
+	// labels["io.drone.step.name"] = step.Name
+	// labels["io.drone.step.number"] = fmt.Sprint(step.Number)
 }
