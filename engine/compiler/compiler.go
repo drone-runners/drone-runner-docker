@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
-	"github.com/drone-runners/drone-runner-docker/engine/auth"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler/image"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
@@ -18,6 +17,8 @@ import (
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/labels"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/registry"
+	"github.com/drone/runner-go/registry/auths"
 	"github.com/drone/runner-go/secret"
 
 	"github.com/dchest/uniuri"
@@ -113,6 +114,10 @@ type Compiler struct {
 	// Secret returns a named secret value that can be injected
 	// into the pipeline step.
 	Secret secret.Provider
+
+	// Registry returns a list of registry credentials that can be
+	// used to pull private container images.
+	Registry registry.Provider
 }
 
 // Compile compiles the configuration file.
@@ -285,22 +290,36 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		}
 	}
 
-	var auths []*engine.Auth
+	// get registry credentials from registry plugins
+	creds, err := c.Registry.List(ctx, &registry.Request{
+		Repo:  c.Repo,
+		Build: c.Build,
+	})
+	if err != nil {
+		// TODO (bradrydzewski) return an error to the caller
+		// if the provider returns an error.
+	}
+
+	// get registry credentials from secrets
 	for _, name := range c.Pipeline.PullSecrets {
 		secret, ok := c.findSecret(ctx, name)
 		if ok {
-			parsed, err := auth.ParseString(secret)
+			parsed, err := auths.ParseString(secret)
 			if err == nil {
-				auths = append(auths, parsed...)
+				creds = append(creds, parsed...)
 			}
 		}
 	}
 
 	for _, step := range spec.Steps {
 	STEPS:
-		for _, auth := range auths {
-			if image.MatchHostname(step.Image, auth.Address) {
-				step.Auth = auth
+		for _, cred := range creds {
+			if image.MatchHostname(step.Image, cred.Address) {
+				step.Auth = &engine.Auth{
+					Address:  cred.Address,
+					Username: cred.Username,
+					Password: cred.Password,
+				}
 				break STEPS
 			}
 		}
@@ -376,6 +395,8 @@ func (c *Compiler) findSecret(ctx context.Context, name string) (s string, ok bo
 	if name == "" {
 		return
 	}
+	// TODO (bradrydzewski) return an error to the caller
+	// if the provider returns an error.
 	found, _ := c.Secret.Find(ctx, &secret.Request{
 		Name:  name,
 		Build: c.Build,

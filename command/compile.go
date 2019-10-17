@@ -18,6 +18,7 @@ import (
 	"github.com/drone/envsubst"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -34,6 +35,7 @@ type compileCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Config     string
 }
 
 func (c *compileCommand) run(*kingpin.ParseContext) error {
@@ -108,6 +110,9 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
 		Secret:     secret.StaticVars(c.Secrets),
+		Registry: registry.Combine(
+			registry.File(c.Config),
+		),
 	}
 	spec := comp.Compile(nocontext)
 
@@ -171,6 +176,9 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("shmsize", "container shm size").
 		Int64Var(&c.Resources.ShmSize)
+
+	cmd.Flag("docker-config", "path to the docker config file").
+		StringVar(&c.Config)
 
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)

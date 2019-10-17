@@ -26,6 +26,7 @@ import (
 	"github.com/drone/runner-go/manifest"
 	"github.com/drone/runner-go/pipeline"
 	"github.com/drone/runner-go/pipeline/console"
+	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 	"github.com/drone/signal"
 
@@ -47,6 +48,7 @@ type execCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Config     string
 	Pretty     bool
 	Procs      int64
 	Debug      bool
@@ -128,6 +130,9 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
 		Secret:     secret.StaticVars(c.Secrets),
+		Registry: registry.Combine(
+			registry.File(c.Config),
+		),
 	}
 	spec := comp.Compile(nocontext)
 
@@ -307,6 +312,9 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("private-key", "private key file path").
 		ExistingFileVar(&c.PrivateKey)
+
+	cmd.Flag("docker-config", "path to the docker config file").
+		StringVar(&c.Config)
 
 	cmd.Flag("debug", "enable debug logging").
 		BoolVar(&c.Debug)
