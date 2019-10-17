@@ -21,6 +21,10 @@ type (
 		ID           string            `json:"id,omitempty"`
 		Auth         *Auth             `json:"auth,omitempty"`
 		Command      []string          `json:"args,omitempty"`
+		CPUPeriod    int64             `json:"cpu_period,omitempty"`
+		CPUQuota     int64             `json:"cpu_quota,omitempty"`
+		CPUShares    int64             `json:"cpu_shares,omitempty"`
+		CPUSet       []string          `json:"cpu_set,omitempty"`
 		Detach       bool              `json:"detach,omitempty"`
 		DependsOn    []string          `json:"depends_on,omitempty"`
 		DNS          []string          `json:"dns,omitempty"`
@@ -34,6 +38,8 @@ type (
 		IgnoreStderr bool              `json:"ignore_stdout,omitempty"`
 		Image        string            `json:"image,omitempty"`
 		Labels       map[string]string `json:"labels,omitempty"`
+		MemSwapLimit int64             `json:"memswap_limit,omitempty"`
+		MemLimit     int64             `json:"mem_limit,omitempty"`
 		Name         string            `json:"name,omitempty"`
 		Network      string            `json:"network,omitempty"`
 		Networks     []string          `json:"networks,omitempty"`
@@ -41,6 +47,7 @@ type (
 		Pull         PullPolicy        `json:"pull,omitempty"`
 		RunPolicy    RunPolicy         `json:"run_policy,omitempty"`
 		Secrets      []*Secret         `json:"secrets,omitempty"`
+		ShmSize      int64             `json:"shm_size,omitempty"`
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`

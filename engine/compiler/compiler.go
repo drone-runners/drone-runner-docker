@@ -16,6 +16,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
 	"github.com/drone/runner-go/environ"
+	"github.com/drone/runner-go/labels"
 	"github.com/drone/runner-go/manifest"
 	"github.com/drone/runner-go/secret"
 
@@ -34,6 +35,18 @@ var Privileged = []string{
 	"plugins/ecr",
 	"plugins/gcr",
 	"plugins/heroku",
+}
+
+// Resources defines container resource constraints. These
+// constraints are per-container, not per-pipeline.
+type Resources struct {
+	MemLimit     int64
+	MemSwapLimit int64
+	ShmSize      int64
+	CPUQuota     int64
+	CPUPeriod    int64
+	CPUShares    int64
+	CPUSet       []string
 }
 
 // Compiler compiles the Yaml configuration file to an
@@ -88,6 +101,10 @@ type Compiler struct {
 	// mounted to each pipeline container.
 	Volumes map[string]string
 
+	// Resources provides global resource constraints
+	// applies to pipeline containers.
+	Resources Resources
+
 	// Netrc provides netrc parameters that can be used by the
 	// default clone step to authenticate to the remote
 	// repository.
@@ -111,23 +128,27 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		Path: base,
 	}
 
+	// create system labels
+	labels := labels.Combine(
+		c.Labels,
+		labels.FromRepo(c.Repo),
+		labels.FromBuild(c.Build),
+		labels.FromStage(c.Stage),
+		labels.FromSystem(c.System),
+		labels.WithTimeout(c.Repo),
+	)
+
 	// create the workspace volume
 	volume := &engine.VolumeEmptyDir{
-		ID:   random(),
-		Name: mount.Name,
-		Labels: environ.Combine(
-			c.Labels,
-			createLabels(c.Repo, c.Build, c.Stage),
-		),
+		ID:     random(),
+		Name:   mount.Name,
+		Labels: labels,
 	}
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID: random(),
-			Labels: environ.Combine(
-				c.Labels,
-				createLabels(c.Repo, c.Build, c.Stage),
-			),
+			ID:     random(),
+			Labels: labels,
 		},
 		Platform: engine.Platform{
 			OS:      c.Pipeline.Platform.OS,
@@ -200,10 +221,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
-		step.Labels = environ.Combine(
-			c.Labels,
-			createLabels(c.Repo, c.Build, c.Stage),
-		)
+		step.Labels = labels
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
 	}
@@ -214,10 +232,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = environ.Combine(
-			c.Labels,
-			createLabels(c.Repo, c.Build, c.Stage),
-		)
+		dst.Labels = labels
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -234,10 +249,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst := createStep(c.Pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = environ.Combine(
-			c.Labels,
-			createLabels(c.Repo, c.Build, c.Stage),
-		)
+		dst.Labels = labels
 		setupScript(src, dst, full)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -292,6 +304,17 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 				break STEPS
 			}
 		}
+	}
+
+	// append global resource limits to steps
+	for _, step := range spec.Steps {
+		step.MemSwapLimit = c.Resources.MemSwapLimit
+		step.MemLimit = c.Resources.MemLimit
+		step.ShmSize = c.Resources.ShmSize
+		step.CPUPeriod = c.Resources.CPUPeriod
+		step.CPUQuota = c.Resources.CPUQuota
+		step.CPUShares = c.Resources.CPUShares
+		step.CPUSet = c.Resources.CPUSet
 	}
 
 	// append global networks to the steps.

@@ -46,6 +46,7 @@ type execCommand struct {
 	Environ    map[string]string
 	Labels     map[string]string
 	Secrets    map[string]string
+	Resources  compiler.Resources
 	Pretty     bool
 	Procs      int64
 	Debug      bool
@@ -122,6 +123,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		System:     c.System,
 		Environ:    c.Environ,
 		Labels:     c.Labels,
+		Resources:  c.Resources,
 		Privileged: append(c.Privileged, compiler.Privileged...),
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
@@ -278,6 +280,27 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("privileged", "privileged docker images").
 		StringsVar(&c.Privileged)
+
+	cmd.Flag("cpu-period", "container cpu period").
+		Int64Var(&c.Resources.CPUPeriod)
+
+	cmd.Flag("cpu-quota", "container cpu quota").
+		Int64Var(&c.Resources.CPUQuota)
+
+	cmd.Flag("cpu-set", "container cpu set").
+		StringsVar(&c.Resources.CPUSet)
+
+	cmd.Flag("cpu-shares", "container cpu shares").
+		Int64Var(&c.Resources.CPUShares)
+
+	cmd.Flag("memory", "container memory limit").
+		Int64Var(&c.Resources.MemLimit)
+
+	cmd.Flag("memory-swap", "container memory swap limit").
+		Int64Var(&c.Resources.MemSwapLimit)
+
+	cmd.Flag("shmsize", "container shm size").
+		Int64Var(&c.Resources.ShmSize)
 
 	cmd.Flag("public-key", "public key file path").
 		ExistingFileVar(&c.PublicKey)
