@@ -11,7 +11,7 @@ require (
 	github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1
 	github.com/drone/drone-yaml v1.2.2
 	github.com/drone/envsubst v1.0.2
-	github.com/drone/runner-go v1.2.3-0.20191017212814-48a0db6f4ed7
+	github.com/drone/runner-go v1.2.3-0.20191017224419-ef1504fb90be
 	github.com/drone/signal v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.3.0

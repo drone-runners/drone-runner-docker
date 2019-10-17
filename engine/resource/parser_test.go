@@ -105,6 +105,14 @@ func TestParseLintErr(t *testing.T) {
 	}
 }
 
+func TestParseLintNilStep(t *testing.T) {
+	_, err := manifest.ParseFile("testdata/nilstep.yml")
+	if err == nil {
+		t.Errorf("Expect linter returns error")
+		return
+	}
+}
+
 func TestParseNoMatch(t *testing.T) {
 	r := &manifest.RawResource{Kind: "pipeline", Type: "exec"}
 	_, match, _ := parse(r)

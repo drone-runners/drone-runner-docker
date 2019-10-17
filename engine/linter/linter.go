@@ -77,6 +77,9 @@ func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
 func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 	steps := append(pipeline.Services, pipeline.Steps...)
 	for _, step := range steps {
+		if step == nil {
+			return errors.New("linter: nil step")
+		}
 		if err := checkStep(step, trusted); err != nil {
 			return err
 		}
