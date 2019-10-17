@@ -9,6 +9,8 @@ import (
 	"fmt"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
+	"github.com/drone-runners/drone-runner-docker/engine/auth"
+	"github.com/drone-runners/drone-runner-docker/engine/compiler/image"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
 	"github.com/drone/drone-go/drone"
@@ -84,13 +86,15 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 
 	// create the workspace volume
 	volume := &engine.VolumeEmptyDir{
-		ID:   random(),
-		Name: mount.Name,
+		ID:     random(),
+		Name:   mount.Name,
+		Labels: createLabels(c.Repo, c.Build, c.Stage, nil),
 	}
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID: random(),
+			ID:     random(),
+			Labels: createLabels(c.Repo, c.Build, c.Stage, nil),
 		},
 		Platform: engine.Platform{
 			OS:      c.Pipeline.Platform.OS,
@@ -107,6 +111,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	envs := environ.Combine(
 		c.Environ,
 		c.Build.Params,
+		c.Pipeline.Environment,
 		environ.Proxy(),
 		environ.System(c.System),
 		environ.Repo(c.Repo),
@@ -162,6 +167,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
+		step.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
 	}
@@ -172,6 +178,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
+		dst.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -188,6 +195,7 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 		dst := createStep(c.Pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
+		dst.Labels = createLabels(c.Repo, c.Build, c.Stage, nil)
 		setupScript(src, dst, full)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -212,6 +220,27 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 			secret, ok := c.findSecret(ctx, s.Name)
 			if ok {
 				s.Data = []byte(secret)
+			}
+		}
+	}
+
+	var auths []*engine.Auth
+	for _, name := range c.Pipeline.PullSecrets {
+		secret, ok := c.findSecret(ctx, name)
+		if ok {
+			parsed, err := auth.ParseString(secret)
+			if err == nil {
+				auths = append(auths, parsed...)
+			}
+		}
+	}
+
+	for _, step := range spec.Steps {
+	STEPS:
+		for _, auth := range auths {
+			if image.MatchHostname(step.Image, auth.Address) {
+				step.Auth = auth
+				break STEPS
 			}
 		}
 	}

@@ -36,11 +36,12 @@ type Pipeline struct {
 	Platform    manifest.Platform    `json:"platform,omitempty"`
 	Trigger     manifest.Conditions  `json:"conditions,omitempty"`
 
-	Services    []*Step   `json:"services,omitempty"`
-	Steps       []*Step   `json:"steps,omitempty"`
-	Volumes     []*Volume `json:"volumes,omitempty"`
-	PullSecrets []string  `json:"image_pull_secrets,omitempty" yaml:"image_pull_secrets"`
-	Workspace   Workspace `json:"workspace,omitempty"`
+	Environment map[string]string `json:"environment,omitempty"`
+	Services    []*Step           `json:"services,omitempty"`
+	Steps       []*Step           `json:"steps,omitempty"`
+	Volumes     []*Volume         `json:"volumes,omitempty"`
+	PullSecrets []string          `json:"image_pull_secrets,omitempty" yaml:"image_pull_secrets"`
+	Workspace   Workspace         `json:"workspace,omitempty"`
 }
 
 // GetVersion returns the resource version.
