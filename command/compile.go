@@ -13,6 +13,7 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/command/internal"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
+	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone/envsubst"
 	"github.com/drone/runner-go/environ"
@@ -73,6 +74,15 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 	// a configuration can contain multiple pipelines.
 	// get a specific pipeline resource for execution.
 	resource, err := resource.Lookup(c.Stage.Name, manifest)
+	if err != nil {
+		return err
+	}
+
+	// lint the pipeline and return an error if any
+	// linting rules are broken
+	lint := linter.New()
+	opts := linter.Opts{Trusted: c.Repo.Trusted}
+	err = lint.Lint(resource, opts)
 	if err != nil {
 		return err
 	}

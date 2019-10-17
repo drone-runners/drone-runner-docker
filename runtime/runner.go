@@ -15,6 +15,7 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
+	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
 	"github.com/drone/drone-go/drone"
@@ -36,6 +37,10 @@ type Runner struct {
 	// Execer is responsible for executing intermediate
 	// representation of the pipeline and returns its results.
 	Execer Execer
+
+	// Linter is responsible for linting the pipeline
+	// and failing if any rules are broken.
+	Linter *linter.Linter
 
 	// Reporter reports pipeline status back to the remote
 	// server.
@@ -176,6 +181,15 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	resource, err := resource.Lookup(stage.Name, manifest)
 	if err != nil {
 		log.WithError(err).Error("cannot find pipeline resource")
+		state.FailAll(err)
+		return s.Reporter.ReportStage(noContext, state)
+	}
+
+	// lint the pipeline configuration and fail the build
+	// if any linting rules are broken.
+	err = s.Linter.Lint(resource, linter.Opts{Trusted: data.Repo.Trusted})
+	if err != nil {
+		log.WithError(err).Error("cannot accept configuration")
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}

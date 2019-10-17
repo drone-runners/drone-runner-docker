@@ -34,6 +34,11 @@ type Opts struct {
 // rules are broken.
 type Linter struct{}
 
+// New returns a new Linter.
+func New() *Linter {
+	return new(Linter)
+}
+
 // Lint executes the linting rules for the pipeline
 // configuration.
 func (l *Linter) Lint(pipeline *resource.Pipeline, opts Opts) error {
@@ -41,9 +46,9 @@ func (l *Linter) Lint(pipeline *resource.Pipeline, opts Opts) error {
 }
 
 func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
-	if err := checkNames(pipeline); err != nil {
-		return err
-	}
+	// if err := checkNames(pipeline); err != nil {
+	// 	return err
+	// }
 	if err := checkSteps(pipeline, trusted); err != nil {
 		return err
 	}
@@ -53,21 +58,21 @@ func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
 	return nil
 }
 
-func checkNames(pipeline *resource.Pipeline) error {
-	names := map[string]struct{}{}
-	if !pipeline.Clone.Disable {
-		names["clone"] = struct{}{}
-	}
-	steps := append(pipeline.Services, pipeline.Steps...)
-	for _, step := range steps {
-		_, ok := names[step.Name]
-		if ok {
-			return ErrDuplicateStepName
-		}
-		names[step.Name] = struct{}{}
-	}
-	return nil
-}
+// func checkNames(pipeline *resource.Pipeline) error {
+// 	names := map[string]struct{}{}
+// 	if !pipeline.Clone.Disable {
+// 		names["clone"] = struct{}{}
+// 	}
+// 	steps := append(pipeline.Services, pipeline.Steps...)
+// 	for _, step := range steps {
+// 		_, ok := names[step.Name]
+// 		if ok {
+// 			return ErrDuplicateStepName
+// 		}
+// 		names[step.Name] = struct{}{}
+// 	}
+// 	return nil
+// }
 
 func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 	steps := append(pipeline.Services, pipeline.Steps...)
@@ -83,12 +88,12 @@ func checkStep(step *resource.Step, trusted bool) error {
 	if step.Image == "" {
 		return errors.New("linter: invalid or missing image")
 	}
-	if step.Name == "" {
-		return errors.New("linter: invalid or missing name")
-	}
-	if len(step.Name) > 100 {
-		return errors.New("linter: name exceeds maximum length")
-	}
+	// if step.Name == "" {
+	// 	return errors.New("linter: invalid or missing name")
+	// }
+	// if len(step.Name) > 100 {
+	// 	return errors.New("linter: name exceeds maximum length")
+	// }
 	if trusted == false && step.Privileged {
 		return errors.New("linter: untrusted repositories cannot enable privileged mode")
 	}

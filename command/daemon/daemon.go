@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
+	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/match"
 	"github.com/drone-runners/drone-runner-docker/runtime"
@@ -82,6 +83,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			Environ:  config.Runner.Environ,
 			Machine:  config.Runner.Name,
 			Reporter: tracer,
+			Linter:   linter.New(),
 			Match: match.Func(
 				config.Limit.Repos,
 				config.Limit.Events,
