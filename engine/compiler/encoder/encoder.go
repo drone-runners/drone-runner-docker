@@ -15,7 +15,7 @@ import (
 
 // Encode encodes an interface value as a string. This function
 // assumes all types were unmarshaled by the yaml.v2 library.
-// The yaml.v2 package only supports a subset of primative types.
+// The yaml.v2 package only supports a subset of primitive types.
 func Encode(v interface{}) string {
 	switch v := v.(type) {
 	case string:

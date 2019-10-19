@@ -50,9 +50,8 @@ type Resources struct {
 	CPUSet       []string
 }
 
-// Compiler compiles the Yaml configuration file to an
-// intermediate representation optimized for simple execution.
-type Compiler struct {
+// Args provides compiler arguments.
+type Args struct {
 	// Manifest provides the parsed manifest.
 	Manifest *manifest.Manifest
 
@@ -82,6 +81,20 @@ type Compiler struct {
 	// each pipeline step.
 	System *drone.System
 
+	// Netrc provides netrc parameters that can be used by the
+	// default clone step to authenticate to the remote
+	// repository.
+	Netrc *drone.Netrc
+
+	// Secret returns a named secret value that can be injected
+	// into the pipeline step.
+	Secret secret.Provider
+}
+
+// Compiler compiles the Yaml configuration file to an
+// intermediate representation optimized for simple execution.
+type Compiler struct {
+
 	// Environ provides a set of environment variables that
 	// should be added to each pipeline step by default.
 	Environ map[string]string
@@ -106,11 +119,6 @@ type Compiler struct {
 	// applies to pipeline containers.
 	Resources Resources
 
-	// Netrc provides netrc parameters that can be used by the
-	// default clone step to authenticate to the remote
-	// repository.
-	Netrc *drone.Netrc
-
 	// Secret returns a named secret value that can be injected
 	// into the pipeline step.
 	Secret secret.Provider
@@ -121,11 +129,11 @@ type Compiler struct {
 }
 
 // Compile compiles the configuration file.
-func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
-	os := c.Pipeline.Platform.OS
+func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
+	os := args.Pipeline.Platform.OS
 
 	// create the workspace paths
-	base, path, full := createWorkspace(c.Pipeline)
+	base, path, full := createWorkspace(args.Pipeline)
 
 	// create the workspace mount
 	mount := &engine.VolumeMount{
@@ -136,11 +144,11 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	// create system labels
 	labels := labels.Combine(
 		c.Labels,
-		labels.FromRepo(c.Repo),
-		labels.FromBuild(c.Build),
-		labels.FromStage(c.Stage),
-		labels.FromSystem(c.System),
-		labels.WithTimeout(c.Repo),
+		labels.FromRepo(args.Repo),
+		labels.FromBuild(args.Build),
+		labels.FromStage(args.Stage),
+		labels.FromSystem(args.System),
+		labels.WithTimeout(args.Repo),
 	)
 
 	// create the workspace volume
@@ -156,10 +164,10 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 			Labels: labels,
 		},
 		Platform: engine.Platform{
-			OS:      c.Pipeline.Platform.OS,
-			Arch:    c.Pipeline.Platform.Arch,
-			Variant: c.Pipeline.Platform.Variant,
-			Version: c.Pipeline.Platform.Version,
+			OS:      args.Pipeline.Platform.OS,
+			Arch:    args.Pipeline.Platform.Arch,
+			Variant: args.Pipeline.Platform.Variant,
+			Version: args.Pipeline.Platform.Version,
 		},
 		Volumes: []*engine.Volume{
 			{EmptyDir: volume},
@@ -169,20 +177,20 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	// create the default environment variables.
 	envs := environ.Combine(
 		c.Environ,
-		c.Build.Params,
-		c.Pipeline.Environment,
+		args.Build.Params,
+		args.Pipeline.Environment,
 		environ.Proxy(),
-		environ.System(c.System),
-		environ.Repo(c.Repo),
-		environ.Build(c.Build),
-		environ.Stage(c.Stage),
-		environ.Link(c.Repo, c.Build, c.System),
+		environ.System(args.System),
+		environ.Repo(args.Repo),
+		environ.Build(args.Build),
+		environ.Stage(args.Stage),
+		environ.Link(args.Repo, args.Build, args.System),
 		clone.Environ(clone.Config{
-			SkipVerify: c.Pipeline.Clone.SkipVerify,
-			Trace:      c.Pipeline.Clone.Trace,
+			SkipVerify: args.Pipeline.Clone.SkipVerify,
+			Trace:      args.Pipeline.Clone.Trace,
 			User: clone.User{
-				Name:  c.Build.AuthorName,
-				Email: c.Build.AuthorEmail,
+				Name:  args.Build.AuthorName,
+				Email: args.Build.AuthorEmail,
 			},
 		}),
 	)
@@ -197,32 +205,32 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	envs["DRONE_WORKSPACE_PATH"] = path
 
 	// create the netrc environment variables
-	if c.Netrc != nil && c.Netrc.Machine != "" {
-		envs["DRONE_NETRC_MACHINE"] = c.Netrc.Machine
-		envs["DRONE_NETRC_USERNAME"] = c.Netrc.Login
-		envs["DRONE_NETRC_PASSWORD"] = c.Netrc.Password
+	if args.Netrc != nil && args.Netrc.Machine != "" {
+		envs["DRONE_NETRC_MACHINE"] = args.Netrc.Machine
+		envs["DRONE_NETRC_USERNAME"] = args.Netrc.Login
+		envs["DRONE_NETRC_PASSWORD"] = args.Netrc.Password
 		envs["DRONE_NETRC_FILE"] = fmt.Sprintf(
 			"machine %s login %s password %s",
-			c.Netrc.Machine,
-			c.Netrc.Login,
-			c.Netrc.Password,
+			args.Netrc.Machine,
+			args.Netrc.Login,
+			args.Netrc.Password,
 		)
 	}
 
 	match := manifest.Match{
-		Action:   c.Build.Action,
-		Cron:     c.Build.Cron,
-		Ref:      c.Build.Ref,
-		Repo:     c.Repo.Slug,
-		Instance: c.System.Host,
-		Target:   c.Build.Deploy,
-		Event:    c.Build.Event,
-		Branch:   c.Build.Target,
+		Action:   args.Build.Action,
+		Cron:     args.Build.Cron,
+		Ref:      args.Build.Ref,
+		Repo:     args.Repo.Slug,
+		Instance: args.System.Host,
+		Target:   args.Build.Deploy,
+		Event:    args.Build.Event,
+		Branch:   args.Build.Target,
 	}
 
 	// create the clone step
-	if c.Pipeline.Clone.Disable == false {
-		step := createClone(c.Pipeline)
+	if args.Pipeline.Clone.Disable == false {
+		step := createClone(args.Pipeline)
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
@@ -232,8 +240,8 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	}
 
 	// create steps
-	for _, src := range c.Pipeline.Services {
-		dst := createStep(c.Pipeline, src)
+	for _, src := range args.Pipeline.Services {
+		dst := createStep(args.Pipeline, src)
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
@@ -250,8 +258,8 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	}
 
 	// create steps
-	for _, src := range c.Pipeline.Steps {
-		dst := createStep(c.Pipeline, src)
+	for _, src := range args.Pipeline.Steps {
+		dst := createStep(args.Pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
 		dst.Labels = labels
@@ -275,15 +283,15 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 
 	if isGraph(spec) == false {
 		configureSerial(spec)
-	} else if c.Pipeline.Clone.Disable == false {
+	} else if args.Pipeline.Clone.Disable == false {
 		configureCloneDeps(spec)
-	} else if c.Pipeline.Clone.Disable == true {
+	} else if args.Pipeline.Clone.Disable == true {
 		removeCloneDeps(spec)
 	}
 
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
-			secret, ok := c.findSecret(ctx, s.Name)
+			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
 			}
@@ -292,8 +300,8 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 
 	// get registry credentials from registry plugins
 	creds, err := c.Registry.List(ctx, &registry.Request{
-		Repo:  c.Repo,
-		Build: c.Build,
+		Repo:  args.Repo,
+		Build: args.Build,
 	})
 	if err != nil {
 		// TODO (bradrydzewski) return an error to the caller
@@ -301,8 +309,8 @@ func (c *Compiler) Compile(ctx context.Context) *engine.Spec {
 	}
 
 	// get registry credentials from secrets
-	for _, name := range c.Pipeline.PullSecrets {
-		secret, ok := c.findSecret(ctx, name)
+	for _, name := range args.Pipeline.PullSecrets {
+		secret, ok := c.findSecret(ctx, args, name)
 		if ok {
 			parsed, err := auths.ParseString(secret)
 			if err == nil {
@@ -391,17 +399,25 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 
 // helper function attempts to find and return the named secret.
 // from the secret provider.
-func (c *Compiler) findSecret(ctx context.Context, name string) (s string, ok bool) {
+func (c *Compiler) findSecret(ctx context.Context, args Args, name string) (s string, ok bool) {
 	if name == "" {
 		return
 	}
-	// TODO (bradrydzewski) return an error to the caller
-	// if the provider returns an error.
-	found, _ := c.Secret.Find(ctx, &secret.Request{
+
+	// source secrets from the global secret provider
+	// and the repository secret provider.
+	provider := secret.Combine(
+		args.Secret,
+		c.Secret,
+	)
+
+	// TODO return an error to the caller if the provider
+	// returns an error.
+	found, _ := provider.Find(ctx, &secret.Request{
 		Name:  name,
-		Build: c.Build,
-		Repo:  c.Repo,
-		Conf:  c.Manifest,
+		Build: args.Build,
+		Repo:  args.Repo,
+		Conf:  args.Manifest,
 	})
 	if found == nil {
 		return

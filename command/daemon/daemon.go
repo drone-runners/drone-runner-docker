@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
+	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/match"
@@ -80,7 +81,6 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		Client: cli,
 		Runner: &runtime.Runner{
 			Client:   cli,
-			Environ:  config.Runner.Environ,
 			Machine:  config.Runner.Name,
 			Reporter: tracer,
 			Linter:   linter.New(),
@@ -89,11 +89,20 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				config.Limit.Events,
 				config.Limit.Trusted,
 			),
-			Secret: secret.External(
-				config.Secret.Endpoint,
-				config.Secret.Token,
-				config.Secret.SkipVerify,
-			),
+			Compiler: &compiler.Compiler{
+				Environ:    nil,
+				Labels:     nil,
+				Privileged: nil,
+				Networks:   nil,
+				Volumes:    nil,
+				// Resources:  nil,
+				Registry: nil,
+				Secret: secret.External(
+					config.Secret.Endpoint,
+					config.Secret.Token,
+					config.Secret.SkipVerify,
+				),
+			},
 			Execer: runtime.NewExecer(
 				tracer,
 				remote,

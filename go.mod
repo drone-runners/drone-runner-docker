@@ -3,10 +3,12 @@ module github.com/drone-runners/drone-runner-docker
 go 1.12
 
 require (
+	docker.io/go-docker v1.0.0
 	github.com/buildkite/yaml v2.1.0+incompatible
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/digitalocean/godo v1.19.0
 	github.com/docker/distribution v2.7.1+incompatible
+	github.com/docker/docker v1.13.1
 	github.com/drone/drone-go v1.0.5-0.20190504210458-4d6116b897ba
 	github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1
 	github.com/drone/drone-yaml v1.2.2

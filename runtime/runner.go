@@ -28,11 +28,15 @@ import (
 	"github.com/drone/runner-go/secret"
 )
 
-// Runnner runs the pipeline.
+// Runner runs the pipeline.
 type Runner struct {
 	// Client is the remote client responsible for interacting
 	// with the central server.
 	Client client.Client
+
+	// Compiler is responsible for compiling the pipeline
+	// configuration to the intermediate representation.
+	Compiler *compiler.Compiler
 
 	// Execer is responsible for executing intermediate
 	// representation of the pipeline and returns its results.
@@ -41,14 +45,6 @@ type Runner struct {
 	// Linter is responsible for linting the pipeline
 	// and failing if any rules are broken.
 	Linter *linter.Linter
-
-	// Reporter reports pipeline status back to the remote
-	// server.
-	Reporter pipeline.Reporter
-
-	// Environ provides custom, global environment variables
-	// that are added to every pipeline step.
-	Environ map[string]string
 
 	// Machine provides the runner with the name of the host
 	// machine executing the pipeline.
@@ -60,8 +56,9 @@ type Runner struct {
 	// processing an unwanted pipeline.
 	Match func(*drone.Repo, *drone.Build) bool
 
-	// Secret provides the compiler with secrets.
-	Secret secret.Provider
+	// Reporter reports pipeline status and logs back to the
+	// remote server.
+	Reporter pipeline.Reporter
 }
 
 // Run runs the pipeline stage.
@@ -124,7 +121,6 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	}()
 
 	envs := environ.Combine(
-		s.Environ,
 		environ.System(data.System),
 		environ.Repo(data.Repo),
 		environ.Build(data.Build),
@@ -197,15 +193,14 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	secrets := secret.Combine(
 		secret.Static(data.Secrets),
 		secret.Encrypted(),
-		s.Secret,
+		// s.Secret,
 	)
 
 	// compile the yaml configuration file to an intermediate
 	// representation, and then
-	comp := &compiler.Compiler{
+	args := compiler.Args{
 		Pipeline: resource,
 		Manifest: manifest,
-		Environ:  s.Environ,
 		Build:    data.Build,
 		Stage:    stage,
 		Repo:     data.Repo,
@@ -214,7 +209,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 		Secret:   secrets,
 	}
 
-	spec := comp.Compile(ctx)
+	spec := s.Compiler.Compile(ctx, args)
 	for _, src := range spec.Steps {
 		// steps that are skipped are ignored and are not stored
 		// in the drone database, nor displayed in the UI.

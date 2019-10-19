@@ -119,6 +119,41 @@ type (
 		Labels map[string]string `json:"labels,omitempty"`
 	}
 
+	// XVolume that is mounted into the container
+	XVolume struct {
+		ID     string            `json:"id,omitempty"`
+		Source string            `json:"source,omitempty"`
+		Target string            `json:"target,omitempty"`
+		Labels map[string]string `json:"labels,omitempty"`
+	}
+
+	volumeDevice struct {
+		Path string
+	}
+
+	volumeData struct {
+		ID   string `json:"id,omitempty"`
+		Name string `json:"name,omitempty"`
+		Path string `json:"target,omitempty"`
+		Mode uint32 `json:"mode,omitempty"`
+	}
+
+	volumeBind struct {
+		Source   string `json:"source,omitempty"`
+		Target   string `json:"target,omitempty"`
+		Readonly bool   `json:"readonly,omitempty"`
+	}
+
+	volumePipe struct {
+		Source string `json:"source,omitempty"`
+		Target string `json:"target,omitempty"`
+	}
+
+	volumeTemp struct {
+		Size int64  `json:"size,omitempty"`
+		Path string `json:"path,omitempty"`
+	}
+
 	// Network that is created and attached to containers
 	Network struct {
 		ID     string            `json:"id,omitempty"`

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/command/internal"
+	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
@@ -35,6 +36,7 @@ type compileCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Clone      bool
 	Config     string
 }
 
@@ -96,13 +98,6 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Pipeline:   resource,
-		Manifest:   manifest,
-		Build:      c.Build,
-		Netrc:      c.Netrc,
-		Repo:       c.Repo,
-		Stage:      c.Stage,
-		System:     c.System,
 		Environ:    c.Environ,
 		Labels:     c.Labels,
 		Resources:  c.Resources,
@@ -114,7 +109,38 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 			registry.File(c.Config),
 		),
 	}
-	spec := comp.Compile(nocontext)
+	args := compiler.Args{
+		Pipeline: resource,
+		Manifest: manifest,
+		Build:    c.Build,
+		Netrc:    c.Netrc,
+		Repo:     c.Repo,
+		Stage:    c.Stage,
+		System:   c.System,
+	}
+	spec := comp.Compile(nocontext, args)
+
+	// when running a build locally cloning is always
+	// disabled in favor of mounting the source code
+	// from the current working directory.
+	if c.Clone == false {
+		pwd, _ := os.Getwd()
+		for _, volume := range spec.Volumes {
+			if volume.EmptyDir != nil && volume.EmptyDir.Name == "_workspace" {
+				volume.HostPath = &engine.VolumeHostPath{
+					ID:   volume.EmptyDir.ID,
+					Name: volume.EmptyDir.Name,
+					Path: pwd,
+				}
+				volume.EmptyDir = nil
+			}
+		}
+		for _, step := range spec.Steps {
+			if step.Name == "clone" {
+				step.RunPolicy = engine.RunNever
+			}
+		}
+	}
 
 	// encode the pipeline in json format and print to the
 	// console for inspection.
@@ -137,6 +163,9 @@ func registerCompile(app *kingpin.Application) {
 	cmd.Flag("source", "source file location").
 		Default(".drone.yml").
 		FileVar(&c.Source)
+
+	cmd.Flag("clone", "enable cloning").
+		BoolVar(&c.Clone)
 
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)

@@ -48,6 +48,7 @@ type execCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Clone      bool
 	Config     string
 	Pretty     bool
 	Procs      int64
@@ -116,13 +117,6 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Pipeline:   resource,
-		Manifest:   manifest,
-		Build:      c.Build,
-		Netrc:      c.Netrc,
-		Repo:       c.Repo,
-		Stage:      c.Stage,
-		System:     c.System,
 		Environ:    c.Environ,
 		Labels:     c.Labels,
 		Resources:  c.Resources,
@@ -134,7 +128,16 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 			registry.File(c.Config),
 		),
 	}
-	spec := comp.Compile(nocontext)
+	args := compiler.Args{
+		Pipeline: resource,
+		Manifest: manifest,
+		Build:    c.Build,
+		Netrc:    c.Netrc,
+		Repo:     c.Repo,
+		Stage:    c.Stage,
+		System:   c.System,
+	}
+	spec := comp.Compile(nocontext, args)
 
 	// include only steps that are in the include list,
 	// if the list in non-empty.
@@ -261,6 +264,9 @@ func registerExec(app *kingpin.Application) {
 	cmd.Arg("source", "source file location").
 		Default(".drone.yml").
 		FileVar(&c.Source)
+
+	cmd.Flag("clone", "enable cloning").
+		BoolVar(&c.Clone)
 
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)
