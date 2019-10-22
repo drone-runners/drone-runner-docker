@@ -17,17 +17,18 @@ import (
 	"docker.io/go-docker/api/types/volume"
 )
 
-type engine struct {
+// Docker implements a Docker pipeline engine.
+type Docker struct {
 	client docker.APIClient
 }
 
 // New returns a new engine.
-func New(client docker.APIClient) Engine {
-	return &engine{client}
+func New(client docker.APIClient) *Docker {
+	return &Docker{client}
 }
 
 // NewEnv returns a new Engine from the environment.
-func NewEnv() (Engine, error) {
+func NewEnv() (*Docker, error) {
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		return nil, err
@@ -35,8 +36,14 @@ func NewEnv() (Engine, error) {
 	return New(cli), nil
 }
 
+// Ping pings the Docker daemon.
+func (e *Docker) Ping(ctx context.Context) error {
+	_, err := e.client.Ping(ctx)
+	return err
+}
+
 // Setup the pipeline environment.
-func (e *engine) Setup(ctx context.Context, spec *Spec) error {
+func (e *Docker) Setup(ctx context.Context, spec *Spec) error {
 	// creates the default temporary (local) volumes
 	// that are mounted into each container step.
 	for _, vol := range spec.Volumes {
@@ -68,7 +75,7 @@ func (e *engine) Setup(ctx context.Context, spec *Spec) error {
 }
 
 // Destroy the pipeline environment.
-func (e *engine) Destroy(ctx context.Context, spec *Spec) error {
+func (e *Docker) Destroy(ctx context.Context, spec *Spec) error {
 	removeOpts := types.ContainerRemoveOptions{
 		Force:         true,
 		RemoveLinks:   false,
@@ -109,7 +116,7 @@ func (e *engine) Destroy(ctx context.Context, spec *Spec) error {
 }
 
 // Run runs the pipeline step.
-func (e *engine) Run(ctx context.Context, spec *Spec, step *Step, output io.Writer) (*State, error) {
+func (e *Docker) Run(ctx context.Context, spec *Spec, step *Step, output io.Writer) (*State, error) {
 	// create the container
 	err := e.create(ctx, spec, step, output)
 	if err != nil {
@@ -133,7 +140,7 @@ func (e *engine) Run(ctx context.Context, spec *Spec, step *Step, output io.Writ
 // emulate docker commands
 //
 
-func (e *engine) create(ctx context.Context, spec *Spec, step *Step, output io.Writer) error {
+func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.Writer) error {
 	// parse the docker image name. We need to extract the
 	// image domain name and match to registry credentials
 	// stored in the .docker/config.json object.
@@ -212,13 +219,13 @@ func (e *engine) create(ctx context.Context, spec *Spec, step *Step, output io.W
 }
 
 // helper function emulates the `docker start` command.
-func (e *engine) start(ctx context.Context, id string) error {
+func (e *Docker) start(ctx context.Context, id string) error {
 	return e.client.ContainerStart(ctx, id, types.ContainerStartOptions{})
 }
 
 // helper function emulates the `docker wait` command, blocking
 // until the container stops and returning the exit code.
-func (e *engine) wait(ctx context.Context, id string) (*State, error) {
+func (e *Docker) wait(ctx context.Context, id string) (*State, error) {
 	wait, errc := e.client.ContainerWait(ctx, id, "")
 	select {
 	case <-wait:
@@ -243,7 +250,7 @@ func (e *engine) wait(ctx context.Context, id string) (*State, error) {
 
 // helper function emulates the `docker logs -f` command, streaming
 // all container logs until the container stops.
-func (e *engine) tail(ctx context.Context, id string, output io.Writer) error {
+func (e *Docker) tail(ctx context.Context, id string, output io.Writer) error {
 	opts := types.ContainerLogsOptions{
 		Follow:     true,
 		ShowStdout: true,

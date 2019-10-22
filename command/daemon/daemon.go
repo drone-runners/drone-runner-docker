@@ -51,6 +51,16 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	// setup the global logrus logger.
 	setupLogger(config)
 
+	ctx, cancel := context.WithCancel(nocontext)
+	defer cancel()
+
+	// listen for termination signals to gracefully shutdown
+	// the runner daemon.
+	ctx = signal.WithContextFunc(ctx, func() {
+		println("received signal, terminating process")
+		cancel()
+	})
+
 	cli := client.New(
 		config.Client.Address,
 		config.Client.Secret,
@@ -69,7 +79,22 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 
 	engine, err := engine.NewEnv()
 	if err != nil {
-		return err
+		logrus.WithError(err).
+			Fatalln("cannot load the docker engine")
+	}
+	for {
+		err := engine.Ping(ctx)
+		if err == context.Canceled {
+			break
+		}
+		if err != nil {
+			logrus.WithError(err).
+				Errorln("cannot ping the docker daemon")
+			time.Sleep(time.Second)
+		} else {
+			logrus.Debugln("successfully pinged the docker daemon")
+			break
+		}
 	}
 
 	remote := remote.New(cli)
@@ -116,16 +141,6 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			Labels: config.Runner.Labels,
 		},
 	}
-
-	ctx, cancel := context.WithCancel(nocontext)
-	defer cancel()
-
-	// listen for termination signals to gracefully shutdown
-	// the runner daemon.
-	ctx = signal.WithContextFunc(ctx, func() {
-		println("received signal, terminating process")
-		cancel()
-	})
 
 	var g errgroup.Group
 	server := server.Server{
