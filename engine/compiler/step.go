@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
-	"github.com/drone-runners/drone-runner-docker/engine/compiler/encoder"
-	"github.com/drone-runners/drone-runner-docker/engine/compiler/image"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
+	"github.com/drone-runners/drone-runner-docker/internal/encoder"
 )
 
 func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {

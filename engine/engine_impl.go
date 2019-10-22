@@ -9,8 +9,8 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/drone-runners/drone-runner-docker/engine/stdcopy"
-	"github.com/drone/drone-runtime/engine/docker/auth"
+	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
+	"github.com/drone/runner-go/registry/auths"
 
 	"docker.io/go-docker"
 	"docker.io/go-docker/api/types"
@@ -145,7 +145,7 @@ func (e *engine) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	// create pull options with encoded authorization credentials.
 	pullopts := types.ImagePullOptions{}
 	if step.Auth != nil {
-		pullopts.RegistryAuth = auth.Encode(
+		pullopts.RegistryAuth = auths.Encode(
 			step.Auth.Username,
 			step.Auth.Password,
 		)
