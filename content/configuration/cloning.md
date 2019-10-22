@@ -46,6 +46,7 @@ steps:
   - git fetch --tags
 
 - name: build
+  image: golang
   commands:
   - go build
   - go test
@@ -68,6 +69,7 @@ steps:
   - git submodule update --recursive --remote
 
 - name: build
+  image: golang
   commands:
   - go build
   - go test
@@ -93,6 +95,7 @@ steps:
   - git checkout $DRONE_COMMIT
 
 - name: build
+  image: golang
   commands:
   - go build
   - go test
