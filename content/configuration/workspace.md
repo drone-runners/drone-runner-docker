@@ -12,7 +12,7 @@ Drone automatically creates a temporary volume, known as your workspace, where i
 
 Because the workspace is a volume, filesystem changes are persisted between pipeline steps. In other words, individual steps can communicate and share state using the filesystem.
 
-Workspace path on inside your pipeline containers:
+Workspace path inside your pipeline containers:
 
 ```
 /drone/src

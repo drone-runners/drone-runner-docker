@@ -7,7 +7,6 @@ description: |
   Frequently asked questions related to usage.
 
 hide_children: true
-draft: true
 ---
 
 Here are the articles in this section:

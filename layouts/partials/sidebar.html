@@ -3,7 +3,11 @@
         <button class="close"></button>
     </header>
     <div class="back">
+        {{ if eq .Kind "home" }}
         <a href="https://docs.drone.io">Main Documentation</a>
+        {{ else }}
+        <a href="/">Back</a>
+        {{ end }}
     </div>
     <div class="title">
         <a href="{{ .Site.Home.URL }}">{{ .Site.Home.Title }}</a>
