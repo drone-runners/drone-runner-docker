@@ -22,7 +22,12 @@ func createWorkspace(from *resource.Pipeline) (base, path, full string) {
 	base = from.Workspace.Base
 	path = from.Workspace.Path
 	if base == "" {
-		base = workspacePath
+		if strings.HasPrefix(path, "/") {
+			base = path
+			path = ""
+		} else {
+			base = workspacePath
+		}
 	}
 	full = stdpath.Join(base, path)
 

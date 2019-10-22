@@ -30,6 +30,6 @@ func setupScriptWindows(src *resource.Step, dst *engine.Step) {
 
 func setupScriptPosix(src *resource.Step, dst *engine.Step) {
 	dst.Entrypoint = []string{"/bin/sh", "-c"}
-	dst.Command = []string{"echo $DRONE_SCRIPT | /bin/sh -e"}
+	dst.Command = []string{`echo "$DRONE_SCRIPT" | /bin/sh`}
 	dst.Envs["DRONE_SCRIPT"] = shell.Script(src.Commands)
 }

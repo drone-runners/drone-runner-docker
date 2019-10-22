@@ -369,6 +369,30 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		}
 	}
 
+	// append volumes
+	for _, v := range args.Pipeline.Volumes {
+		id := random()
+		src := new(engine.Volume)
+		if v.EmptyDir != nil {
+			src.EmptyDir = &engine.VolumeEmptyDir{
+				ID:        id,
+				Name:      v.Name,
+				Medium:    v.EmptyDir.Medium,
+				SizeLimit: int64(v.EmptyDir.SizeLimit),
+				Labels:    labels,
+			}
+		} else if v.HostPath != nil {
+			src.HostPath = &engine.VolumeHostPath{
+				ID:   id,
+				Name: v.Name,
+				Path: v.HostPath.Path,
+			}
+		} else {
+			continue
+		}
+		spec.Volumes = append(spec.Volumes, src)
+	}
+
 	return spec
 }
 

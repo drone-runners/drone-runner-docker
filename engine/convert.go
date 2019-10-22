@@ -36,7 +36,7 @@ func toConfig(spec *Spec, step *Step) *container.Config {
 	}
 
 	if len(step.Entrypoint) != 0 {
-		config.Cmd = step.Entrypoint
+		config.Entrypoint = step.Entrypoint
 	}
 	if len(step.Command) != 0 {
 		config.Cmd = step.Command
@@ -117,7 +117,7 @@ func toNetConfig(spec *Spec, proc *Step) *network.NetworkingConfig {
 func toDeviceSlice(spec *Spec, step *Step) []container.DeviceMapping {
 	var to []container.DeviceMapping
 	for _, mount := range step.Devices {
-		device, ok := LookupVolume(spec, mount.Name)
+		device, ok := lookupVolume(spec, mount.Name)
 		if !ok {
 			continue
 		}
@@ -141,7 +141,7 @@ func toDeviceSlice(spec *Spec, step *Step) []container.DeviceMapping {
 func toVolumeSet(spec *Spec, step *Step) map[string]struct{} {
 	set := map[string]struct{}{}
 	for _, mount := range step.Volumes {
-		volume, ok := LookupVolume(spec, mount.Name)
+		volume, ok := lookupVolume(spec, mount.Name)
 		if !ok {
 			continue
 		}
@@ -166,7 +166,7 @@ func toVolumeSlice(spec *Spec, step *Step) []string {
 	// to get it working with data volumes.
 	var to []string
 	for _, mount := range step.Volumes {
-		volume, ok := LookupVolume(spec, mount.Name)
+		volume, ok := lookupVolume(spec, mount.Name)
 		if !ok {
 			continue
 		}
@@ -174,7 +174,7 @@ func toVolumeSlice(spec *Spec, step *Step) []string {
 			continue
 		}
 		if isDataVolume(volume) {
-			path := volume.Metadata.UID + ":" + mount.Path
+			path := volume.EmptyDir.ID + ":" + mount.Path
 			to = append(to, path)
 		}
 		if isBindMount(volume) {
@@ -190,7 +190,7 @@ func toVolumeSlice(spec *Spec, step *Step) []string {
 func toVolumeMounts(spec *Spec, step *Step) []mount.Mount {
 	var mounts []mount.Mount
 	for _, target := range step.Volumes {
-		source, ok := LookupVolume(spec, target.Name)
+		source, ok := lookupVolume(spec, target.Name)
 		if !ok {
 			continue
 		}
@@ -283,4 +283,17 @@ func isDevice(volume *Volume) bool {
 func isNamedPipe(volume *Volume) bool {
 	return volume.HostPath != nil &&
 		strings.HasPrefix(volume.HostPath.Path, `\\.\pipe\`)
+}
+
+// helper function returns the named volume.
+func lookupVolume(spec *Spec, name string) (*Volume, bool) {
+	for _, v := range spec.Volumes {
+		if v.HostPath != nil && v.HostPath.Name == name {
+			return v, true
+		}
+		if v.EmptyDir != nil && v.EmptyDir.Name == name {
+			return v, true
+		}
+	}
+	return nil, false
 }

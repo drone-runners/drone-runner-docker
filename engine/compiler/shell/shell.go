@@ -34,9 +34,8 @@ func Script(commands []string) string {
 // optionScript is a helper script this is added to the build
 // to set shell options, in this case, to exit on error.
 const optionScript = `
-if [[ ! -z "${DRONE_NETRC_FILE}" ]]; then
+if [ ! -z "${DRONE_NETRC_FILE}" ]; then
 	echo $DRONE_NETRC_FILE > $HOME/.netrc
-EOF
 fi
 
 unset DRONE_SCRIPT

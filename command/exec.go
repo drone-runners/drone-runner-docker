@@ -220,7 +220,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		),
 	)
 
-	engine, err := engine.New(c.PublicKey, c.PrivateKey)
+	engine, err := engine.NewEnv()
 	if err != nil {
 		return err
 	}

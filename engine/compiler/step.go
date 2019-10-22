@@ -43,7 +43,7 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		Networks: nil, // set in compiler.go
 		Files:    nil, // set below
 		Volumes:  nil, // set below
-		// Devices:      nil,              // TODO
+		Devices:  nil, // see below
 		// Resources:    toResources(src), // TODO
 	}
 
@@ -52,6 +52,14 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		dst.Volumes = append(dst.Volumes, &engine.VolumeMount{
 			Name: vol.Name,
 			Path: vol.MountPath,
+		})
+	}
+
+	// appends the devices to the container def.
+	for _, vol := range src.Devices {
+		dst.Devices = append(dst.Devices, &engine.VolumeDevice{
+			Name:       vol.Name,
+			DevicePath: vol.DevicePath,
 		})
 	}
 
@@ -81,19 +89,6 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 			dst.Envs[key] = encoder.Encode(value.Value)
 		}
 	}
-
-	// // if the step specifies shell commands we generate a
-	// // script. The script is copied to the container at
-	// // runtime (or mounted as a config map) and then executed
-	// // as the entrypoint.
-	// if len(src.Commands) > 0 {
-	// 	switch spec.Platform.OS {
-	// 	case "windows":
-	// 		setupScriptWin(spec, dst, src)
-	// 	default:
-	// 		setupScript(spec, dst, src)
-	// 	}
-	// }
 
 	// set the pipeline step run policy. steps run on
 	// success by default, but may be optionally configured

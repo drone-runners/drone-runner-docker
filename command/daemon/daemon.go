@@ -67,7 +67,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		),
 	)
 
-	engine, err := engine.New(config.Keypair.Public, config.Keypair.Private)
+	engine, err := engine.NewEnv()
 	if err != nil {
 		return err
 	}

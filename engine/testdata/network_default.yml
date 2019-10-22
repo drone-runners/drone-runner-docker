@@ -1,0 +1,21 @@
+kind: pipeline
+type: docker
+name: default
+
+clone:
+  disable: true
+
+steps:
+- name: test
+  pull: if-not-exists
+  image: redis
+  commands:
+  - sleep 5
+  - redis-cli -h redis ping
+  - redis-cli -h redis set FOO bar
+  - redis-cli -h redis get FOO
+
+services:
+- name: redis
+  pull: if-not-exists
+  image: redis

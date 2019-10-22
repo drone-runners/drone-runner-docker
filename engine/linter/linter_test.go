@@ -31,6 +31,12 @@ func TestLint(t *testing.T) {
 		},
 		// user should not use reserved volume names.
 		{
+			path:    "testdata/volume_missing_name.yml",
+			trusted: false,
+			invalid: true,
+			message: "linter: missing volume name",
+		},
+		{
 			path:    "testdata/volume_invalid_name.yml",
 			trusted: false,
 			invalid: true,

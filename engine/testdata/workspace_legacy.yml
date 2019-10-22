@@ -1,0 +1,25 @@
+kind: pipeline
+type: docker
+name: default
+
+clone:
+  disable: true
+
+workspace:
+  base: /tmp
+  path: /drone
+
+steps:
+- name: write
+  pull: if-not-exists
+  image: alpine
+  commands:
+  - pwd
+  - echo "hello" > /tmp/greetings.txt
+
+- name: read
+  pull: if-not-exists
+  image: alpine
+  commands:
+  - pwd
+  - cat /tmp/greetings.txt

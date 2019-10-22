@@ -32,7 +32,8 @@ func parse(r *manifest.RawResource) (manifest.Resource, bool, error) {
 
 // match returns true if the resource matches the kind and type.
 func match(r *manifest.RawResource) bool {
-	return r.Kind == Kind && r.Type == Type
+	return (r.Kind == Kind && r.Type == Type) ||
+		(r.Kind == Kind && r.Type == "")
 }
 
 func lint(pipeline *Pipeline) error {
