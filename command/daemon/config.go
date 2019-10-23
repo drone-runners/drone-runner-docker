@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -58,6 +59,7 @@ type Config struct {
 		Procs    int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
 		Labels   map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
 		Environ  map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
+		EnvFile  string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
 	}
 
 	Limit struct {
@@ -90,5 +92,19 @@ func fromEnviron() (Config, error) {
 		config.Client.Proto,
 		config.Client.Host,
 	)
+
+	// environment variables can be sourced from a separate
+	// file. These variables are loaded and appended to the
+	// environment list.
+	if file := config.Runner.EnvFile; file != "" {
+		envs, err := godotenv.Read(file)
+		if err != nil {
+			return config, err
+		}
+		for k, v := range envs {
+			config.Runner.Environ[k] = v
+		}
+	}
+
 	return config, nil
 }
