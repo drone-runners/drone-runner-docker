@@ -197,7 +197,6 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 	}
 	if diff := cmp.Diff(got, want, opts...); len(diff) != 0 {
 		t.Errorf(diff)
-		dump(got)
 	}
 
 	return got
