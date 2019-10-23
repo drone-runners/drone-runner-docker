@@ -17,6 +17,7 @@ require (
 	github.com/drone/signal v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506 // indirect
+	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.3.0
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/joho/godotenv v1.3.0

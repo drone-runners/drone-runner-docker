@@ -12,6 +12,8 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/registry"
+	"github.com/drone/runner-go/secret"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -24,6 +26,10 @@ func TestClone(t *testing.T) {
 	}()
 
 	c := &Compiler{
+		Registry: registry.Static(nil),
+		Secret:   secret.Static(nil),
+	}
+	args := Args{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{},
 		Stage:    &drone.Stage{},
@@ -37,12 +43,19 @@ func TestClone(t *testing.T) {
 			ID:         "random",
 			Image:      "drone/git:1",
 			Name:       "clone",
+			Pull:       engine.PullDefault,
 			RunPolicy:  engine.RunAlways,
 			WorkingDir: "/drone/src",
+			Volumes: []*engine.VolumeMount{
+				&engine.VolumeMount{
+					Name: "_workspace",
+					Path: "/drone/src",
+				},
+			},
 		},
 	}
-	got := c.Compile(nil)
-	ignore := cmpopts.IgnoreFields(engine.Step{}, "Envs")
+	got := c.Compile(nocontext, args)
+	ignore := cmpopts.IgnoreFields(engine.Step{}, "Envs", "Labels")
 	if diff := cmp.Diff(got.Steps, want, ignore); len(diff) != 0 {
 		t.Errorf(diff)
 	}
@@ -50,6 +63,10 @@ func TestClone(t *testing.T) {
 
 func TestCloneDisable(t *testing.T) {
 	c := &Compiler{
+		Registry: registry.Static(nil),
+		Secret:   secret.Static(nil),
+	}
+	args := Args{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{},
 		Stage:    &drone.Stage{},
@@ -58,7 +75,7 @@ func TestCloneDisable(t *testing.T) {
 		Manifest: &manifest.Manifest{},
 		Pipeline: &resource.Pipeline{Clone: manifest.Clone{Disable: true}},
 	}
-	got := c.Compile(nil)
+	got := c.Compile(nocontext, args)
 	if len(got.Steps) != 0 {
 		t.Errorf("Expect no clone step added when disabled")
 	}

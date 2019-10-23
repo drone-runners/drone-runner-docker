@@ -297,3 +297,41 @@ func Test_matchTag(t *testing.T) {
 		}
 	}
 }
+
+func Test_isLatest(t *testing.T) {
+	testdata := []struct {
+		name string
+		want bool
+	}{
+		{
+			name: "golang:1",
+			want: false,
+		},
+		{
+			name: "golang",
+			want: true,
+		},
+		{
+			name: "golang:latest",
+			want: true,
+		},
+		{
+			name: "docker.io/library/golang",
+			want: true,
+		},
+		{
+			name: "docker.io/library/golang:latest",
+			want: true,
+		},
+		{
+			name: "docker.io/library/golang:1",
+			want: false,
+		},
+	}
+	for _, test := range testdata {
+		got, want := IsLatest(test.name), test.want
+		if got != want {
+			t.Errorf("Want image %q isLatest %v", test.name, want)
+		}
+	}
+}

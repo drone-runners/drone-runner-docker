@@ -11,6 +11,8 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 )
 
+// helper function configures the pipeline script for the
+// target operating system.
 func setupScript(src *resource.Step, dst *engine.Step, os string) {
 	if len(src.Commands) > 0 {
 		switch os {
@@ -22,12 +24,16 @@ func setupScript(src *resource.Step, dst *engine.Step, os string) {
 	}
 }
 
+// helper function configures the pipeline script for the
+// windows operating system.
 func setupScriptWindows(src *resource.Step, dst *engine.Step) {
 	dst.Entrypoint = []string{"powershell", "-noprofile", "-noninteractive", "-command"}
 	dst.Command = []string{"echo $DRONE_SCRIPT | iex"}
 	dst.Envs["DRONE_SCRIPT"] = powershell.Script(src.Commands)
 }
 
+// helper function configures the pipeline script for the
+// linux operating system.
 func setupScriptPosix(src *resource.Step, dst *engine.Step) {
 	dst.Entrypoint = []string{"/bin/sh", "-c"}
 	dst.Command = []string{`echo "$DRONE_SCRIPT" | /bin/sh`}

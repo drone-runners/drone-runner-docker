@@ -21,6 +21,7 @@ import (
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/pipeline/history"
 	"github.com/drone/runner-go/pipeline/remote"
+	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
@@ -115,13 +116,21 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				config.Limit.Trusted,
 			),
 			Compiler: &compiler.Compiler{
-				Environ:    nil,
-				Labels:     nil,
-				Privileged: nil,
-				Networks:   nil,
-				Volumes:    nil,
+				Environ:    config.Runner.Environ,
+				Privileged: config.Runner.Privileged,
+				Networks:   config.Runner.Networks,
+				Volumes:    config.Runner.Volumes,
 				// Resources:  nil,
-				Registry: nil,
+				Registry: registry.Combine(
+					registry.File(
+						config.Docker.Config,
+					),
+					registry.External(
+						config.Registry.Endpoint,
+						config.Registry.Token,
+						config.Registry.SkipVerify,
+					),
+				),
 				Secret: secret.External(
 					config.Secret.Endpoint,
 					config.Secret.Token,
@@ -136,9 +145,13 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			),
 		},
 		Filter: &client.Filter{
-			Kind:   resource.Kind,
-			Type:   resource.Type,
-			Labels: config.Runner.Labels,
+			Kind:    resource.Kind,
+			Type:    resource.Type,
+			OS:      config.Platform.OS,
+			Arch:    config.Platform.Arch,
+			Variant: config.Platform.Variant,
+			Kernel:  config.Platform.Kernel,
+			Labels:  config.Runner.Labels,
 		},
 	}
 

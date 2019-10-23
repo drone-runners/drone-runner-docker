@@ -1,104 +1,366 @@
 {
   "platform": {},
-  "token": "3DA541559918A808C2402BBA5012F6C60B27661C",
-  "server": {
-    "name": "drone-temp-random",
-    "image": "docker-18-04",
-    "region": "nyc1",
-    "size": "s-1vcpu-1gb",
-    "user": "root"
-  },
-  "root": "/tmp/drone-random",
-  "files": [
-    {
-      "path": "/tmp/drone-random/home",
-      "mode": 448,
-      "is_dir": true
-    },
-    {
-      "path": "/tmp/drone-random/home/drone",
-      "mode": 448,
-      "is_dir": true
-    },
-    {
-      "path": "/tmp/drone-random/drone",
-      "mode": 448,
-      "is_dir": true
-    },
-    {
-      "path": "/tmp/drone-random/drone/src",
-      "mode": 448,
-      "is_dir": true
-    },
-    {
-      "path": "/tmp/drone-random/opt",
-      "mode": 448,
-      "is_dir": true
-    },
-    {
-      "path": "/tmp/drone-random/home/drone/.netrc",
-      "mode": 384,
-      "data": "bWFjaGluZSBnaXRodWIuY29tIGxvZ2luIG9jdG9jYXQgcGFzc3dvcmQgY29ycmVjdC1ob3JzZS1iYXR0ZXJ5LXN0YXBsZQ=="
-    }
-  ],
   "steps": [
     {
-      "args": [
-        "-e",
-        "/tmp/drone-random/opt/clone"
-      ],
-      "command": "/bin/sh",
-      "files": [
+      "id": "random",
+      "environment": {
+        "CI": "true",
+        "DRONE": "true",
+        "DRONE_BRANCH": "master",
+        "DRONE_BUILD_ACTION": "",
+        "DRONE_BUILD_CREATED": "0",
+        "DRONE_BUILD_EVENT": "",
+        "DRONE_BUILD_FINISHED": "1571810939",
+        "DRONE_BUILD_LINK": ":////0",
+        "DRONE_BUILD_NUMBER": "0",
+        "DRONE_BUILD_PARENT": "0",
+        "DRONE_BUILD_STARTED": "1571810939",
+        "DRONE_BUILD_STATUS": "success",
+        "DRONE_COMMIT": "",
+        "DRONE_COMMIT_AFTER": "",
+        "DRONE_COMMIT_AUTHOR": "",
+        "DRONE_COMMIT_AUTHOR_AVATAR": "",
+        "DRONE_COMMIT_AUTHOR_EMAIL": "",
+        "DRONE_COMMIT_AUTHOR_NAME": "",
+        "DRONE_COMMIT_BEFORE": "",
+        "DRONE_COMMIT_BRANCH": "master",
+        "DRONE_COMMIT_LINK": "",
+        "DRONE_COMMIT_MESSAGE": "",
+        "DRONE_COMMIT_REF": "",
+        "DRONE_COMMIT_SHA": "",
+        "DRONE_DEPLOY_TO": "",
+        "DRONE_DOCKER_NETWORK_ID": "random",
+        "DRONE_DOCKER_VOLUME_ID": "random",
+        "DRONE_GIT_HTTP_URL": "",
+        "DRONE_GIT_SSH_URL": "",
+        "DRONE_NETRC_FILE": "machine github.com login octocat password correct-horse-battery-staple",
+        "DRONE_NETRC_MACHINE": "github.com",
+        "DRONE_NETRC_PASSWORD": "correct-horse-battery-staple",
+        "DRONE_NETRC_USERNAME": "octocat",
+        "DRONE_REMOTE_URL": "",
+        "DRONE_REPO": "",
+        "DRONE_REPO_BRANCH": "",
+        "DRONE_REPO_LINK": "",
+        "DRONE_REPO_NAME": "",
+        "DRONE_REPO_NAMESPACE": "",
+        "DRONE_REPO_OWNER": "",
+        "DRONE_REPO_PRIVATE": "false",
+        "DRONE_REPO_SCM": "",
+        "DRONE_REPO_VISIBILITY": "",
+        "DRONE_SOURCE_BRANCH": "",
+        "DRONE_STAGE_ARCH": "",
+        "DRONE_STAGE_DEPENDS_ON": "",
+        "DRONE_STAGE_FINISHED": "1571810939",
+        "DRONE_STAGE_KIND": "",
+        "DRONE_STAGE_MACHINE": "",
+        "DRONE_STAGE_NAME": "",
+        "DRONE_STAGE_NUMBER": "0",
+        "DRONE_STAGE_OS": "",
+        "DRONE_STAGE_STARTED": "1571810939",
+        "DRONE_STAGE_STATUS": "success",
+        "DRONE_STAGE_TYPE": "",
+        "DRONE_STAGE_VARIANT": "",
+        "DRONE_SYSTEM_HOST": "",
+        "DRONE_SYSTEM_HOSTNAME": "",
+        "DRONE_SYSTEM_PROTO": "",
+        "DRONE_SYSTEM_VERSION": "",
+        "DRONE_TARGET_BRANCH": "master",
+        "DRONE_WORKSPACE": "/drone/src",
+        "DRONE_WORKSPACE_BASE": "/drone/src",
+        "DRONE_WORKSPACE_PATH": "",
+        "GIT_AUTHOR_EMAIL": "noreply@drone",
+        "GIT_AUTHOR_NAME": "drone",
+        "GIT_COMMITTER_EMAIL": "noreply@drone",
+        "GIT_COMMITTER_NAME": "drone",
+        "GIT_TERMINAL_PROMPT": "0"
+      },
+      "image": "drone/git:1",
+      "labels": {
+        "io.drone": "true",
+        "io.drone.build.number": "0",
+        "io.drone.created": "1571810939",
+        "io.drone.expires": "1571814539",
+        "io.drone.protected": "false",
+        "io.drone.repo.name": "",
+        "io.drone.repo.namespace": "",
+        "io.drone.repo.slug": "",
+        "io.drone.stage.name": "",
+        "io.drone.stage.number": "0",
+        "io.drone.system.host": "",
+        "io.drone.system.proto": "",
+        "io.drone.system.version": "",
+        "io.drone.ttl": "0s"
+      },
+      "name": "clone",
+      "run_policy": "always",
+      "volumes": [
         {
-          "path": "/tmp/drone-random/opt/clone",
-          "mode": 448,
-          "data": "CnNldCAtZQoKZWNobyArICJnaXQgaW5pdCIKZ2l0IGluaXQKCmVjaG8gKyAiZ2l0IHJlbW90ZSBhZGQgb3JpZ2luICIKZ2l0IHJlbW90ZSBhZGQgb3JpZ2luIAoKZWNobyArICJnaXQgZmV0Y2ggIG9yaWdpbiArcmVmcy9oZWFkcy9tYXN0ZXI6IgpnaXQgZmV0Y2ggIG9yaWdpbiArcmVmcy9oZWFkcy9tYXN0ZXI6CgplY2hvICsgImdpdCBjaGVja291dCAgLWIgbWFzdGVyIgpnaXQgY2hlY2tvdXQgIC1iIG1hc3Rlcgo="
+          "name": "_workspace",
+          "path": "/drone/src"
         }
       ],
-      "secrets": [],
-      "name": "clone",
-      "run_policy": 2,
-      "working_dir": "/tmp/drone-random/drone/src"
+      "working_dir": "/drone/src"
     },
     {
+      "id": "random",
       "args": [
-        "-e",
-        "/tmp/drone-random/opt/build"
+        "echo \"$DRONE_SCRIPT\" | /bin/sh"
       ],
-      "command": "/bin/sh",
       "depends_on": [
         "clone"
       ],
-      "files": [
+      "entrypoint": [
+        "/bin/sh",
+        "-c"
+      ],
+      "environment": {
+        "CI": "true",
+        "DRONE": "true",
+        "DRONE_BRANCH": "master",
+        "DRONE_BUILD_ACTION": "",
+        "DRONE_BUILD_CREATED": "0",
+        "DRONE_BUILD_EVENT": "",
+        "DRONE_BUILD_FINISHED": "1571810939",
+        "DRONE_BUILD_LINK": ":////0",
+        "DRONE_BUILD_NUMBER": "0",
+        "DRONE_BUILD_PARENT": "0",
+        "DRONE_BUILD_STARTED": "1571810939",
+        "DRONE_BUILD_STATUS": "success",
+        "DRONE_COMMIT": "",
+        "DRONE_COMMIT_AFTER": "",
+        "DRONE_COMMIT_AUTHOR": "",
+        "DRONE_COMMIT_AUTHOR_AVATAR": "",
+        "DRONE_COMMIT_AUTHOR_EMAIL": "",
+        "DRONE_COMMIT_AUTHOR_NAME": "",
+        "DRONE_COMMIT_BEFORE": "",
+        "DRONE_COMMIT_BRANCH": "master",
+        "DRONE_COMMIT_LINK": "",
+        "DRONE_COMMIT_MESSAGE": "",
+        "DRONE_COMMIT_REF": "",
+        "DRONE_COMMIT_SHA": "",
+        "DRONE_DEPLOY_TO": "",
+        "DRONE_DOCKER_NETWORK_ID": "random",
+        "DRONE_DOCKER_VOLUME_ID": "random",
+        "DRONE_GIT_HTTP_URL": "",
+        "DRONE_GIT_SSH_URL": "",
+        "DRONE_NETRC_FILE": "machine github.com login octocat password correct-horse-battery-staple",
+        "DRONE_NETRC_MACHINE": "github.com",
+        "DRONE_NETRC_PASSWORD": "correct-horse-battery-staple",
+        "DRONE_NETRC_USERNAME": "octocat",
+        "DRONE_REMOTE_URL": "",
+        "DRONE_REPO": "",
+        "DRONE_REPO_BRANCH": "",
+        "DRONE_REPO_LINK": "",
+        "DRONE_REPO_NAME": "",
+        "DRONE_REPO_NAMESPACE": "",
+        "DRONE_REPO_OWNER": "",
+        "DRONE_REPO_PRIVATE": "false",
+        "DRONE_REPO_SCM": "",
+        "DRONE_REPO_VISIBILITY": "",
+        "DRONE_SCRIPT": "\n\nif [ ! -z \"${DRONE_NETRC_FILE}\" ]; then\n\techo $DRONE_NETRC_FILE \u003e $HOME/.netrc\nfi\n\nunset DRONE_SCRIPT\nunset DRONE_NETRC_MACHINE\nunset DRONE_NETRC_USERNAME\nunset DRONE_NETRC_PASSWORD\nunset DRONE_NETRC_FILE\n\nset -e\n\n\necho + \"go build\"\ngo build\n",
+        "DRONE_SOURCE_BRANCH": "",
+        "DRONE_STAGE_ARCH": "",
+        "DRONE_STAGE_DEPENDS_ON": "",
+        "DRONE_STAGE_FINISHED": "1571810939",
+        "DRONE_STAGE_KIND": "",
+        "DRONE_STAGE_MACHINE": "",
+        "DRONE_STAGE_NAME": "",
+        "DRONE_STAGE_NUMBER": "0",
+        "DRONE_STAGE_OS": "",
+        "DRONE_STAGE_STARTED": "1571810939",
+        "DRONE_STAGE_STATUS": "success",
+        "DRONE_STAGE_TYPE": "",
+        "DRONE_STAGE_VARIANT": "",
+        "DRONE_SYSTEM_HOST": "",
+        "DRONE_SYSTEM_HOSTNAME": "",
+        "DRONE_SYSTEM_PROTO": "",
+        "DRONE_SYSTEM_VERSION": "",
+        "DRONE_TARGET_BRANCH": "master",
+        "DRONE_WORKSPACE": "/drone/src",
+        "DRONE_WORKSPACE_BASE": "/drone/src",
+        "DRONE_WORKSPACE_PATH": "",
+        "GIT_AUTHOR_EMAIL": "noreply@drone",
+        "GIT_AUTHOR_NAME": "drone",
+        "GIT_COMMITTER_EMAIL": "noreply@drone",
+        "GIT_COMMITTER_NAME": "drone",
+        "GIT_TERMINAL_PROMPT": "0"
+      },
+      "labels": {
+        "io.drone": "true",
+        "io.drone.build.number": "0",
+        "io.drone.created": "1571810939",
+        "io.drone.expires": "1571814539",
+        "io.drone.protected": "false",
+        "io.drone.repo.name": "",
+        "io.drone.repo.namespace": "",
+        "io.drone.repo.slug": "",
+        "io.drone.stage.name": "",
+        "io.drone.stage.number": "0",
+        "io.drone.system.host": "",
+        "io.drone.system.proto": "",
+        "io.drone.system.version": "",
+        "io.drone.ttl": "0s"
+      },
+      "name": "build",
+      "volumes": [
         {
-          "path": "/tmp/drone-random/opt/build",
-          "mode": 448,
-          "data": "CnNldCAtZQoKZWNobyArICJnbyBidWlsZCIKZ28gYnVpbGQK"
+          "name": "_workspace",
+          "path": "/drone/src"
         }
       ],
-      "secrets": [],
-      "name": "build",
-      "working_dir": "/tmp/drone-random/drone/src"
+      "working_dir": "/drone/src"
     },
     {
+      "id": "random",
       "args": [
-        "-e",
-        "/tmp/drone-random/opt/test"
+        "echo \"$DRONE_SCRIPT\" | /bin/sh"
       ],
-      "command": "/bin/sh",
       "depends_on": [
         "build"
       ],
-      "files": [
+      "entrypoint": [
+        "/bin/sh",
+        "-c"
+      ],
+      "environment": {
+        "CI": "true",
+        "DRONE": "true",
+        "DRONE_BRANCH": "master",
+        "DRONE_BUILD_ACTION": "",
+        "DRONE_BUILD_CREATED": "0",
+        "DRONE_BUILD_EVENT": "",
+        "DRONE_BUILD_FINISHED": "1571810939",
+        "DRONE_BUILD_LINK": ":////0",
+        "DRONE_BUILD_NUMBER": "0",
+        "DRONE_BUILD_PARENT": "0",
+        "DRONE_BUILD_STARTED": "1571810939",
+        "DRONE_BUILD_STATUS": "success",
+        "DRONE_COMMIT": "",
+        "DRONE_COMMIT_AFTER": "",
+        "DRONE_COMMIT_AUTHOR": "",
+        "DRONE_COMMIT_AUTHOR_AVATAR": "",
+        "DRONE_COMMIT_AUTHOR_EMAIL": "",
+        "DRONE_COMMIT_AUTHOR_NAME": "",
+        "DRONE_COMMIT_BEFORE": "",
+        "DRONE_COMMIT_BRANCH": "master",
+        "DRONE_COMMIT_LINK": "",
+        "DRONE_COMMIT_MESSAGE": "",
+        "DRONE_COMMIT_REF": "",
+        "DRONE_COMMIT_SHA": "",
+        "DRONE_DEPLOY_TO": "",
+        "DRONE_DOCKER_NETWORK_ID": "random",
+        "DRONE_DOCKER_VOLUME_ID": "random",
+        "DRONE_GIT_HTTP_URL": "",
+        "DRONE_GIT_SSH_URL": "",
+        "DRONE_NETRC_FILE": "machine github.com login octocat password correct-horse-battery-staple",
+        "DRONE_NETRC_MACHINE": "github.com",
+        "DRONE_NETRC_PASSWORD": "correct-horse-battery-staple",
+        "DRONE_NETRC_USERNAME": "octocat",
+        "DRONE_REMOTE_URL": "",
+        "DRONE_REPO": "",
+        "DRONE_REPO_BRANCH": "",
+        "DRONE_REPO_LINK": "",
+        "DRONE_REPO_NAME": "",
+        "DRONE_REPO_NAMESPACE": "",
+        "DRONE_REPO_OWNER": "",
+        "DRONE_REPO_PRIVATE": "false",
+        "DRONE_REPO_SCM": "",
+        "DRONE_REPO_VISIBILITY": "",
+        "DRONE_SCRIPT": "\n\nif [ ! -z \"${DRONE_NETRC_FILE}\" ]; then\n\techo $DRONE_NETRC_FILE \u003e $HOME/.netrc\nfi\n\nunset DRONE_SCRIPT\nunset DRONE_NETRC_MACHINE\nunset DRONE_NETRC_USERNAME\nunset DRONE_NETRC_PASSWORD\nunset DRONE_NETRC_FILE\n\nset -e\n\n\necho + \"go test\"\ngo test\n",
+        "DRONE_SOURCE_BRANCH": "",
+        "DRONE_STAGE_ARCH": "",
+        "DRONE_STAGE_DEPENDS_ON": "",
+        "DRONE_STAGE_FINISHED": "1571810939",
+        "DRONE_STAGE_KIND": "",
+        "DRONE_STAGE_MACHINE": "",
+        "DRONE_STAGE_NAME": "",
+        "DRONE_STAGE_NUMBER": "0",
+        "DRONE_STAGE_OS": "",
+        "DRONE_STAGE_STARTED": "1571810939",
+        "DRONE_STAGE_STATUS": "success",
+        "DRONE_STAGE_TYPE": "",
+        "DRONE_STAGE_VARIANT": "",
+        "DRONE_SYSTEM_HOST": "",
+        "DRONE_SYSTEM_HOSTNAME": "",
+        "DRONE_SYSTEM_PROTO": "",
+        "DRONE_SYSTEM_VERSION": "",
+        "DRONE_TARGET_BRANCH": "master",
+        "DRONE_WORKSPACE": "/drone/src",
+        "DRONE_WORKSPACE_BASE": "/drone/src",
+        "DRONE_WORKSPACE_PATH": "",
+        "GIT_AUTHOR_EMAIL": "noreply@drone",
+        "GIT_AUTHOR_NAME": "drone",
+        "GIT_COMMITTER_EMAIL": "noreply@drone",
+        "GIT_COMMITTER_NAME": "drone",
+        "GIT_TERMINAL_PROMPT": "0"
+      },
+      "labels": {
+        "io.drone": "true",
+        "io.drone.build.number": "0",
+        "io.drone.created": "1571810939",
+        "io.drone.expires": "1571814539",
+        "io.drone.protected": "false",
+        "io.drone.repo.name": "",
+        "io.drone.repo.namespace": "",
+        "io.drone.repo.slug": "",
+        "io.drone.stage.name": "",
+        "io.drone.stage.number": "0",
+        "io.drone.system.host": "",
+        "io.drone.system.proto": "",
+        "io.drone.system.version": "",
+        "io.drone.ttl": "0s"
+      },
+      "name": "test",
+      "volumes": [
         {
-          "path": "/tmp/drone-random/opt/test",
-          "mode": 448,
-          "data": "CnNldCAtZQoKZWNobyArICJnbyB0ZXN0IgpnbyB0ZXN0Cg=="
+          "name": "_workspace",
+          "path": "/drone/src"
         }
       ],
-      "secrets": [],
-      "name": "test",
-      "working_dir": "/tmp/drone-random/drone/src"
+      "working_dir": "/drone/src"
     }
-  ]
+  ],
+  "volumes": [
+    {
+      "temp": {
+        "id": "random",
+        "name": "_workspace",
+        "labels": {
+          "io.drone": "true",
+          "io.drone.build.number": "0",
+          "io.drone.created": "1571810939",
+          "io.drone.expires": "1571814539",
+          "io.drone.protected": "false",
+          "io.drone.repo.name": "",
+          "io.drone.repo.namespace": "",
+          "io.drone.repo.slug": "",
+          "io.drone.stage.name": "",
+          "io.drone.stage.number": "0",
+          "io.drone.system.host": "",
+          "io.drone.system.proto": "",
+          "io.drone.system.version": "",
+          "io.drone.ttl": "0s"
+        }
+      }
+    }
+  ],
+  "network": {
+    "id": "random",
+    "labels": {
+      "io.drone": "true",
+      "io.drone.build.number": "0",
+      "io.drone.created": "1571810939",
+      "io.drone.expires": "1571814539",
+      "io.drone.protected": "false",
+      "io.drone.repo.name": "",
+      "io.drone.repo.namespace": "",
+      "io.drone.repo.slug": "",
+      "io.drone.stage.name": "",
+      "io.drone.stage.number": "0",
+      "io.drone.system.host": "",
+      "io.drone.system.proto": "",
+      "io.drone.system.version": "",
+      "io.drone.ttl": "0s"
+    }
+  }
 }

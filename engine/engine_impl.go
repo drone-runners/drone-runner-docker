@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
 	"github.com/drone/runner-go/registry/auths"
 
@@ -141,14 +142,6 @@ func (e *Docker) Run(ctx context.Context, spec *Spec, step *Step, output io.Writ
 //
 
 func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.Writer) error {
-	// parse the docker image name. We need to extract the
-	// image domain name and match to registry credentials
-	// stored in the .docker/config.json object.
-	_, _, latest, err := parseImage(step.Image)
-	if err != nil {
-		return err
-	}
-
 	// create pull options with encoded authorization credentials.
 	pullopts := types.ImagePullOptions{}
 	if step.Auth != nil {
@@ -161,7 +154,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	// automatically pull the latest version of the image if requested
 	// by the process configuration, or if the image is :latest
 	if step.Pull == PullAlways ||
-		(step.Pull == PullDefault && latest) {
+		(step.Pull == PullDefault && image.IsLatest(step.Image)) {
 		rc, pullerr := e.client.ImagePull(ctx, step.Image, pullopts)
 		if pullerr == nil {
 			io.Copy(ioutil.Discard, rc)
@@ -172,7 +165,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		}
 	}
 
-	_, err = e.client.ContainerCreate(ctx,
+	_, err := e.client.ContainerCreate(ctx,
 		toConfig(spec, step),
 		toHostConfig(spec, step),
 		toNetConfig(spec, step),

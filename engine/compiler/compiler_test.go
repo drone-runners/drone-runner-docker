@@ -18,6 +18,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
 	"github.com/google/go-cmp/cmp"
@@ -82,7 +83,7 @@ func TestCompile_RunAlways(t *testing.T) {
 
 // This test verifies that steps configured to run on failure
 // are configured to run on failure.
-func TestCompile_RunFaiure(t *testing.T) {
+func TestCompile_RunFailure(t *testing.T) {
 	ir := testCompile(t, "testdata/run_failure.yml", "testdata/run_failure.json")
 	if ir.Steps[0].RunPolicy != engine.RunOnFailure {
 		t.Errorf("Expect run on failure")
@@ -94,20 +95,27 @@ func TestCompile_RunFaiure(t *testing.T) {
 // at compile time.
 func TestCompile_Secrets(t *testing.T) {
 	manifest, _ := manifest.ParseFile("testdata/secret.yml")
-	compiler := Compiler{}
-	compiler.Build = &drone.Build{}
-	compiler.Repo = &drone.Repo{}
-	compiler.Stage = &drone.Stage{}
-	compiler.System = &drone.System{}
-	compiler.Netrc = &drone.Netrc{}
-	compiler.Manifest = manifest
-	compiler.Pipeline = manifest.Resources[0].(*resource.Pipeline)
-	compiler.Secret = secret.StaticVars(map[string]string{
-		"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
-		"password":    "password",
-		"my_username": "octocat",
-	})
-	ir := compiler.Compile(nocontext)
+
+	compiler := &Compiler{
+		Registry: registry.Static(nil),
+		Secret: secret.StaticVars(map[string]string{
+			"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
+			"password":    "password",
+			"my_username": "octocat",
+		}),
+	}
+	args := Args{
+		Repo:     &drone.Repo{},
+		Build:    &drone.Build{},
+		Stage:    &drone.Stage{},
+		System:   &drone.System{},
+		Netrc:    &drone.Netrc{},
+		Manifest: manifest,
+		Pipeline: manifest.Resources[0].(*resource.Pipeline),
+		Secret:   secret.Static(nil),
+	}
+
+	ir := compiler.Compile(nocontext, args)
 	got := ir.Steps[0].Secrets
 	want := []*engine.Secret{
 		{
@@ -149,15 +157,26 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 		return nil
 	}
 
-	compiler := Compiler{}
-	compiler.Build = &drone.Build{Target: "master"}
-	compiler.Repo = &drone.Repo{}
-	compiler.Stage = &drone.Stage{}
-	compiler.System = &drone.System{}
-	compiler.Netrc = &drone.Netrc{Machine: "github.com", Login: "octocat", Password: "correct-horse-battery-staple"}
-	compiler.Manifest = manifest
-	compiler.Pipeline = manifest.Resources[0].(*resource.Pipeline)
-	got := compiler.Compile(nocontext)
+	compiler := &Compiler{
+		Registry: registry.Static(nil),
+		Secret: secret.StaticVars(map[string]string{
+			"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
+			"password":    "password",
+			"my_username": "octocat",
+		}),
+	}
+	args := Args{
+		Repo:     &drone.Repo{},
+		Build:    &drone.Build{Target: "master"},
+		Stage:    &drone.Stage{},
+		System:   &drone.System{},
+		Netrc:    &drone.Netrc{Machine: "github.com", Login: "octocat", Password: "correct-horse-battery-staple"},
+		Manifest: manifest,
+		Pipeline: manifest.Resources[0].(*resource.Pipeline),
+		Secret:   secret.Static(nil),
+	}
+
+	got := compiler.Compile(nocontext, args)
 
 	raw, err := ioutil.ReadFile(golden)
 	if err != nil {
@@ -170,10 +189,15 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 		t.Error(err)
 	}
 
-	ignore := cmpopts.IgnoreFields(engine.Step{}, "Envs", "Secrets")
-	unexported := cmpopts.IgnoreUnexported(engine.Spec{})
-	if diff := cmp.Diff(got, want, ignore, unexported); len(diff) != 0 {
+	opts := cmp.Options{
+		cmpopts.IgnoreUnexported(engine.Spec{}),
+		cmpopts.IgnoreFields(engine.Step{}, "Envs", "Secrets", "Labels"),
+		cmpopts.IgnoreFields(engine.Network{}, "Labels"),
+		cmpopts.IgnoreFields(engine.VolumeEmptyDir{}, "Labels"),
+	}
+	if diff := cmp.Diff(got, want, opts...); len(diff) != 0 {
 		t.Errorf(diff)
+		dump(got)
 	}
 
 	return got

@@ -7,6 +7,7 @@ package daemon
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -54,12 +55,23 @@ type Config struct {
 	}
 
 	Runner struct {
-		Name     string            `envconfig:"DRONE_RUNNER_NAME"`
-		Capacity int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"10"`
-		Procs    int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
-		Labels   map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
-		Environ  map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
-		EnvFile  string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
+		Name       string            `envconfig:"DRONE_RUNNER_NAME"`
+		Capacity   int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
+		Procs      int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
+		Environ    map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
+		EnvFile    string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
+		Labels     map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
+		Volumes    map[string]string `envconfig:"DRONE_RUNNER_VOLUMES"`
+		Devices    []string          `envconfig:"DRONE_RUNNER_DEVICES"`
+		Networks   []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
+		Privileged []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
+	}
+
+	Platform struct {
+		OS      string `envconfig:"DRONE_PLATFORM_OS"`
+		Arch    string `envconfig:"DRONE_PLATFORM_ARCH"`
+		Kernel  string `envconfig:"DRONE_PLATFORM_KERNEL"`
+		Variant string `envconfig:"DRONE_PLATFORM_VARIANT"`
 	}
 
 	Limit struct {
@@ -72,6 +84,16 @@ type Config struct {
 		Endpoint   string `envconfig:"DRONE_SECRET_PLUGIN_ENDPOINT"`
 		Token      string `envconfig:"DRONE_SECRET_PLUGIN_TOKEN"`
 		SkipVerify bool   `envconfig:"DRONE_SECRET_PLUGIN_SKIP_VERIFY"`
+	}
+
+	Registry struct {
+		Endpoint   string `envconfig:"DRONE_REGISTRY_PLUGIN_ENDPOINT"`
+		Token      string `envconfig:"DRONE_REGISTRY_PLUGIN_SECRET"`
+		SkipVerify bool   `envconfig:"DRONE_REGISTRY_PLUGIN_SKIP_VERIFY"`
+	}
+
+	Docker struct {
+		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
 	}
 }
 
@@ -92,6 +114,13 @@ func fromEnviron() (Config, error) {
 		config.Client.Proto,
 		config.Client.Host,
 	)
+
+	if config.Platform.OS == "" {
+		config.Platform.OS = runtime.GOOS
+	}
+	if config.Platform.Arch == "" {
+		config.Platform.Arch = runtime.GOARCH
+	}
 
 	// environment variables can be sourced from a separate
 	// file. These variables are loaded and appended to the

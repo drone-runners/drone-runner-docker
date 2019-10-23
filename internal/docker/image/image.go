@@ -4,7 +4,11 @@
 
 package image
 
-import "github.com/docker/distribution/reference"
+import (
+	"strings"
+
+	"github.com/docker/distribution/reference"
+)
 
 // Trim returns the short image name without tag.
 func Trim(name string) string {
@@ -68,4 +72,10 @@ func MatchHostname(image, hostname string) bool {
 		hostname = "docker.io"
 	}
 	return reference.Domain(named) == hostname
+}
+
+// IsLatest parses the image and returns true if
+// the image uses the :latest tag.
+func IsLatest(s string) bool {
+	return strings.HasSuffix(Expand(s), ":latest")
 }
