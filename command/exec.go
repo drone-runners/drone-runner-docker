@@ -128,6 +128,14 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 			registry.File(c.Config),
 		),
 	}
+
+	// when running a build locally cloning is always
+	// disabled in favor of mounting the source code
+	// from the current working directory.
+	if c.Clone == false {
+		comp.Mount, _ = os.Getwd()
+	}
+
 	args := compiler.Args{
 		Pipeline: resource,
 		Manifest: manifest,

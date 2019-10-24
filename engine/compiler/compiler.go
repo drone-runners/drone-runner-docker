@@ -126,6 +126,10 @@ type Compiler struct {
 	// Registry returns a list of registry credentials that can be
 	// used to pull private container images.
 	Registry registry.Provider
+
+	// Mount is an optional field that overrides the default
+	// workspace volume and mounts to the host path
+	Mount string
 }
 
 // Compile compiles the configuration file.
@@ -135,10 +139,12 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 	// create the workspace paths
 	base, path, full := createWorkspace(args.Pipeline)
 
-	// create the workspace mount
-	mount := &engine.VolumeMount{
-		Name: "_workspace",
-		Path: base,
+	// if the source code is mounted from the host, the
+	// target mount path inside the container must be the
+	// full workspace path.
+	if c.Mount != "" {
+		base = full
+		path = ""
 	}
 
 	// create system labels
@@ -151,11 +157,32 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		labels.WithTimeout(args.Repo),
 	)
 
+	// create the workspace mount
+	mount := &engine.VolumeMount{
+		Name: "_workspace",
+		Path: base,
+	}
+
 	// create the workspace volume
-	volume := &engine.VolumeEmptyDir{
-		ID:     random(),
-		Name:   mount.Name,
-		Labels: labels,
+	volume := &engine.Volume{
+		EmptyDir: &engine.VolumeEmptyDir{
+			ID:     random(),
+			Name:   mount.Name,
+			Labels: labels,
+		},
+	}
+
+	// if the repository is mounted from a local volume,
+	// we should replace the data volume with a host machine
+	// volume declaration.
+	if c.Mount != "" {
+		volume.EmptyDir = nil
+		volume.HostPath = &engine.VolumeHostPath{
+			ID:     random(),
+			Name:   mount.Name,
+			Path:   c.Mount,
+			Labels: labels,
+		}
 	}
 
 	spec := &engine.Spec{
@@ -169,9 +196,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 			Variant: args.Pipeline.Platform.Variant,
 			Version: args.Pipeline.Platform.Version,
 		},
-		Volumes: []*engine.Volume{
-			{EmptyDir: volume},
-		},
+		Volumes: []*engine.Volume{volume},
 	}
 
 	// create the default environment variables.
@@ -195,14 +220,20 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		}),
 	)
 
-	// create docker reference variables
-	envs["DRONE_DOCKER_VOLUME_ID"] = volume.ID
+	// create network reference variables
 	envs["DRONE_DOCKER_NETWORK_ID"] = spec.Network.ID
 
 	// create the workspace variables
 	envs["DRONE_WORKSPACE"] = full
 	envs["DRONE_WORKSPACE_BASE"] = base
 	envs["DRONE_WORKSPACE_PATH"] = path
+
+	// create volume reference variables
+	if volume.EmptyDir != nil {
+		envs["DRONE_DOCKER_VOLUME_ID"] = volume.EmptyDir.ID
+	} else {
+		envs["DRONE_DOCKER_VOLUME_PATH"] = volume.HostPath.Path
+	}
 
 	// create the netrc environment variables
 	if args.Netrc != nil && args.Netrc.Machine != "" {
@@ -237,6 +268,12 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		step.Labels = labels
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
+
+		// if the repository is mounted from a local
+		// volume we should disable cloning.
+		if c.Mount != "" {
+			step.RunPolicy = engine.RunNever
+		}
 	}
 
 	// create steps

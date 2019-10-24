@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/command/internal"
-	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
@@ -109,6 +108,14 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 			registry.File(c.Config),
 		),
 	}
+
+	// when running a build locally cloning is always
+	// disabled in favor of mounting the source code
+	// from the current working directory.
+	if c.Clone == false {
+		comp.Mount, _ = os.Getwd()
+	}
+
 	args := compiler.Args{
 		Pipeline: resource,
 		Manifest: manifest,
@@ -119,28 +126,6 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		System:   c.System,
 	}
 	spec := comp.Compile(nocontext, args)
-
-	// when running a build locally cloning is always
-	// disabled in favor of mounting the source code
-	// from the current working directory.
-	if c.Clone == false {
-		pwd, _ := os.Getwd()
-		for _, volume := range spec.Volumes {
-			if volume.EmptyDir != nil && volume.EmptyDir.Name == "_workspace" {
-				volume.HostPath = &engine.VolumeHostPath{
-					ID:   volume.EmptyDir.ID,
-					Name: volume.EmptyDir.Name,
-					Path: pwd,
-				}
-				volume.EmptyDir = nil
-			}
-		}
-		for _, step := range spec.Steps {
-			if step.Name == "clone" {
-				step.RunPolicy = engine.RunNever
-			}
-		}
-	}
 
 	// encode the pipeline in json format and print to the
 	// console for inspection.
