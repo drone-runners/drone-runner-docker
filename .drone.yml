@@ -80,3 +80,7 @@ steps:
 volumes:
 - name: go
   temp: {}
+
+trigger:
+  branch: [ never ]
+  event: [ never ]
