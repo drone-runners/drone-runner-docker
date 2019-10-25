@@ -41,7 +41,7 @@ func TestClone(t *testing.T) {
 	want := []*engine.Step{
 		{
 			ID:         "random",
-			Image:      "drone/git:1",
+			Image:      "drone/git:latest",
 			Name:       "clone",
 			Pull:       engine.PullDefault,
 			RunPolicy:  engine.RunAlways,
@@ -84,7 +84,7 @@ func TestCloneDisable(t *testing.T) {
 func TestCloneCreate(t *testing.T) {
 	want := &engine.Step{
 		Name:      "clone",
-		Image:     "drone/git:1",
+		Image:     "drone/git:latest",
 		RunPolicy: engine.RunAlways,
 		Envs:      map[string]string{"PLUGIN_DEPTH": "50"},
 	}
@@ -102,11 +102,11 @@ func TestCloneImage(t *testing.T) {
 	}{
 		{
 			in:  manifest.Platform{},
-			out: "drone/git:1",
+			out: "drone/git:latest",
 		},
 		{
 			in:  manifest.Platform{OS: "linux"},
-			out: "drone/git:1",
+			out: "drone/git:latest",
 		},
 		{
 			in:  manifest.Platform{OS: "windows"},

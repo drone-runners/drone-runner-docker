@@ -117,7 +117,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			),
 			Compiler: &compiler.Compiler{
 				Environ:    config.Runner.Environ,
-				Privileged: config.Runner.Privileged,
+				Privileged: append(config.Runner.Privileged, compiler.Privileged...),
 				Networks:   config.Runner.Networks,
 				Volumes:    config.Runner.Volumes,
 				// Resources:  nil,
@@ -131,10 +131,15 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 						config.Registry.SkipVerify,
 					),
 				),
-				Secret: secret.External(
-					config.Secret.Endpoint,
-					config.Secret.Token,
-					config.Secret.SkipVerify,
+				Secret: secret.Combine(
+					secret.StaticVars(
+						config.Runner.Secrets,
+					),
+					secret.External(
+						config.Secret.Endpoint,
+						config.Secret.Token,
+						config.Secret.SkipVerify,
+					),
 				),
 			},
 			Execer: runtime.NewExecer(

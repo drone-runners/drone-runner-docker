@@ -7,7 +7,6 @@ package daemon
 import (
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -17,13 +16,6 @@ import (
 type Config struct {
 	Debug bool `envconfig:"DRONE_DEBUG"`
 	Trace bool `envconfig:"DRONE_TRACE"`
-
-	Logger struct {
-		File       string `envconfig:"DRONE_LOG_FILE"`
-		MaxAge     int    `envconfig:"DRONE_LOG_FILE_MAX_AGE"     default:"1"`
-		MaxBackups int    `envconfig:"DRONE_LOG_FILE_MAX_BACKUPS" default:"1"`
-		MaxSize    int    `envconfig:"DRONE_LOG_FILE_MAX_SIZE"    default:"100"`
-	}
 
 	Client struct {
 		Address    string `ignored:"true"`
@@ -60,6 +52,7 @@ type Config struct {
 		Procs      int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
 		Environ    map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
 		EnvFile    string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
+		Secrets    map[string]string `envconfig:"DRONE_RUNNER_SECRETS"`
 		Labels     map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
 		Volumes    map[string]string `envconfig:"DRONE_RUNNER_VOLUMES"`
 		Devices    []string          `envconfig:"DRONE_RUNNER_DEVICES"`
@@ -68,8 +61,8 @@ type Config struct {
 	}
 
 	Platform struct {
-		OS      string `envconfig:"DRONE_PLATFORM_OS"`
-		Arch    string `envconfig:"DRONE_PLATFORM_ARCH"`
+		OS      string `envconfig:"DRONE_PLATFORM_OS"    default:"linux"`
+		Arch    string `envconfig:"DRONE_PLATFORM_ARCH"  default:"amd64"`
 		Kernel  string `envconfig:"DRONE_PLATFORM_KERNEL"`
 		Variant string `envconfig:"DRONE_PLATFORM_VARIANT"`
 	}
@@ -114,13 +107,6 @@ func fromEnviron() (Config, error) {
 		config.Client.Proto,
 		config.Client.Host,
 	)
-
-	if config.Platform.OS == "" {
-		config.Platform.OS = runtime.GOOS
-	}
-	if config.Platform.Arch == "" {
-		config.Platform.Arch = runtime.GOARCH
-	}
 
 	// environment variables can be sourced from a separate
 	// file. These variables are loaded and appended to the

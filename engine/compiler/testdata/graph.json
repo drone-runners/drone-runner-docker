@@ -4,7 +4,7 @@
     {
       "id": "random",
       "environment": {},
-      "image": "drone/git:1",
+      "image": "drone/git:latest",
       "labels": {},
       "name": "clone",
       "run_policy": "always",

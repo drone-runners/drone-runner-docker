@@ -22,7 +22,7 @@ func cloneImage(platform manifest.Platform) string {
 	case "windows":
 		return "drone/git:latest"
 	default:
-		return "drone/git:1"
+		return "drone/git:latest"
 	}
 }
 

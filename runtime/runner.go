@@ -76,6 +76,10 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 
 	stage.Machine = s.Machine
 	err := s.Client.Accept(ctx, stage)
+	if err != nil && err == client.ErrOptimisticLock {
+		log.Debug("stage accepted by another runner")
+		return nil
+	}
 	if err != nil {
 		log.WithError(err).Error("cannot accept stage")
 		return err
