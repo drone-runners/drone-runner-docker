@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
+	"github.com/drone-runners/drone-runner-docker/internal/docker/jsonmessage"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
 	"github.com/drone/runner-go/registry/auths"
 
@@ -18,23 +19,32 @@ import (
 	"docker.io/go-docker/api/types/volume"
 )
 
+// Opts configures the Docker engine.
+type Opts struct {
+	HidePull bool
+}
+
 // Docker implements a Docker pipeline engine.
 type Docker struct {
-	client docker.APIClient
+	client   docker.APIClient
+	hidePull bool
 }
 
 // New returns a new engine.
-func New(client docker.APIClient) *Docker {
-	return &Docker{client}
+func New(client docker.APIClient, opts Opts) *Docker {
+	return &Docker{
+		client:   client,
+		hidePull: opts.HidePull,
+	}
 }
 
 // NewEnv returns a new Engine from the environment.
-func NewEnv() (*Docker, error) {
+func NewEnv(opts Opts) (*Docker, error) {
 	cli, err := docker.NewEnvClient()
 	if err != nil {
 		return nil, err
 	}
-	return New(cli), nil
+	return New(cli, opts), nil
 }
 
 // Ping pings the Docker daemon.
@@ -157,7 +167,11 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		(step.Pull == PullDefault && image.IsLatest(step.Image)) {
 		rc, pullerr := e.client.ImagePull(ctx, step.Image, pullopts)
 		if pullerr == nil {
-			io.Copy(ioutil.Discard, rc)
+			if e.hidePull {
+				io.Copy(ioutil.Discard, rc)
+			} else {
+				jsonmessage.Copy(rc, output)
+			}
 			rc.Close()
 		}
 		if pullerr != nil {
@@ -179,7 +193,12 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		if pullerr != nil {
 			return pullerr
 		}
-		io.Copy(ioutil.Discard, rc)
+
+		if e.hidePull {
+			io.Copy(ioutil.Discard, rc)
+		} else {
+			jsonmessage.Copy(rc, output)
+		}
 		rc.Close()
 
 		// once the image is successfully pulled we attempt to

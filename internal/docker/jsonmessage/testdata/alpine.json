@@ -1,0 +1,12 @@
+{"status":"Pulling from library/alpine","id":"3.6"}
+{"status":"Pulling fs layer","progressDetail":{},"id":"5a3ea8efae5d"}
+{"status":"Downloading","progressDetail":{"current":21019,"total":2017774},"progress":"[\u003e                                                  ]  21.02kB/2.018MB","id":"5a3ea8efae5d"}
+{"status":"Downloading","progressDetail":{"current":1194721,"total":2017774},"progress":"[=============================\u003e                     ]  1.195MB/2.018MB","id":"5a3ea8efae5d"}
+{"status":"Verifying Checksum","progressDetail":{},"id":"5a3ea8efae5d"}
+{"status":"Download complete","progressDetail":{},"id":"5a3ea8efae5d"}
+{"status":"Extracting","progressDetail":{"current":32768,"total":2017774},"progress":"[\u003e                                                  ]  32.77kB/2.018MB","id":"5a3ea8efae5d"}
+{"status":"Extracting","progressDetail":{"current":786432,"total":2017774},"progress":"[===================\u003e                               ]  786.4kB/2.018MB","id":"5a3ea8efae5d"}
+{"status":"Extracting","progressDetail":{"current":2017774,"total":2017774},"progress":"[==================================================\u003e]  2.018MB/2.018MB","id":"5a3ea8efae5d"}
+{"status":"Pull complete","progressDetail":{},"id":"5a3ea8efae5d"}
+{"status":"Digest: sha256:66790a2b79e1ea3e1dabac43990c54aca5d1ddf268d9a5a0285e4167c8b24475"}
+{"status":"Status: Downloaded newer image for alpine:3.6"}

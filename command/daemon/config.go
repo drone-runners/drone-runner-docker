@@ -87,6 +87,7 @@ type Config struct {
 
 	Docker struct {
 		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
+		Stream bool   `envconfig:"DRONE_DOCKER_STREAM_PULL" default:"true"`
 	}
 }
 

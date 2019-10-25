@@ -78,7 +78,10 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		),
 	)
 
-	engine, err := engine.NewEnv()
+	opts := engine.Opts{
+		HidePull: !config.Docker.Stream,
+	}
+	engine, err := engine.NewEnv(opts)
 	if err != nil {
 		logrus.WithError(err).
 			Fatalln("cannot load the docker engine")

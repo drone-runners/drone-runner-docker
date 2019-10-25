@@ -266,6 +266,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
 		step.Labels = labels
+		step.Pull = engine.PullIfNotExists
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
 

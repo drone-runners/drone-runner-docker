@@ -228,7 +228,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		),
 	)
 
-	engine, err := engine.NewEnv()
+	engine, err := engine.NewEnv(engine.Opts{})
 	if err != nil {
 		return err
 	}
