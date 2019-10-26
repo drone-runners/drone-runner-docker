@@ -54,7 +54,7 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 			Type: "json-file",
 		},
 		Privileged: step.Privileged,
-		// TODO(bradrydzewski) set ShmSize
+		ShmSize:    step.ShmSize,
 	}
 	// windows does not support privileged so we hard-code
 	// this value to false.

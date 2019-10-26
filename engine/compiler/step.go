@@ -34,6 +34,7 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		Pull:         convertPullPolicy(src.Pull),
 		User:         src.User,
 		Secrets:      convertSecretEnv(src.Environment),
+		ShmSize:      int64(src.ShmSize),
 		WorkingDir:   src.WorkingDir,
 
 		//

@@ -103,6 +103,7 @@ type (
 		Pull        string                         `json:"pull,omitempty"`
 		Settings    map[string]*manifest.Parameter `json:"settings,omitempty"`
 		Shell       string                         `json:"shell,omitempty"`
+		ShmSize     manifest.BytesSize             `json:"shm_size,omitempty"`
 		User        string                         `json:"user,omitempty"`
 		Volumes     []*VolumeMount                 `json:"volumes,omitempty"`
 		When        manifest.Conditions            `json:"when,omitempty"`

@@ -115,6 +115,9 @@ func checkStep(step *resource.Step, trusted bool) error {
 	if trusted == false && len(step.Network) > 0 {
 		return errors.New("linter: untrusted repositories cannot configure network_mode")
 	}
+	if trusted == false && int(step.ShmSize) > 0 {
+		return errors.New("linter: untrusted repositories cannot configure shm_size")
+	}
 	for _, mount := range step.Volumes {
 		switch mount.Name {
 		case "workspace", "_workspace", "_docker_socket":
