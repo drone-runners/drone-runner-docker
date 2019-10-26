@@ -43,7 +43,7 @@ func TestClone(t *testing.T) {
 			ID:         "random",
 			Image:      "drone/git:latest",
 			Name:       "clone",
-			Pull:       engine.PullDefault,
+			Pull:       engine.PullIfNotExists,
 			RunPolicy:  engine.RunAlways,
 			WorkingDir: "/drone/src",
 			Volumes: []*engine.VolumeMount{

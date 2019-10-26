@@ -8,6 +8,7 @@
       "labels": {},
       "name": "clone",
       "run_policy": "always",
+      "pull": "if-not-exists",
       "volumes": [
         {
           "name": "_workspace",

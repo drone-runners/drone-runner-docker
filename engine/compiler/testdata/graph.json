@@ -7,6 +7,7 @@
       "image": "drone/git:latest",
       "labels": {},
       "name": "clone",
+      "pull": "if-not-exists",
       "run_policy": "always",
       "volumes": [
         {
