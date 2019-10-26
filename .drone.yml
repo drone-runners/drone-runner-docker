@@ -1,5 +1,6 @@
 kind: pipeline
-name: default
+type: docker
+name: linux
 
 platform:
   os: linux
@@ -66,12 +67,27 @@ steps:
   settings:
     repo: drone/drone-runner-docker
     auto_tag: true
-    auto_tag_suffix: linux-arm
+    auto_tag_suffix: linux-arm64
     dockerfile: docker/Dockerfile.linux.arm64
     username:
       from_secret: docker_username
     password:
       from_secret: docker_password
+  when:
+    ref:
+    - refs/heads/master
+    - refs/tags/*
+
+- name: manifest
+  image: plugins/manifest
+  settings:
+    spec: docker/manifest.tmpl
+    auto_tag: true
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    username:
+      from_secret: docker_username
   when:
     ref:
     - refs/heads/master
