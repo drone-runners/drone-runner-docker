@@ -313,13 +313,10 @@ func registerExec(app *kingpin.Application) {
 		Int64Var(&c.Resources.CPUShares)
 
 	cmd.Flag("memory", "container memory limit").
-		Int64Var(&c.Resources.MemLimit)
+		Int64Var(&c.Resources.Memory)
 
 	cmd.Flag("memory-swap", "container memory swap limit").
-		Int64Var(&c.Resources.MemSwapLimit)
-
-	cmd.Flag("shmsize", "container shm size").
-		Int64Var(&c.Resources.ShmSize)
+		Int64Var(&c.Resources.MemorySwap)
 
 	cmd.Flag("public-key", "public key file path").
 		ExistingFileVar(&c.PublicKey)

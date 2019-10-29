@@ -10,7 +10,6 @@ type (
 	// execution.
 	Spec struct {
 		Platform Platform  `json:"platform,omitempty"`
-		Files    []*File   `json:"files,omitempty"`
 		Steps    []*Step   `json:"steps,omitempty"`
 		Volumes  []*Volume `json:"volumes,omitempty"`
 		Network  Network   `json:"network"`
@@ -33,7 +32,6 @@ type (
 		Entrypoint   []string          `json:"entrypoint,omitempty"`
 		Envs         map[string]string `json:"environment,omitempty"`
 		ExtraHosts   []string          `json:"extra_hosts,omitempty"`
-		Files        []*File           `json:"files,omitempty"`
 		IgnoreErr    bool              `json:"ignore_err,omitempty"`
 		IgnoreStdout bool              `json:"ignore_stderr,omitempty"`
 		IgnoreStderr bool              `json:"ignore_stdout,omitempty"`
@@ -52,16 +50,6 @@ type (
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`
-	}
-
-	// File defines a file that should be uploaded or
-	// mounted somewhere in the step container or virtual
-	// machine prior to command execution.
-	File struct {
-		Path  string `json:"path,omitempty"`
-		Mode  uint32 `json:"mode,omitempty"`
-		Data  []byte `json:"data,omitempty"`
-		IsDir bool   `json:"is_dir,omitempty"`
 	}
 
 	// Platform defines the target platform.

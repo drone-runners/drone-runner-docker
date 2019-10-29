@@ -123,7 +123,14 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				Privileged: append(config.Runner.Privileged, compiler.Privileged...),
 				Networks:   config.Runner.Networks,
 				Volumes:    config.Runner.Volumes,
-				// Resources:  nil,
+				Resources: compiler.Resources{
+					Memory:     config.Resources.Memory,
+					MemorySwap: config.Resources.MemorySwap,
+					CPUQuota:   config.Resources.CPUQuota,
+					CPUPeriod:  config.Resources.CPUPeriod,
+					CPUShares:  config.Resources.CPUShares,
+					CPUSet:     config.Resources.CPUSet,
+				},
 				Registry: registry.Combine(
 					registry.File(
 						config.Docker.Config,

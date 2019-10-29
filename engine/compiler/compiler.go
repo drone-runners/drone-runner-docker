@@ -41,13 +41,12 @@ var Privileged = []string{
 // Resources defines container resource constraints. These
 // constraints are per-container, not per-pipeline.
 type Resources struct {
-	MemLimit     int64
-	MemSwapLimit int64
-	ShmSize      int64
-	CPUQuota     int64
-	CPUPeriod    int64
-	CPUShares    int64
-	CPUSet       []string
+	Memory     int64
+	MemorySwap int64
+	CPUQuota   int64
+	CPUPeriod  int64
+	CPUShares  int64
+	CPUSet     []string
 }
 
 // Args provides compiler arguments.
@@ -373,9 +372,8 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 
 	// append global resource limits to steps
 	for _, step := range spec.Steps {
-		step.MemSwapLimit = c.Resources.MemSwapLimit
-		step.MemLimit = c.Resources.MemLimit
-		step.ShmSize = c.Resources.ShmSize
+		step.MemSwapLimit = c.Resources.MemorySwap
+		step.MemLimit = c.Resources.Memory
 		step.CPUPeriod = c.Resources.CPUPeriod
 		step.CPUQuota = c.Resources.CPUQuota
 		step.CPUShares = c.Resources.CPUShares

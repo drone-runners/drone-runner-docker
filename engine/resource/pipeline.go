@@ -13,8 +13,6 @@ var (
 	_ manifest.PlatformResource  = (*Pipeline)(nil)
 )
 
-// TODO(bradrydzewski) add resource limits
-
 // Defines the Resource Kind and Type.
 const (
 	Kind = "pipeline"
@@ -108,8 +106,6 @@ type (
 		Volumes     []*VolumeMount                 `json:"volumes,omitempty"`
 		When        manifest.Conditions            `json:"when,omitempty"`
 		WorkingDir  string                         `json:"working_dir,omitempty" yaml:"working_dir"`
-
-		// Resources *Resources `json:"resources,omitempty"`
 	}
 
 	// Volume that can be mounted by containers.

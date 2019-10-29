@@ -73,19 +73,16 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 	if len(step.ExtraHosts) > 0 {
 		config.ExtraHosts = step.ExtraHosts
 	}
-	// if step.Resources != nil {
-	// 	config.Resources = container.Resources{}
-	// 	if limits := step.Resources.Limits; limits != nil {
-	// 		config.Resources.Memory = limits.Memory
-	// 		// TODO(bradrydewski) set config.Resources.CPUPercent
-
-	// 		// IMPORTANT docker and kubernetes use
-	// 		// different units of measure for cpu limits.
-	// 		// we need to figure out how to convert from
-	// 		// the kubernetes unit of measure to the docker
-	// 		// unit of measure.
-	// 	}
-	// }
+	if isUnlimited(step) == false {
+		config.Resources = container.Resources{
+			CPUPeriod:  step.CPUPeriod,
+			CPUQuota:   step.CPUQuota,
+			CpusetCpus: strings.Join(step.CPUSet, ","),
+			CPUShares:  step.CPUShares,
+			Memory:     step.MemLimit,
+			MemorySwap: step.MemSwapLimit,
+		}
+	}
 
 	if len(step.Volumes) != 0 {
 		config.Devices = toDeviceSlice(spec, step)
@@ -257,6 +254,16 @@ func toEnv(env map[string]string) []string {
 		envs = append(envs, k+"="+v)
 	}
 	return envs
+}
+
+// returns true if the container has no resource limits.
+func isUnlimited(res *Step) bool {
+	return len(res.CPUSet) == 0 &&
+		res.CPUPeriod == 0 &&
+		res.CPUQuota == 0 &&
+		res.CPUShares == 0 &&
+		res.MemLimit == 0 &&
+		res.MemSwapLimit == 0
 }
 
 // returns true if the volume is a bind mount.
