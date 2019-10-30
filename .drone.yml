@@ -78,6 +78,16 @@ steps:
     - refs/heads/master
     - refs/tags/*
 
+volumes:
+- name: go
+  temp: {}
+
+---
+kind: pipeline
+type: docker
+name: manifest
+
+steps:
 - name: manifest
   image: plugins/manifest
   settings:
@@ -88,11 +98,11 @@ steps:
       from_secret: docker_password
     username:
       from_secret: docker_username
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
 
-volumes:
-- name: go
-  temp: {}
+depends_on:
+- linux
+
+trigger:
+  ref:
+  - refs/heads/master
+  - refs/tags/*

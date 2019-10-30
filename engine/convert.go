@@ -251,7 +251,9 @@ func toVolumeType(from *Volume) mount.Type {
 func toEnv(env map[string]string) []string {
 	var envs []string
 	for k, v := range env {
-		envs = append(envs, k+"="+v)
+		if v != "" {
+			envs = append(envs, k+"="+v)
+		}
 	}
 	return envs
 }

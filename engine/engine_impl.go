@@ -16,6 +16,7 @@ import (
 
 	"docker.io/go-docker"
 	"docker.io/go-docker/api/types"
+	"docker.io/go-docker/api/types/network"
 	"docker.io/go-docker/api/types/volume"
 )
 
@@ -212,6 +213,19 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	}
 	if err != nil {
 		return err
+	}
+
+	// attach the container to user-defined networks.
+	// primarily used to attach global user-defined networks.
+	if step.Network == "" {
+		for _, net := range step.Networks {
+			err = e.client.NetworkConnect(ctx, net, step.ID, &network.EndpointSettings{
+				Aliases: []string{net},
+			})
+			if err != nil {
+				return nil
+			}
+		}
 	}
 
 	return nil
