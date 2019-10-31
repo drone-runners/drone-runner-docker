@@ -119,6 +119,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				config.Limit.Trusted,
 			),
 			Compiler: &compiler.Compiler{
+				Clone:      config.Runner.Clone,
 				Environ:    config.Runner.Environ,
 				Privileged: append(config.Runner.Privileged, compiler.Privileged...),
 				Networks:   config.Runner.Networks,

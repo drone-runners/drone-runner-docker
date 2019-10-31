@@ -114,6 +114,10 @@ type Compiler struct {
 	// mounted to each pipeline container.
 	Volumes map[string]string
 
+	// Clone overrides the default plugin image used
+	// when cloning a repository.
+	Clone string
+
 	// Resources provides global resource constraints
 	// applies to pipeline containers.
 	Resources Resources
@@ -268,6 +272,12 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		step.Pull = engine.PullIfNotExists
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
+
+		// if the clone image is customized, override
+		// the default image.
+		if c.Clone != "" {
+			step.Image = c.Clone
+		}
 
 		// if the repository is mounted from a local
 		// volume we should disable cloning.

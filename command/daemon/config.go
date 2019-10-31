@@ -58,6 +58,7 @@ type Config struct {
 		Devices    []string          `envconfig:"DRONE_RUNNER_DEVICES"`
 		Networks   []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
 		Privileged []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
+		Clone      string            `envconfig:"DRONE_RUNNER_CLONE_IMAGE"`
 	}
 
 	Platform struct {
