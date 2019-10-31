@@ -31,8 +31,11 @@ github.com/drone/drone-go v1.0.5-0.20190504210458-4d6116b897ba h1:GKiT4UPBligLXJ
 github.com/drone/drone-go v1.0.5-0.20190504210458-4d6116b897ba/go.mod h1:GxyeGClYohaKNYJv/ZpsmVHtMJ7WhoT+uDaJNcDIrk4=
 github.com/drone/envsubst v1.0.2 h1:dpYLMAspQHW0a8dZpLRKe9jCNvIGZPhCPrycZzIHdqo=
 github.com/drone/envsubst v1.0.2/go.mod h1:bkZbnc/2vh1M12Ecn7EYScpI4YGYU0etwLJICOWi8Z0=
+github.com/drone/runner-go v1.2.2 h1:fwYgjyJl6KdjQGEUFof9+HLtNpK3iHq7UuR+/aYNyDk=
 github.com/drone/runner-go v1.2.3-0.20191022224645-c23a30094df2 h1:cWCxBb42XWdTXIdRhVKBeZZsCwnPgB+CWHcP2Sq25Ow=
 github.com/drone/runner-go v1.2.3-0.20191022224645-c23a30094df2/go.mod h1:GvB5hX023g0n5UZUjMBmudk6givdDDuLcls7Nolm5v8=
+github.com/drone/runner-go v1.2.3-0.20191031003804-fcde0c5625b9 h1:cInMHvQe7n3KBwBJyH1Otw8MbPDDBxtMskWY/kISbxY=
+github.com/drone/runner-go v1.2.3-0.20191031003804-fcde0c5625b9/go.mod h1:61VgQWhZbNPXp01lBuR7PAztTMySGLnMzK/4oYE3D9Y=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
