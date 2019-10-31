@@ -35,10 +35,10 @@ type Config struct {
 	}
 
 	Server struct {
-		Proto string `envconfig:"DRONE_SERVER_PROTO"`
-		Host  string `envconfig:"DRONE_SERVER_HOST"`
-		Port  string `envconfig:"DRONE_SERVER_PORT" default:":3000"`
-		Acme  bool   `envconfig:"DRONE_SERVER_ACME"`
+		Port  string `envconfig:"DRONE_HTTP_BIND" default:":3000"`
+		Proto string `envconfig:"DRONE_HTTP_PROTO"`
+		Host  string `envconfig:"DRONE_HTTP_HOST"`
+		Acme  bool   `envconfig:"DRONE_HTTP_ACME"`
 	}
 
 	Keypair struct {
@@ -104,24 +104,28 @@ type Config struct {
 // legacy environment variables. the key is the legacy
 // variable name, and the value is the new variable name.
 var legacy = map[string]string{
-	"DRONE_MACHINE": "DRONE_RUNNER_NAME",
-	// registry settings
+	"DRONE_MACHINE":              "DRONE_RUNNER_NAME",
+	"DRONE_RUNNER_OS":            "DRONE_PLATFORM_OS",
+	"DRONE_RUNNER_ARCH":          "DRONE_PLATFORM_ARCH",
+	"DRONE_RUNNER_KERNEL":        "DRONE_PLATFORM_KERNEL",
+	"DRONE_RUNNER_VARIANT":       "DRONE_PLATFORM_VARIANT",
 	"DRONE_REGISTRY_ENDPOINT":    "DRONE_REGISTRY_PLUGIN_ENDPOINT",
 	"DRONE_REGISTRY_SECRET":      "DRONE_REGISTRY_PLUGIN_SECRET",
 	"DRONE_REGISTRY_SKIP_VERIFY": "DRONE_REGISTRY_PLUGIN_SKIP_VERIFY",
-	// secret settings
-	"DRONE_SECRET_ENDPOINT":    "DRONE_SECRET_PLUGIN_ENDPOINT",
-	"DRONE_SECRET_SECRET":      "DRONE_SECRET_PLUGIN_TOKEN",
-	"DRONE_SECRET_SKIP_VERIFY": "DRONE_SECRET_PLUGIN_SKIP_VERIFY",
-	// resource settings
-	"DRONE_LIMIT_MEM_SWAP":   "DRONE_MEMORY_SWAP_LIMIT",
-	"DRONE_LIMIT_MEM":        "DRONE_MEMORY_LIMIT",
-	"DRONE_LIMIT_CPU_QUOTA":  "DRONE_CPU_QUOTA",
-	"DRONE_LIMIT_CPU_SHARES": "DRONE_CPU_SHARES",
-	"DRONE_LIMIT_CPU_SET":    "DRONE_CPU_SET",
-	// logger settings
-	"DRONE_LOGS_DEBUG": "DRONE_DEBUG",
-	"DRONE_LOGS_TRACE": "DRONE_TRACE",
+	"DRONE_SECRET_ENDPOINT":      "DRONE_SECRET_PLUGIN_ENDPOINT",
+	"DRONE_SECRET_SECRET":        "DRONE_SECRET_PLUGIN_TOKEN",
+	"DRONE_SECRET_SKIP_VERIFY":   "DRONE_SECRET_PLUGIN_SKIP_VERIFY",
+	"DRONE_LIMIT_MEM_SWAP":       "DRONE_MEMORY_SWAP_LIMIT",
+	"DRONE_LIMIT_MEM":            "DRONE_MEMORY_LIMIT",
+	"DRONE_LIMIT_CPU_QUOTA":      "DRONE_CPU_QUOTA",
+	"DRONE_LIMIT_CPU_SHARES":     "DRONE_CPU_SHARES",
+	"DRONE_LIMIT_CPU_SET":        "DRONE_CPU_SET",
+	"DRONE_LOGS_DEBUG":           "DRONE_DEBUG",
+	"DRONE_LOGS_TRACE":           "DRONE_TRACE",
+	"DRONE_SERVER_PROTO":         "DRONE_HTTP_PROTO",
+	"DRONE_SERVER_HOST":          "DRONE_HTTP_HOST",
+	"DRONE_SERVER_PORT":          "DRONE_HTTP_BIND",
+	"DRONE_SERVER_ACME":          "DRONE_HTTP_ACME",
 }
 
 func fromEnviron() (Config, error) {
