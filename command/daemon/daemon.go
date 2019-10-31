@@ -215,6 +215,8 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			WithField("endpoint", config.Client.Address).
 			WithField("kind", resource.Kind).
 			WithField("type", resource.Type).
+			WithField("os", config.Platform.OS).
+			WithField("arch", config.Platform.Arch).
 			Infoln("polling the remote server")
 
 		poller.Poll(ctx, config.Runner.Capacity)
