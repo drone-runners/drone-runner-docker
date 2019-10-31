@@ -10,5 +10,7 @@ ENV DRONE_PLATFORM_ARCH arm
 
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
+LABEL com.centurylinklabs.watchtower.stop-signal="SIGINT"
+
 ADD release/linux/arm/drone-runner-docker /bin/
 ENTRYPOINT ["/bin/drone-runner-docker"]

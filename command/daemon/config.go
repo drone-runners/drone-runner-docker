@@ -104,6 +104,7 @@ type Config struct {
 // legacy environment variables. the key is the legacy
 // variable name, and the value is the new variable name.
 var legacy = map[string]string{
+	"DRONE_MACHINE": "DRONE_RUNNER_NAME",
 	// registry settings
 	"DRONE_REGISTRY_ENDPOINT":    "DRONE_REGISTRY_PLUGIN_ENDPOINT",
 	"DRONE_REGISTRY_SECRET":      "DRONE_REGISTRY_PLUGIN_SECRET",
