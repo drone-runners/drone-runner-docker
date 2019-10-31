@@ -100,7 +100,37 @@ type Config struct {
 	}
 }
 
+// legacy environment variables. the key is the legacy
+// variable name, and the value is the new variable name.
+var legacy = map[string]string{
+	// registry settings
+	"DRONE_REGISTRY_ENDPOINT":    "DRONE_REGISTRY_PLUGIN_ENDPOINT",
+	"DRONE_REGISTRY_SECRET":      "DRONE_REGISTRY_PLUGIN_SECRET",
+	"DRONE_REGISTRY_SKIP_VERIFY": "DRONE_REGISTRY_PLUGIN_SKIP_VERIFY",
+	// secret settings
+	"DRONE_SECRET_ENDPOINT":    "DRONE_SECRET_PLUGIN_ENDPOINT",
+	"DRONE_SECRET_SECRET":      "DRONE_SECRET_PLUGIN_TOKEN",
+	"DRONE_SECRET_SKIP_VERIFY": "DRONE_SECRET_PLUGIN_SKIP_VERIFY",
+	// resource settings
+	"DRONE_LIMIT_MEM_SWAP":   "DRONE_MEMORY_SWAP_LIMIT",
+	"DRONE_LIMIT_MEM":        "DRONE_MEMORY_LIMIT",
+	"DRONE_LIMIT_CPU_QUOTA":  "DRONE_CPU_QUOTA",
+	"DRONE_LIMIT_CPU_SHARES": "DRONE_CPU_SHARES",
+	"DRONE_LIMIT_CPU_SET":    "DRONE_CPU_SET",
+	// logger settings
+	"DRONE_LOGS_DEBUG": "DRONE_DEBUG",
+	"DRONE_LOGS_TRACE": "DRONE_TRACE",
+}
+
 func fromEnviron() (Config, error) {
+	// loop through legacy environment variable and, if set
+	// rewrite to the new variable name.
+	for k, v := range legacy {
+		if s, ok := os.LookupEnv(k); ok {
+			os.Setenv(v, s)
+		}
+	}
+
 	var config Config
 	err := envconfig.Process("", &config)
 	if err != nil {
