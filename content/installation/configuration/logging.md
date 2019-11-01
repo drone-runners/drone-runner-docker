@@ -4,7 +4,7 @@ title: Setup Logging
 title_in_header: Setup Logging
 author: bradrydzewski
 weight: 1
-draft: true
+
 description: |
   Configure trace and debug logging.
 ---

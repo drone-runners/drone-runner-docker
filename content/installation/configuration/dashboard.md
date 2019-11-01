@@ -4,7 +4,6 @@ title: Setup the Dashboard
 title_in_header: Dashboard
 author: bradrydzewski
 weight: 2
-draft: true
 
 description: |
   Configure the administrative dashboard.

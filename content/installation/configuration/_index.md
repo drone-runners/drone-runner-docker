@@ -4,7 +4,6 @@ title: Configuration
 title_in_header: Configuration
 author: bradrydzewski
 weight: 2
-draft: true
 description: |
   Configure the runner.
 ---

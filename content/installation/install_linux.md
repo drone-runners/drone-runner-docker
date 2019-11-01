@@ -19,7 +19,7 @@ This article explains how to install the Docker runner on Linux. The Docker runn
 Install Docker and pull the public image:
 
 ```
-$ docker pull drone/agent:1
+$ docker pull drone/drone-runner-docker:latest
 ```
 
 # Step 2 - Configure
@@ -50,10 +50,10 @@ $ docker run -d \
   -p 3000:3000 \
   --restart always \
   --name runner \
-  drone/agent:1
+  drone/drone-runner-docker:latest
 ```
 
-<!-- # Step 4 - Verify
+# Step 4 - Verify
 
 Use the `docker logs` command to view the logs and verify the runner successfully established a connection with the Drone server.
 
@@ -62,4 +62,4 @@ $ docker logs runner
 
 INFO[0000] starting the server
 INFO[0000] successfully pinged the remote server 
-``` -->
+```
