@@ -41,11 +41,6 @@ type Config struct {
 		Acme  bool   `envconfig:"DRONE_HTTP_ACME"`
 	}
 
-	Keypair struct {
-		Public  string `envconfig:"DRONE_PUBLIC_KEY_FILE"`
-		Private string `envconfig:"DRONE_PRIVATE_KEY_FILE"`
-	}
-
 	Runner struct {
 		Name       string            `envconfig:"DRONE_RUNNER_NAME"`
 		Capacity   int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`

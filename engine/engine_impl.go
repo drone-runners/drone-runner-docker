@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/jsonmessage"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
@@ -68,7 +69,7 @@ func (e *Docker) Setup(ctx context.Context, spec *Spec) error {
 			Labels: vol.EmptyDir.Labels,
 		})
 		if err != nil {
-			return err
+			return errors.TrimExtraInfo(err)
 		}
 	}
 
@@ -83,7 +84,7 @@ func (e *Docker) Setup(ctx context.Context, spec *Spec) error {
 		Labels: spec.Network.Labels,
 	})
 
-	return err
+	return errors.TrimExtraInfo(err)
 }
 
 // Destroy the pipeline environment.
@@ -132,17 +133,17 @@ func (e *Docker) Run(ctx context.Context, spec *Spec, step *Step, output io.Writ
 	// create the container
 	err := e.create(ctx, spec, step, output)
 	if err != nil {
-		return nil, err
+		return nil, errors.TrimExtraInfo(err)
 	}
 	// start the container
 	err = e.start(ctx, step.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.TrimExtraInfo(err)
 	}
 	// tail the container
 	err = e.tail(ctx, step.ID, output)
 	if err != nil {
-		return nil, err
+		return nil, errors.TrimExtraInfo(err)
 	}
 	// wait for the response
 	return e.wait(ctx, step.ID)
