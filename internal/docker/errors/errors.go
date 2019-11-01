@@ -13,6 +13,9 @@ import (
 // from a Docker error. Specifically, on Windows, this can expose
 // environment variables and other sensitive data.
 func TrimExtraInfo(err error) error {
+	if err == nil {
+		return nil
+	}
 	s := err.Error()
 	i := strings.Index(s, "extra info:")
 	if i > 0 {
