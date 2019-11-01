@@ -89,7 +89,7 @@ trigger:
 ---
 kind: pipeline
 type: ssh
-name: window-1903
+name: windows-1903
 
 platform:
   os: windows
@@ -137,7 +137,7 @@ trigger:
 ---
 kind: pipeline
 type: ssh
-name: window-1809
+name: windows-1809
 
 platform:
   os: windows
