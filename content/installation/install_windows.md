@@ -22,7 +22,7 @@ This article explains how to install the Docker runner on Windows. The Docker ru
 Install Docker and pull the public image:
 
 ```
-$ docker pull drone/agent:windows-1809-amd64
+$ docker pull drone/drone-runner-docker:1
 ```
 
 # Step 2 - Configure

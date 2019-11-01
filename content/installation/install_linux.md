@@ -19,7 +19,7 @@ This article explains how to install the Docker runner on Linux. The Docker runn
 Install Docker and pull the public image:
 
 ```
-$ docker pull drone/drone-runner-docker:latest
+$ docker pull drone/drone-runner-docker:1
 ```
 
 # Step 2 - Configure
