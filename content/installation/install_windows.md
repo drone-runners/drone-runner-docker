@@ -53,10 +53,10 @@ $ docker run -d \
   -p 3000:3000 \
   --restart always \
   --name runner \
-  drone/agent:1
+  drone/drone-runner-docker:1
 ```
 
-<!-- # Step 4 - Verify
+# Step 4 - Verify
 
 Use the `docker logs` command to view the logs and verify the runner successfully established a connection with the Drone server.
 
@@ -65,4 +65,4 @@ $ docker logs runner
 
 INFO[0000] starting the server
 INFO[0000] successfully pinged the remote server 
-``` -->
+```

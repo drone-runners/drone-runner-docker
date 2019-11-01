@@ -50,7 +50,7 @@ $ docker run -d \
   -p 3000:3000 \
   --restart always \
   --name runner \
-  drone/drone-runner-docker:latest
+  drone/drone-runner-docker:1
 ```
 
 # Step 4 - Verify
