@@ -168,7 +168,7 @@ steps:
     PASSWORD:
       from_secret: docker_password
   commands:
-  - powershell.exe scripts/windows/latest.ps1
+  - powershell.exe scripts/windows/tag.ps1
   when:
     event: [ tag ]
 
