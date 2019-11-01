@@ -82,10 +82,6 @@ volumes:
 - name: go
   temp: {}
 
-trigger:
-  branch:
-  - none
-
 ---
 kind: pipeline
 type: ssh
@@ -95,7 +91,8 @@ platform:
   os: windows
 
 server:
-  host: windows.1903.amd64.ssh.pipeline.drone.ci
+  host:
+    from_secret: windows_server_1903
   password:
     from_secret: windows_password
   user:
@@ -143,7 +140,8 @@ platform:
   os: windows
 
 server:
-  host: windows.1809.amd64.ssh.pipeline.drone.ci
+  host:
+    from_secret: windows_server_1809
   password:
     from_secret: windows_password
   user:
@@ -204,8 +202,6 @@ depends_on:
 - windows-1809
 
 trigger:
-  branch:
-  - none
   ref:
   - refs/heads/master
   - refs/tags/*
