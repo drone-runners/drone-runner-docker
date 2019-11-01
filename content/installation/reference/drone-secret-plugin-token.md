@@ -5,7 +5,6 @@ author: bradrydzewski
 weight: 1
 ---
 
-DRONE_SECRET_PLUGIN_TOKEN
 Optional string value. Provides the secret token used to authenticate http requests to the plugin endpoint.
 
 ```
