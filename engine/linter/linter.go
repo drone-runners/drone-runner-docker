@@ -7,6 +7,8 @@ package linter
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 )
@@ -122,6 +124,9 @@ func checkStep(step *resource.Step, trusted bool) error {
 		switch mount.Name {
 		case "workspace", "_workspace", "_docker_socket":
 			return fmt.Errorf("linter: invalid volume name: %s", mount.Name)
+		}
+		if strings.HasPrefix(filepath.Clean(mount.MountPath), "/run/drone") {
+			return fmt.Errorf("linter: cannot mount volume at /run/drone")
 		}
 	}
 	return nil
