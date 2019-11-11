@@ -5,7 +5,7 @@ author: bradrydzewski
 weight: 1
 ---
 
-Optional number value. Limits the number of concurrent pipelines that a runner can execute. This does _not_ limit the number of concurrent pipelines that can execute on a single remote instance.
+Optional number value. Limits the number of concurrent pipelines that a runner can execute. The runner executes 2 concurrent pipelines by default.
 
 ```
 DRONE_RUNNER_CAPACITY=10
