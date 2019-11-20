@@ -78,6 +78,12 @@ type Config struct {
 		CPUSet     []string `envconfig:"DRONE_CPU_SET"`
 	}
 
+	Environ struct {
+		Endpoint   string `envconfig:"DRONE_ENV_PLUGIN_ENDPOINT"`
+		Token      string `envconfig:"DRONE_ENV_PLUGIN_TOKEN"`
+		SkipVerify bool   `envconfig:"DRONE_ENV_PLUGIN_SKIP_VERIFY"`
+	}
+
 	Secret struct {
 		Endpoint   string `envconfig:"DRONE_SECRET_PLUGIN_ENDPOINT"`
 		Token      string `envconfig:"DRONE_SECRET_PLUGIN_TOKEN"`

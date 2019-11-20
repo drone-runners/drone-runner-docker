@@ -157,7 +157,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	// create pull options with encoded authorization credentials.
 	pullopts := types.ImagePullOptions{}
 	if step.Auth != nil {
-		pullopts.RegistryAuth = auths.Encode(
+		pullopts.RegistryAuth = auths.Header(
 			step.Auth.Username,
 			step.Auth.Password,
 		)

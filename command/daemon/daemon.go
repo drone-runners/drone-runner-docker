@@ -16,6 +16,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/runtime"
 
 	"github.com/drone/runner-go/client"
+	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/handler/router"
 	"github.com/drone/runner-go/logger"
 	loghistory "github.com/drone/runner-go/logger/history"
@@ -120,7 +121,6 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			),
 			Compiler: &compiler.Compiler{
 				Clone:      config.Runner.Clone,
-				Environ:    config.Runner.Environ,
 				Privileged: append(config.Runner.Privileged, compiler.Privileged...),
 				Networks:   config.Runner.Networks,
 				Volumes:    config.Runner.Volumes,
@@ -132,6 +132,14 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 					CPUShares:  config.Resources.CPUShares,
 					CPUSet:     config.Resources.CPUSet,
 				},
+				Environ: provider.Combine(
+					provider.Static(config.Runner.Environ),
+					provider.External(
+						config.Environ.Endpoint,
+						config.Environ.Token,
+						config.Environ.SkipVerify,
+					),
+				),
 				Registry: registry.Combine(
 					registry.File(
 						config.Docker.Config,

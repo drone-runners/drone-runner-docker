@@ -15,6 +15,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
 	"github.com/drone/runner-go/environ"
+	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/labels"
 	"github.com/drone/runner-go/manifest"
 	"github.com/drone/runner-go/registry"
@@ -25,7 +26,9 @@ import (
 )
 
 // random generator function
-var random = uniuri.New
+var random = func() string {
+	return "drone-" + uniuri.NewLen(20)
+}
 
 // Privileged provides a list of plugins that execute
 // with privileged capabilities in order to run Docker
@@ -96,7 +99,7 @@ type Compiler struct {
 
 	// Environ provides a set of environment variables that
 	// should be added to each pipeline step by default.
-	Environ map[string]string
+	Environ provider.Provider
 
 	// Labels provides a set of labels that should be added
 	// to each container by default.
@@ -202,9 +205,15 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		Volumes: []*engine.Volume{volume},
 	}
 
+	// list the global environment variables
+	envs, _ := c.Environ.List(ctx, &provider.Request{
+		Build: args.Build,
+		Repo:  args.Repo,
+	})
+
 	// create the default environment variables.
-	envs := environ.Combine(
-		c.Environ,
+	envs = environ.Combine(
+		envs,
 		args.Build.Params,
 		args.Pipeline.Environment,
 		environ.Proxy(),
