@@ -117,11 +117,12 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	go func() {
 		done, _ := s.Client.Watch(ctxdone, data.Build.ID)
 		if done {
-			cancel()
 			log.Debugln("received cancellation")
 		} else {
 			log.Debugln("done listening for cancellations")
 		}
+		log.Debugln("cancelling pipeline")
+		cancel()
 	}()
 
 	envs := environ.Combine(
