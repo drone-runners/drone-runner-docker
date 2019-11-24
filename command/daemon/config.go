@@ -143,6 +143,9 @@ func fromEnviron() (Config, error) {
 	if err != nil {
 		return config, err
 	}
+	if config.Runner.Environ == nil {
+		config.Runner.Environ = map[string]string{}
+	}
 	if config.Runner.Name == "" {
 		config.Runner.Name, _ = os.Hostname()
 	}
