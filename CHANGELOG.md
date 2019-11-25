@@ -5,7 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - use trace level logging for context errors
-- prefix named docker resources with drone-
+- prefix docker resource names
+
+### Fixed
+- initialize environment map to prevent nil pointer
 
 ### Added
 - support for global environment variable extension
