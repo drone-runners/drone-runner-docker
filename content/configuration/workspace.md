@@ -24,7 +24,7 @@ Note the workspace volume is ephemeral. It is created when the pipeline starts a
 
 # Customizing the Workspace
 
-The workspace can be customized using the workspace block in the Yaml file:
+You can customize the workspace directory by defining the `workspace` section in your yaml. Here is a basic example:
 
 {{< highlight text "linenos=table,linenostart=1,hl_lines=5-7" >}}
 kind: pipeline
