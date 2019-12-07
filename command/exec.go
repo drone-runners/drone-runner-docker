@@ -18,7 +18,6 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
-	"github.com/drone-runners/drone-runner-docker/runtime"
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/envsubst"
 	"github.com/drone/runner-go/environ"
@@ -26,7 +25,8 @@ import (
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/manifest"
 	"github.com/drone/runner-go/pipeline"
-	"github.com/drone/runner-go/pipeline/console"
+	"github.com/drone/runner-go/pipeline/runtime"
+	"github.com/drone/runner-go/pipeline/streamer/console"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 	"github.com/drone/signal"
@@ -102,7 +102,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	// a configuration can contain multiple pipelines.
 	// get a specific pipeline resource for execution.
-	resource, err := resource.Lookup(c.Stage.Name, manifest)
+	res, err := resource.Lookup(c.Stage.Name, manifest)
 	if err != nil {
 		return err
 	}
@@ -110,8 +110,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 	// lint the pipeline and return an error if any
 	// linting rules are broken
 	lint := linter.New()
-	opts := linter.Opts{Trusted: c.Repo.Trusted}
-	err = lint.Lint(resource, opts)
+	err = lint.Lint(res, c.Repo)
 	if err != nil {
 		return err
 	}
@@ -137,8 +136,8 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		comp.Mount, _ = os.Getwd()
 	}
 
-	args := compiler.Args{
-		Pipeline: resource,
+	args := runtime.CompilerArgs{
+		Pipeline: res,
 		Manifest: manifest,
 		Build:    c.Build,
 		Netrc:    c.Netrc,
@@ -146,7 +145,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		Stage:    c.Stage,
 		System:   c.System,
 	}
-	spec := comp.Compile(nocontext, args)
+	spec := comp.Compile(nocontext, args).(*engine.Spec)
 
 	// include only steps that are in the include list,
 	// if the list in non-empty.
@@ -161,7 +160,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 					continue I
 				}
 			}
-			step.RunPolicy = engine.RunNever
+			step.RunPolicy = runtime.RunNever
 		}
 	}
 
@@ -175,7 +174,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 			}
 			for _, name := range c.Exclude {
 				if step.Name == name {
-					step.RunPolicy = engine.RunNever
+					step.RunPolicy = runtime.RunNever
 					continue E
 				}
 			}
@@ -184,7 +183,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	// create a step object for each pipeline step.
 	for _, step := range spec.Steps {
-		if step.RunPolicy == engine.RunNever {
+		if step.RunPolicy == runtime.RunNever {
 			continue
 		}
 		c.Stage.Steps = append(c.Stage.Steps, &drone.Step{

@@ -19,6 +19,7 @@ import (
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
@@ -90,8 +91,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 	// lint the pipeline and return an error if any
 	// linting rules are broken
 	lint := linter.New()
-	opts := linter.Opts{Trusted: c.Repo.Trusted}
-	err = lint.Lint(resource, opts)
+	err = lint.Lint(resource, c.Repo)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		comp.Mount, _ = os.Getwd()
 	}
 
-	args := compiler.Args{
+	args := runtime.CompilerArgs{
 		Pipeline: resource,
 		Manifest: manifest,
 		Build:    c.Build,

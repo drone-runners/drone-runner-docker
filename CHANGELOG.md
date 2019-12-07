@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 
+- abstract polling and execution to runner-go library
 - use trace level logging for context errors
 - prefix docker resource names
 

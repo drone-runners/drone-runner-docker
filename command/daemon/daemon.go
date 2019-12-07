@@ -13,15 +13,16 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/match"
-	"github.com/drone-runners/drone-runner-docker/runtime"
 
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/handler/router"
 	"github.com/drone/runner-go/logger"
 	loghistory "github.com/drone/runner-go/logger/history"
-	"github.com/drone/runner-go/pipeline/history"
-	"github.com/drone/runner-go/pipeline/remote"
+	"github.com/drone/runner-go/pipeline/reporter/history"
+	"github.com/drone/runner-go/pipeline/reporter/remote"
+	"github.com/drone/runner-go/pipeline/runtime"
+	"github.com/drone/runner-go/poller"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 	"github.com/drone/runner-go/server"
@@ -107,67 +108,70 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	hook := loghistory.New()
 	logrus.AddHook(hook)
 
-	poller := &runtime.Poller{
-		Client: cli,
-		Runner: &runtime.Runner{
-			Client:   cli,
-			Machine:  config.Runner.Name,
-			Reporter: tracer,
-			Linter:   linter.New(),
-			Match: match.Func(
-				config.Limit.Repos,
-				config.Limit.Events,
-				config.Limit.Trusted,
-			),
-			Compiler: &compiler.Compiler{
-				Clone:      config.Runner.Clone,
-				Privileged: append(config.Runner.Privileged, compiler.Privileged...),
-				Networks:   config.Runner.Networks,
-				Volumes:    config.Runner.Volumes,
-				Resources: compiler.Resources{
-					Memory:     config.Resources.Memory,
-					MemorySwap: config.Resources.MemorySwap,
-					CPUQuota:   config.Resources.CPUQuota,
-					CPUPeriod:  config.Resources.CPUPeriod,
-					CPUShares:  config.Resources.CPUShares,
-					CPUSet:     config.Resources.CPUSet,
-				},
-				Environ: provider.Combine(
-					provider.Static(config.Runner.Environ),
-					provider.External(
-						config.Environ.Endpoint,
-						config.Environ.Token,
-						config.Environ.SkipVerify,
-					),
-				),
-				Registry: registry.Combine(
-					registry.File(
-						config.Docker.Config,
-					),
-					registry.External(
-						config.Registry.Endpoint,
-						config.Registry.Token,
-						config.Registry.SkipVerify,
-					),
-				),
-				Secret: secret.Combine(
-					secret.StaticVars(
-						config.Runner.Secrets,
-					),
-					secret.External(
-						config.Secret.Endpoint,
-						config.Secret.Token,
-						config.Secret.SkipVerify,
-					),
-				),
+	runner := &runtime.Runner{
+		Client:   cli,
+		Machine:  config.Runner.Name,
+		Reporter: tracer,
+		Lookup:   resource.Lookup,
+		Lint:     linter.New().Lint,
+		Match: match.Func(
+			config.Limit.Repos,
+			config.Limit.Events,
+			config.Limit.Trusted,
+		),
+		Compiler: &compiler.Compiler{
+			Clone:      config.Runner.Clone,
+			Privileged: append(config.Runner.Privileged, compiler.Privileged...),
+			Networks:   config.Runner.Networks,
+			Volumes:    config.Runner.Volumes,
+			Resources: compiler.Resources{
+				Memory:     config.Resources.Memory,
+				MemorySwap: config.Resources.MemorySwap,
+				CPUQuota:   config.Resources.CPUQuota,
+				CPUPeriod:  config.Resources.CPUPeriod,
+				CPUShares:  config.Resources.CPUShares,
+				CPUSet:     config.Resources.CPUSet,
 			},
-			Execer: runtime.NewExecer(
-				tracer,
-				remote,
-				engine,
-				config.Runner.Procs,
+			Environ: provider.Combine(
+				provider.Static(config.Runner.Environ),
+				provider.External(
+					config.Environ.Endpoint,
+					config.Environ.Token,
+					config.Environ.SkipVerify,
+				),
+			),
+			Registry: registry.Combine(
+				registry.File(
+					config.Docker.Config,
+				),
+				registry.External(
+					config.Registry.Endpoint,
+					config.Registry.Token,
+					config.Registry.SkipVerify,
+				),
+			),
+			Secret: secret.Combine(
+				secret.StaticVars(
+					config.Runner.Secrets,
+				),
+				secret.External(
+					config.Secret.Endpoint,
+					config.Secret.Token,
+					config.Secret.SkipVerify,
+				),
 			),
 		},
+		Exec: runtime.NewExecer(
+			tracer,
+			remote,
+			engine,
+			config.Runner.Procs,
+		).Exec,
+	}
+
+	poller := &poller.Poller{
+		Client:   cli,
+		Dispatch: runner.Run,
 		Filter: &client.Filter{
 			Kind:    resource.Kind,
 			Type:    resource.Type,

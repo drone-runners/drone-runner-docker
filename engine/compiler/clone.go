@@ -10,6 +10,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/pipeline/runtime"
 )
 
 // default name of the clone step.
@@ -47,7 +48,7 @@ func createClone(src *resource.Pipeline) *engine.Step {
 	return &engine.Step{
 		Name:      cloneStepName,
 		Image:     cloneImage(src.Platform),
-		RunPolicy: engine.RunAlways,
+		RunPolicy: runtime.RunAlways,
 		Envs:      cloneParams(src.Clone),
 	}
 }

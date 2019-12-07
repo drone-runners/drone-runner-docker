@@ -13,6 +13,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
@@ -46,7 +47,7 @@ func TestClone(t *testing.T) {
 			Image:      "drone/git:latest",
 			Name:       "clone",
 			Pull:       engine.PullIfNotExists,
-			RunPolicy:  engine.RunAlways,
+			RunPolicy:  runtime.RunAlways,
 			WorkingDir: "/drone/src",
 			Volumes: []*engine.VolumeMount{
 				&engine.VolumeMount{
@@ -88,7 +89,7 @@ func TestCloneCreate(t *testing.T) {
 	want := &engine.Step{
 		Name:      "clone",
 		Image:     "drone/git:latest",
-		RunPolicy: engine.RunAlways,
+		RunPolicy: runtime.RunAlways,
 		Envs:      map[string]string{"PLUGIN_DEPTH": "50"},
 	}
 	src := &resource.Pipeline{Clone: manifest.Clone{Depth: 50}}

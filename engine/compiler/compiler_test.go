@@ -19,6 +19,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
@@ -65,10 +66,10 @@ func TestCompile_CloneDisabled_Graph(t *testing.T) {
 // defined in the when block are not satisfied.
 func TestCompile_Match(t *testing.T) {
 	ir := testCompile(t, "testdata/match.yml", "testdata/match.json")
-	if ir.Steps[0].RunPolicy != engine.RunOnSuccess {
+	if ir.Steps[0].RunPolicy != runtime.RunOnSuccess {
 		t.Errorf("Expect run on success")
 	}
-	if ir.Steps[1].RunPolicy != engine.RunNever {
+	if ir.Steps[1].RunPolicy != runtime.RunNever {
 		t.Errorf("Expect run never")
 	}
 }
@@ -77,7 +78,7 @@ func TestCompile_Match(t *testing.T) {
 // success or failure are configured to always run.
 func TestCompile_RunAlways(t *testing.T) {
 	ir := testCompile(t, "testdata/run_always.yml", "testdata/run_always.json")
-	if ir.Steps[0].RunPolicy != engine.RunAlways {
+	if ir.Steps[0].RunPolicy != runtime.RunAlways {
 		t.Errorf("Expect run always")
 	}
 }
@@ -86,7 +87,7 @@ func TestCompile_RunAlways(t *testing.T) {
 // are configured to run on failure.
 func TestCompile_RunFailure(t *testing.T) {
 	ir := testCompile(t, "testdata/run_failure.yml", "testdata/run_failure.json")
-	if ir.Steps[0].RunPolicy != engine.RunOnFailure {
+	if ir.Steps[0].RunPolicy != runtime.RunOnFailure {
 		t.Errorf("Expect run on failure")
 	}
 }

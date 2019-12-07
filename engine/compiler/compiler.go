@@ -12,12 +12,12 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
-	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/labels"
 	"github.com/drone/runner-go/manifest"
+	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/registry/auths"
 	"github.com/drone/runner-go/secret"
@@ -52,51 +52,9 @@ type Resources struct {
 	CPUSet     []string
 }
 
-// Args provides compiler arguments.
-type Args struct {
-	// Manifest provides the parsed manifest.
-	Manifest *manifest.Manifest
-
-	// Pipeline provides the parsed pipeline. This pipeline is
-	// the compiler source and is converted to the intermediate
-	// representation by the Compile method.
-	Pipeline *resource.Pipeline
-
-	// Build provides the compiler with stage information that
-	// is converted to environment variable format and passed to
-	// each pipeline step. It is also used to clone the commit.
-	Build *drone.Build
-
-	// Stage provides the compiler with stage information that
-	// is converted to environment variable format and passed to
-	// each pipeline step.
-	Stage *drone.Stage
-
-	// Repo provides the compiler with repo information. This
-	// repo information is converted to environment variable
-	// format and passed to each pipeline step. It is also used
-	// to clone the repository.
-	Repo *drone.Repo
-
-	// System provides the compiler with system information that
-	// is converted to environment variable format and passed to
-	// each pipeline step.
-	System *drone.System
-
-	// Netrc provides netrc parameters that can be used by the
-	// default clone step to authenticate to the remote
-	// repository.
-	Netrc *drone.Netrc
-
-	// Secret returns a named secret value that can be injected
-	// into the pipeline step.
-	Secret secret.Provider
-}
-
 // Compiler compiles the Yaml configuration file to an
 // intermediate representation optimized for simple execution.
 type Compiler struct {
-
 	// Environ provides a set of environment variables that
 	// should be added to each pipeline step by default.
 	Environ provider.Provider
@@ -139,11 +97,12 @@ type Compiler struct {
 }
 
 // Compile compiles the configuration file.
-func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
-	os := args.Pipeline.Platform.OS
+func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runtime.Spec {
+	pipeline := args.Pipeline.(*resource.Pipeline)
+	os := pipeline.Platform.OS
 
 	// create the workspace paths
-	base, path, full := createWorkspace(args.Pipeline)
+	base, path, full := createWorkspace(pipeline)
 
 	// if the source code is mounted from the host, the
 	// target mount path inside the container must be the
@@ -197,10 +156,10 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 			Labels: labels,
 		},
 		Platform: engine.Platform{
-			OS:      args.Pipeline.Platform.OS,
-			Arch:    args.Pipeline.Platform.Arch,
-			Variant: args.Pipeline.Platform.Variant,
-			Version: args.Pipeline.Platform.Version,
+			OS:      pipeline.Platform.OS,
+			Arch:    pipeline.Platform.Arch,
+			Variant: pipeline.Platform.Variant,
+			Version: pipeline.Platform.Version,
 		},
 		Volumes: []*engine.Volume{volume},
 	}
@@ -215,7 +174,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 	envs = environ.Combine(
 		envs,
 		args.Build.Params,
-		args.Pipeline.Environment,
+		pipeline.Environment,
 		environ.Proxy(),
 		environ.System(args.System),
 		environ.Repo(args.Repo),
@@ -223,8 +182,8 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		environ.Stage(args.Stage),
 		environ.Link(args.Repo, args.Build, args.System),
 		clone.Environ(clone.Config{
-			SkipVerify: args.Pipeline.Clone.SkipVerify,
-			Trace:      args.Pipeline.Clone.Trace,
+			SkipVerify: pipeline.Clone.SkipVerify,
+			Trace:      pipeline.Clone.Trace,
 			User: clone.User{
 				Name:  args.Build.AuthorName,
 				Email: args.Build.AuthorEmail,
@@ -272,8 +231,8 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 	}
 
 	// create the clone step
-	if args.Pipeline.Clone.Disable == false {
-		step := createClone(args.Pipeline)
+	if pipeline.Clone.Disable == false {
+		step := createClone(pipeline)
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
@@ -291,13 +250,13 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		// if the repository is mounted from a local
 		// volume we should disable cloning.
 		if c.Mount != "" {
-			step.RunPolicy = engine.RunNever
+			step.RunPolicy = runtime.RunNever
 		}
 	}
 
 	// create steps
-	for _, src := range args.Pipeline.Services {
-		dst := createStep(args.Pipeline, src)
+	for _, src := range pipeline.Services {
+		dst := createStep(pipeline, src)
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
@@ -309,13 +268,13 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		// if the pipeline step has unmet conditions the step is
 		// automatically skipped.
 		if !src.When.Match(match) {
-			dst.RunPolicy = engine.RunNever
+			dst.RunPolicy = runtime.RunNever
 		}
 	}
 
 	// create steps
-	for _, src := range args.Pipeline.Steps {
-		dst := createStep(args.Pipeline, src)
+	for _, src := range pipeline.Steps {
+		dst := createStep(pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
 		dst.Labels = labels
@@ -326,7 +285,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 		// if the pipeline step has unmet conditions the step is
 		// automatically skipped.
 		if !src.When.Match(match) {
-			dst.RunPolicy = engine.RunNever
+			dst.RunPolicy = runtime.RunNever
 		}
 
 		// if the pipeline step has an approved image, it is
@@ -339,9 +298,9 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 
 	if isGraph(spec) == false {
 		configureSerial(spec)
-	} else if args.Pipeline.Clone.Disable == false {
+	} else if pipeline.Clone.Disable == false {
 		configureCloneDeps(spec)
-	} else if args.Pipeline.Clone.Disable == true {
+	} else if pipeline.Clone.Disable == true {
 		removeCloneDeps(spec)
 	}
 
@@ -365,7 +324,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 	}
 
 	// get registry credentials from secrets
-	for _, name := range args.Pipeline.PullSecrets {
+	for _, name := range pipeline.PullSecrets {
 		secret, ok := c.findSecret(ctx, args, name)
 		if ok {
 			parsed, err := auths.ParseString(secret)
@@ -425,7 +384,7 @@ func (c *Compiler) Compile(ctx context.Context, args Args) *engine.Spec {
 	}
 
 	// append volumes
-	for _, v := range args.Pipeline.Volumes {
+	for _, v := range pipeline.Volumes {
 		id := random()
 		src := new(engine.Volume)
 		if v.EmptyDir != nil {
@@ -478,7 +437,7 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 
 // helper function attempts to find and return the named secret.
 // from the secret provider.
-func (c *Compiler) findSecret(ctx context.Context, args Args, name string) (s string, ok bool) {
+func (c *Compiler) findSecret(ctx context.Context, args runtime.CompilerArgs, name string) (s string, ok bool) {
 	if name == "" {
 		return
 	}

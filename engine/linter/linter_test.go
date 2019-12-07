@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"
 )
 
@@ -212,7 +213,7 @@ func TestLint(t *testing.T) {
 			}
 
 			lint := New()
-			opts := Opts{Trusted: test.trusted}
+			opts := &drone.Repo{Trusted: test.trusted}
 			err = lint.Lint(resources.Resources[0].(*resource.Pipeline), opts)
 			if err == nil && test.invalid == true {
 				t.Logf("yaml: %s", test.path)

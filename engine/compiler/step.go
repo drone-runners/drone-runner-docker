@@ -11,6 +11,8 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 	"github.com/drone-runners/drone-runner-docker/internal/encoder"
+
+	"github.com/drone/runner-go/pipeline/runtime"
 )
 
 func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
@@ -94,9 +96,9 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 	// success by default, but may be optionally configured
 	// to run on failure.
 	if isRunAlways(src) {
-		dst.RunPolicy = engine.RunAlways
+		dst.RunPolicy = runtime.RunAlways
 	} else if isRunOnFailure(src) {
-		dst.RunPolicy = engine.RunOnFailure
+		dst.RunPolicy = runtime.RunOnFailure
 	}
 
 	return dst

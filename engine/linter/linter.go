@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone/drone-go/drone"
+	"github.com/drone/runner-go/manifest"
 )
 
 // ErrDuplicateStepName is returned when two Pipeline steps
@@ -43,8 +45,8 @@ func New() *Linter {
 
 // Lint executes the linting rules for the pipeline
 // configuration.
-func (l *Linter) Lint(pipeline *resource.Pipeline, opts Opts) error {
-	return checkPipeline(pipeline, opts.Trusted)
+func (l *Linter) Lint(pipeline manifest.Resource, repo *drone.Repo) error {
+	return checkPipeline(pipeline.(*resource.Pipeline), repo.Trusted)
 }
 
 func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
