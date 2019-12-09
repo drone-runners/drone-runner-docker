@@ -58,6 +58,8 @@ github.com/drone/runner-go v1.4.1-0.20191206210533-80bb9688cb0c h1:T3CIdRKiTiaNb
 github.com/drone/runner-go v1.4.1-0.20191206210533-80bb9688cb0c/go.mod h1:ZIhsNU4EHG7R7J+OXeXuwwAxlxOBYLCc0gCkbbhWb/o=
 github.com/drone/runner-go v1.5.0 h1:4cgQn+ZIf9TKHQpAF8wC06knqSULZ8T46tFxPZ5ADs0=
 github.com/drone/runner-go v1.5.0/go.mod h1:ZIhsNU4EHG7R7J+OXeXuwwAxlxOBYLCc0gCkbbhWb/o=
+github.com/drone/runner-go v1.5.1-0.20191209224608-17a63102bc1d h1:nrtqRjjyIpC9qM5Iruzu+wV8L7ugAJGE2G2KZCbXn9g=
+github.com/drone/runner-go v1.5.1-0.20191209224608-17a63102bc1d/go.mod h1:ZIhsNU4EHG7R7J+OXeXuwwAxlxOBYLCc0gCkbbhWb/o=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=

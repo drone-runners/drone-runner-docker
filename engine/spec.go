@@ -37,8 +37,8 @@ type (
 		DNSSearch    []string          `json:"dns_search,omitempty"`
 		Entrypoint   []string          `json:"entrypoint,omitempty"`
 		Envs         map[string]string `json:"environment,omitempty"`
+		ErrPolicy    runtime.ErrPolicy `json:"err_policy,omitempty"`
 		ExtraHosts   []string          `json:"extra_hosts,omitempty"`
-		IgnoreErr    bool              `json:"ignore_err,omitempty"`
 		IgnoreStdout bool              `json:"ignore_stderr,omitempty"`
 		IgnoreStderr bool              `json:"ignore_stdout,omitempty"`
 		Image        string            `json:"image,omitempty"`
@@ -151,7 +151,7 @@ func (s *Step) GetName() string                  { return s.Name }
 func (s *Step) GetDependencies() []string        { return s.DependsOn }
 func (s *Step) GetEnviron() map[string]string    { return s.Envs }
 func (s *Step) SetEnviron(env map[string]string) { s.Envs = env }
-func (s *Step) GetErrPolicy() runtime.ErrPolicy  { return runtime.ErrFail }
+func (s *Step) GetErrPolicy() runtime.ErrPolicy  { return s.ErrPolicy }
 func (s *Step) GetRunPolicy() runtime.RunPolicy  { return s.RunPolicy }
 func (s *Step) GetSecretAt(i int) runtime.Secret { return s.Secrets[i] }
 func (s *Step) GetSecretLen() int                { return len(s.Secrets) }

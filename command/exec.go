@@ -191,7 +191,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 			Number:    len(c.Stage.Steps) + 1,
 			Name:      step.Name,
 			Status:    drone.StatusPending,
-			ErrIgnore: step.IgnoreErr,
+			ErrIgnore: step.ErrPolicy == runtime.ErrIgnore,
 		})
 	}
 

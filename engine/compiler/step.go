@@ -28,7 +28,6 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		DNSSearch:    src.DNSSearch,
 		Envs:         convertStaticEnv(src.Environment),
 		ExtraHosts:   src.ExtraHosts,
-		IgnoreErr:    strings.EqualFold(src.Failure, "ignore"),
 		IgnoreStderr: false,
 		IgnoreStdout: false,
 		Network:      src.Network,
@@ -99,6 +98,15 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		dst.RunPolicy = runtime.RunAlways
 	} else if isRunOnFailure(src) {
 		dst.RunPolicy = runtime.RunOnFailure
+	}
+
+	// set the pipeline failure policy. steps can choose
+	// to ignore the failure, or fail fast.
+	switch src.Failure {
+	case "ignore":
+		dst.ErrPolicy = runtime.ErrIgnore
+	case "fast", "fast-fail", "fail-fast":
+		dst.ErrPolicy = runtime.ErrFailFast
 	}
 
 	return dst
