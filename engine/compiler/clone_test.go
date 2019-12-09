@@ -32,7 +32,7 @@ func TestClone(t *testing.T) {
 		Secret:   secret.Static(nil),
 		Environ:  provider.Static(nil),
 	}
-	args := Args{
+	args := runtime.CompilerArgs{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{},
 		Stage:    &drone.Stage{},
@@ -57,7 +57,7 @@ func TestClone(t *testing.T) {
 			},
 		},
 	}
-	got := c.Compile(nocontext, args)
+	got := c.Compile(nocontext, args).(*engine.Spec)
 	ignore := cmpopts.IgnoreFields(engine.Step{}, "Envs", "Labels")
 	if diff := cmp.Diff(got.Steps, want, ignore); len(diff) != 0 {
 		t.Errorf(diff)
@@ -70,7 +70,7 @@ func TestCloneDisable(t *testing.T) {
 		Registry: registry.Static(nil),
 		Secret:   secret.Static(nil),
 	}
-	args := Args{
+	args := runtime.CompilerArgs{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{},
 		Stage:    &drone.Stage{},
@@ -79,7 +79,7 @@ func TestCloneDisable(t *testing.T) {
 		Manifest: &manifest.Manifest{},
 		Pipeline: &resource.Pipeline{Clone: manifest.Clone{Disable: true}},
 	}
-	got := c.Compile(nocontext, args)
+	got := c.Compile(nocontext, args).(*engine.Spec)
 	if len(got.Steps) != 0 {
 		t.Errorf("Expect no clone step added when disabled")
 	}

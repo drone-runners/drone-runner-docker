@@ -107,7 +107,7 @@ func TestCompile_Secrets(t *testing.T) {
 			"my_username": "octocat",
 		}),
 	}
-	args := Args{
+	args := runtime.CompilerArgs{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{},
 		Stage:    &drone.Stage{},
@@ -118,7 +118,7 @@ func TestCompile_Secrets(t *testing.T) {
 		Secret:   secret.Static(nil),
 	}
 
-	ir := compiler.Compile(nocontext, args)
+	ir := compiler.Compile(nocontext, args).(*engine.Spec)
 	got := ir.Steps[0].Secrets
 	want := []*engine.Secret{
 		{
@@ -169,7 +169,7 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 			"my_username": "octocat",
 		}),
 	}
-	args := Args{
+	args := runtime.CompilerArgs{
 		Repo:     &drone.Repo{},
 		Build:    &drone.Build{Target: "master"},
 		Stage:    &drone.Stage{},
@@ -203,7 +203,7 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 		t.Errorf(diff)
 	}
 
-	return got
+	return got.(*engine.Spec)
 }
 
 func dump(v interface{}) {
