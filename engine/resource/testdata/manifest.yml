@@ -24,6 +24,9 @@ workspace:
 clone:
   depth: 50
 
+environment:
+  NODE_ENV: development
+
 steps:
 - name: build
   image: golang

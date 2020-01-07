@@ -35,6 +35,9 @@ func TestParse(t *testing.T) {
 			Type:    "docker",
 			Name:    "default",
 			Version: "1",
+			Environment: map[string]string{
+				"NODE_ENV": "development",
+			},
 			Workspace: Workspace{
 				Path: "/drone/src",
 			},
