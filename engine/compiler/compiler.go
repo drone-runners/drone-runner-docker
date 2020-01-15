@@ -371,6 +371,11 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 				ID:   id,
 				Name: id,
 				Path: k,
+
+				// TODO(bradrydzewski) the volume map does not include
+				// a read only flag and needs to be modified to provide
+				// this option.
+				ReadOnly: false,
 			},
 		}
 		spec.Volumes = append(spec.Volumes, volume)

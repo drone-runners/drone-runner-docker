@@ -220,6 +220,7 @@ func toMount(source *Volume, target *VolumeMount) mount.Mount {
 	}
 	if isBindMount(source) || isNamedPipe(source) {
 		to.Source = source.HostPath.Path
+		to.ReadOnly = source.HostPath.ReadOnly
 	}
 	if isTempfs(source) {
 		to.TmpfsOptions = &mount.TmpfsOptions{
