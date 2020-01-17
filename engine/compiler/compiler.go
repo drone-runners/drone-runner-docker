@@ -7,6 +7,7 @@ package compiler
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
@@ -366,16 +367,14 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	// append global volumes to the steps.
 	for k, v := range c.Volumes {
 		id := random()
+		ro := strings.HasSuffix(v, ":ro")
+		v = strings.TrimSuffix(v, ":ro")
 		volume := &engine.Volume{
 			HostPath: &engine.VolumeHostPath{
-				ID:   id,
-				Name: id,
-				Path: k,
-
-				// TODO(bradrydzewski) the volume map does not include
-				// a read only flag and needs to be modified to provide
-				// this option.
-				ReadOnly: false,
+				ID:       id,
+				Name:     id,
+				Path:     k,
+				ReadOnly: ro,
 			},
 		}
 		spec.Volumes = append(spec.Volumes, volume)
