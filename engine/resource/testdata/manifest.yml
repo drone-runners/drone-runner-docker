@@ -32,6 +32,8 @@ steps:
   image: golang
   detach: false
   failure: ignore
+  mem_limit: 1GiB
+  memswap_limit: 2GiB
   commands:
   - go build
   - go test

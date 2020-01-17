@@ -48,6 +48,14 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		// Resources:    toResources(src), // TODO
 	}
 
+	// set container limits
+	if v := int64(src.MemLimit); v > 0 {
+		dst.MemLimit = v
+	}
+	if v := int64(src.MemSwapLimit); v > 0 {
+		dst.MemSwapLimit = v
+	}
+
 	// appends the volumes to the container def.
 	for _, vol := range src.Volumes {
 		dst.Volumes = append(dst.Volumes, &engine.VolumeMount{

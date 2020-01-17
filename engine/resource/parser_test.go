@@ -76,7 +76,9 @@ func TestParse(t *testing.T) {
 						"GOOS":   &manifest.Variable{Value: "linux"},
 						"GOARCH": &manifest.Variable{Value: "arm64"},
 					},
-					Failure: "ignore",
+					MemLimit:     manifest.BytesSize(1073741824),
+					MemSwapLimit: manifest.BytesSize(2147483648),
+					Failure:      "ignore",
 					When: manifest.Conditions{
 						Event: manifest.Condition{
 							Include: []string{"push"},

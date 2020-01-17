@@ -83,29 +83,31 @@ func (p *Pipeline) GetStep(name string) *Step {
 type (
 	// Step defines a Pipeline step.
 	Step struct {
-		Command     []string                       `json:"command,omitempty"`
-		Commands    []string                       `json:"commands,omitempty"`
-		Detach      bool                           `json:"detach,omitempty"`
-		DependsOn   []string                       `json:"depends_on,omitempty" yaml:"depends_on"`
-		Devices     []*VolumeDevice                `json:"devices,omitempty"`
-		DNS         []string                       `json:"dns,omitempty"`
-		DNSSearch   []string                       `json:"dns_search,omitempty" yaml:"dns_search"`
-		Entrypoint  []string                       `json:"entrypoint,omitempty"`
-		Environment map[string]*manifest.Variable  `json:"environment,omitempty"`
-		ExtraHosts  []string                       `json:"extra_hosts,omitempty" yaml:"extra_hosts"`
-		Failure     string                         `json:"failure,omitempty"`
-		Image       string                         `json:"image,omitempty"`
-		Network     string                         `json:"network_mode,omitempty" yaml:"network_mode"`
-		Name        string                         `json:"name,omitempty"`
-		Privileged  bool                           `json:"privileged,omitempty"`
-		Pull        string                         `json:"pull,omitempty"`
-		Settings    map[string]*manifest.Parameter `json:"settings,omitempty"`
-		Shell       string                         `json:"shell,omitempty"`
-		ShmSize     manifest.BytesSize             `json:"shm_size,omitempty" yaml:"shm_size"`
-		User        string                         `json:"user,omitempty"`
-		Volumes     []*VolumeMount                 `json:"volumes,omitempty"`
-		When        manifest.Conditions            `json:"when,omitempty"`
-		WorkingDir  string                         `json:"working_dir,omitempty" yaml:"working_dir"`
+		Command      []string                       `json:"command,omitempty"`
+		Commands     []string                       `json:"commands,omitempty"`
+		Detach       bool                           `json:"detach,omitempty"`
+		DependsOn    []string                       `json:"depends_on,omitempty" yaml:"depends_on"`
+		Devices      []*VolumeDevice                `json:"devices,omitempty"`
+		DNS          []string                       `json:"dns,omitempty"`
+		DNSSearch    []string                       `json:"dns_search,omitempty" yaml:"dns_search"`
+		Entrypoint   []string                       `json:"entrypoint,omitempty"`
+		Environment  map[string]*manifest.Variable  `json:"environment,omitempty"`
+		ExtraHosts   []string                       `json:"extra_hosts,omitempty" yaml:"extra_hosts"`
+		Failure      string                         `json:"failure,omitempty"`
+		Image        string                         `json:"image,omitempty"`
+		MemLimit     manifest.BytesSize             `json:"mem_limit,omitempty" yaml:"mem_limit"`
+		MemSwapLimit manifest.BytesSize             `json:"memswap_limit,omitempty" yaml:"memswap_limit"`
+		Network      string                         `json:"network_mode,omitempty" yaml:"network_mode"`
+		Name         string                         `json:"name,omitempty"`
+		Privileged   bool                           `json:"privileged,omitempty"`
+		Pull         string                         `json:"pull,omitempty"`
+		Settings     map[string]*manifest.Parameter `json:"settings,omitempty"`
+		Shell        string                         `json:"shell,omitempty"`
+		ShmSize      manifest.BytesSize             `json:"shm_size,omitempty" yaml:"shm_size"`
+		User         string                         `json:"user,omitempty"`
+		Volumes      []*VolumeMount                 `json:"volumes,omitempty"`
+		When         manifest.Conditions            `json:"when,omitempty"`
+		WorkingDir   string                         `json:"working_dir,omitempty" yaml:"working_dir"`
 	}
 
 	// Volume that can be mounted by containers.
