@@ -351,8 +351,15 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 
 	// append global resource limits to steps
 	for _, step := range spec.Steps {
-		step.MemSwapLimit = c.Resources.MemorySwap
-		step.MemLimit = c.Resources.Memory
+		// the resource limits defined in the yaml currently
+		// take precedence over global values. This is something
+		// we should re-think in a future release.
+		if step.MemSwapLimit != 0 {
+			step.MemSwapLimit = c.Resources.MemorySwap
+		}
+		if step.MemLimit != 0 {
+			step.MemLimit = c.Resources.Memory
+		}
 		step.CPUPeriod = c.Resources.CPUPeriod
 		step.CPUQuota = c.Resources.CPUQuota
 		step.CPUShares = c.Resources.CPUShares
