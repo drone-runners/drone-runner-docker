@@ -78,7 +78,7 @@ func MatchHostname(image, hostname string) bool {
 	if strings.HasPrefix(hostname, "http://") ||
 		strings.HasPrefix(hostname, "https://") {
 		parsed, err := url.Parse(hostname)
-		if err != nil {
+		if err == nil {
 			hostname = parsed.Host
 		}
 	}
