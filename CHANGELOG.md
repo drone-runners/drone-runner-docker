@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - do not override user defined mem_limit and memswap_limit
+- remove scheme when comparing image and registry hostnames
 
 ## 1.2.0
 ### Added
