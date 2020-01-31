@@ -251,6 +251,11 @@ func Test_matchHostname(t *testing.T) {
 			want:     true,
 		},
 		{
+			image:    "012345678910.dkr.ecr.us-east-1.amazonaws.com/foo:latest",
+			hostname: "https://012345678910.dkr.ecr.us-east-1.amazonaws.com",
+			want:     true,
+		},
+		{
 			image:    "*&^%",
 			hostname: "1.2.3.4:8000",
 			want:     false,
