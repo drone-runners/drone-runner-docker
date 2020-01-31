@@ -241,8 +241,13 @@ func Test_matchHostname(t *testing.T) {
 			want:     true,
 		},
 		{
-			image:    "1.2.3.4:8000/golang:1.0.0",
-			hostname: "1.2.3.4:8000",
+			image:    "gcr.io/golang:1.0.0",
+			hostname: "gcr.io",
+			want:     true,
+		},
+		{
+			image:    "012345678910.dkr.ecr.us-east-1.amazonaws.com/foo:latest",
+			hostname: "012345678910.dkr.ecr.us-east-1.amazonaws.com",
 			want:     true,
 		},
 		{

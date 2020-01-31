@@ -1,6 +1,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.1
+### Added
+- deployment id environment variable
+- support for multi-line secret masking
+- trace logging prints external registry details
+
+### Fixed
+- do not override user defined mem_limit and memswap_limit
+
 ## 1.2.0
 ### Added
 - support for mem_limit and memswap_limit
