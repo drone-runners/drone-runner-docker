@@ -330,7 +330,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		if ok {
 			parsed, err := auths.ParseString(secret)
 			if err == nil {
-				creds = append(creds, parsed...)
+				creds = append(parsed, creds...)
 			}
 		}
 	}
