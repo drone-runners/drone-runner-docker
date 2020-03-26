@@ -1,6 +1,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Changed
+- update environment extension protocol to version 2
+- registry credentials stored in repository secrets take precedence over globals
+
+### Added
+- support for environment extension variable masking
+- support for username/password in config.json files
+
 ## 1.2.1
 ### Added
 - deployment id environment variable
