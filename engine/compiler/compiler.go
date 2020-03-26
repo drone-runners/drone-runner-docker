@@ -166,14 +166,16 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	}
 
 	// list the global environment variables
-	envs, _ := c.Environ.List(ctx, &provider.Request{
+	globals, _ := c.Environ.List(ctx, &provider.Request{
 		Build: args.Build,
 		Repo:  args.Repo,
 	})
 
 	// create the default environment variables.
-	envs = environ.Combine(
-		envs,
+	envs := environ.Combine(
+		provider.ToMap(
+			provider.FilterUnmasked(globals),
+		),
 		args.Build.Params,
 		pipeline.Environment,
 		environ.Proxy(),
@@ -346,6 +348,21 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 				}
 				break STEPS
 			}
+		}
+	}
+
+	// HACK: append masked global variables to secrets
+	// this ensures the environment variable values are
+	// masked when printed to the console.
+	masked := provider.FilterMasked(globals)
+	for _, step := range spec.Steps {
+		for _, g := range masked {
+			step.Secrets = append(step.Secrets, &engine.Secret{
+				Name: g.Name,
+				Data: []byte(g.Data),
+				Mask: g.Mask,
+				Env:  g.Name,
+			})
 		}
 	}
 
