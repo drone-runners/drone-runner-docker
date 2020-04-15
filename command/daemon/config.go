@@ -76,6 +76,7 @@ type Config struct {
 		CPUPeriod  int64    `envconfig:"DRONE_CPU_PERIOD"`
 		CPUShares  int64    `envconfig:"DRONE_CPU_SHARES"`
 		CPUSet     []string `envconfig:"DRONE_CPU_SET"`
+		ShmSize    int64    `envconfig:"DRONE_SHM_SIZE"`
 	}
 
 	Environ struct {

@@ -131,6 +131,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				CPUPeriod:  config.Resources.CPUPeriod,
 				CPUShares:  config.Resources.CPUShares,
 				CPUSet:     config.Resources.CPUSet,
+				ShmSize:    config.Resources.ShmSize,
 			},
 			Environ: provider.Combine(
 				provider.Static(config.Runner.Environ),
