@@ -262,6 +262,11 @@ func setupLogger(config Config) {
 
 // Register the daemon command.
 func Register(app *kingpin.Application) {
+	registerDaemon(app)
+	registerProcess(app)
+}
+
+func registerDaemon(app *kingpin.Application) {
 	c := new(daemonCommand)
 
 	cmd := app.Command("daemon", "starts the runner daemon").
