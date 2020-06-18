@@ -141,6 +141,8 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 	// create the container
 	err := e.create(ctx, spec, step, output)
 	if err != nil {
+		// in cases where the image cannot be pulled an empty log will be generated if we do not log the error here ...
+		io.WriteString(output, err.Error())
 		return nil, errors.TrimExtraInfo(err)
 	}
 	// start the container
