@@ -4,7 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 1.4.0
 ### Added
 - support for windows 1909
-- support for nomad runner integration
+- support for nomad runner execution
 
 ## 1.3.0
 ### Added
