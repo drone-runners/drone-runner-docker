@@ -274,6 +274,10 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		if !src.When.Match(match) {
 			dst.RunPolicy = runtime.RunNever
 		}
+
+		if c.isPrivileged(src) {
+			dst.Privileged = true
+		}
 	}
 
 	// create steps
