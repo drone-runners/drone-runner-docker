@@ -16,10 +16,11 @@ import (
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
 
-	"docker.io/go-docker"
-	"docker.io/go-docker/api/types"
-	"docker.io/go-docker/api/types/network"
-	"docker.io/go-docker/api/types/volume"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/client"
 )
 
 // Opts configures the Docker engine.
@@ -29,12 +30,12 @@ type Opts struct {
 
 // Docker implements a Docker pipeline engine.
 type Docker struct {
-	client   docker.APIClient
+	client   client.APIClient
 	hidePull bool
 }
 
 // New returns a new engine.
-func New(client docker.APIClient, opts Opts) *Docker {
+func New(client client.APIClient, opts Opts) *Docker {
 	return &Docker{
 		client:   client,
 		hidePull: opts.HidePull,
@@ -43,7 +44,7 @@ func New(client docker.APIClient, opts Opts) *Docker {
 
 // NewEnv returns a new Engine from the environment.
 func NewEnv(opts Opts) (*Docker, error) {
-	cli, err := docker.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		if vol.EmptyDir == nil {
 			continue
 		}
-		_, err := e.client.VolumeCreate(ctx, volume.VolumesCreateBody{
+		_, err := e.client.VolumeCreate(ctx, volume.VolumeCreateBody{
 			Name:   vol.EmptyDir.ID,
 			Driver: "local",
 			Labels: vol.EmptyDir.Labels,
@@ -199,7 +200,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 
 	// automatically pull and try to re-create the image if the
 	// failure is caused because the image does not exist.
-	if docker.IsErrImageNotFound(err) && step.Pull != PullNever {
+	if client.IsErrNotFound(err) && step.Pull != PullNever {
 		rc, pullerr := e.client.ImagePull(ctx, step.Image, pullopts)
 		if pullerr != nil {
 			return pullerr
@@ -249,7 +250,7 @@ func (e *Docker) start(ctx context.Context, id string) error {
 // helper function emulates the `docker wait` command, blocking
 // until the container stops and returning the exit code.
 func (e *Docker) wait(ctx context.Context, id string) (*runtime.State, error) {
-	wait, errc := e.client.ContainerWait(ctx, id, "")
+	wait, errc := e.client.ContainerWait(ctx, id, container.WaitConditionNotRunning)
 	select {
 	case <-wait:
 	case <-errc:
