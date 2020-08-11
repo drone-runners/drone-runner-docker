@@ -73,6 +73,10 @@ type Compiler struct {
 	// attached to each pipeline container.
 	Networks []string
 
+	// NetworkOpts provides a set of network options that
+	// are used when creating the docker network.
+	NetworkOpts map[string]string
+
 	// Volumes provides a set of volumes that should be
 	// mounted to each pipeline container.
 	Volumes map[string]string
@@ -154,8 +158,9 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID:     random(),
-			Labels: labels,
+			ID:      random(),
+			Labels:  labels,
+			Options: c.NetworkOpts,
 		},
 		Platform: engine.Platform{
 			OS:      pipeline.Platform.OS,

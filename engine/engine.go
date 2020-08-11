@@ -83,8 +83,9 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		driver = "nat"
 	}
 	_, err := e.client.NetworkCreate(ctx, spec.Network.ID, types.NetworkCreate{
-		Driver: driver,
-		Labels: spec.Network.Labels,
+		Driver:  driver,
+		Options: spec.Network.Options,
+		Labels:  spec.Network.Labels,
 	})
 
 	return errors.TrimExtraInfo(err)

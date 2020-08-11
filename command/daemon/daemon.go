@@ -120,10 +120,11 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			config.Limit.Trusted,
 		),
 		Compiler: &compiler.Compiler{
-			Clone:      config.Runner.Clone,
-			Privileged: append(config.Runner.Privileged, compiler.Privileged...),
-			Networks:   config.Runner.Networks,
-			Volumes:    config.Runner.Volumes,
+			Clone:       config.Runner.Clone,
+			Privileged:  append(config.Runner.Privileged, compiler.Privileged...),
+			Networks:    config.Runner.Networks,
+			NetworkOpts: config.Runner.NetworkOpts,
+			Volumes:     config.Runner.Volumes,
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
 				MemorySwap: config.Resources.MemorySwap,
