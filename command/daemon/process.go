@@ -66,15 +66,17 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 	runner := &runtime.Runner{
 		Client:   cli,
 		Machine:  config.Runner.Name,
+		Environ:  config.Runner.Environ,
 		Reporter: remote,
 		Lookup:   resource.Lookup,
 		Lint:     linter.New().Lint,
 		Match:    nil,
 		Compiler: &compiler.Compiler{
-			Clone:      config.Runner.Clone,
-			Privileged: append(config.Runner.Privileged, compiler.Privileged...),
-			Networks:   config.Runner.Networks,
-			Volumes:    config.Runner.Volumes,
+			Clone:          config.Runner.Clone,
+			Privileged:     append(config.Runner.Privileged, compiler.Privileged...),
+			Networks:       config.Runner.Networks,
+			NetrcCloneOnly: config.Netrc.CloneOnly,
+			Volumes:        config.Runner.Volumes,
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
 				MemorySwap: config.Resources.MemorySwap,

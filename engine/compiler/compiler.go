@@ -6,7 +6,6 @@ package compiler
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -76,6 +75,10 @@ type Compiler struct {
 	// NetworkOpts provides a set of network options that
 	// are used when creating the docker network.
 	NetworkOpts map[string]string
+
+	// NetrcCloneOnly instrucs the compiler to only inject
+	// the netrc file into the clone setp.
+	NetrcCloneOnly bool
 
 	// Volumes provides a set of volumes that should be
 	// mounted to each pipeline container.
@@ -215,17 +218,10 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		envs["DRONE_DOCKER_VOLUME_PATH"] = volume.HostPath.Path
 	}
 
-	// create the netrc environment variables
-	if args.Netrc != nil && args.Netrc.Machine != "" {
-		envs["DRONE_NETRC_MACHINE"] = args.Netrc.Machine
-		envs["DRONE_NETRC_USERNAME"] = args.Netrc.Login
-		envs["DRONE_NETRC_PASSWORD"] = args.Netrc.Password
-		envs["DRONE_NETRC_FILE"] = fmt.Sprintf(
-			"machine %s login %s password %s",
-			args.Netrc.Machine,
-			args.Netrc.Login,
-			args.Netrc.Password,
-		)
+	// create the .netrc environment variables if not
+	// explicitly disabled
+	if c.NetrcCloneOnly == false {
+		envs = environ.Combine(envs, environ.Netrc(args.Netrc))
 	}
 
 	match := manifest.Match{
@@ -249,6 +245,12 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		step.Pull = engine.PullIfNotExists
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
+
+		// always set the .netrc file for the clone step.
+		// note that environment variables are only set
+		// if the .netrc file is not nil (it will always
+		// be nil for public repositories).
+		step.Envs = environ.Combine(step.Envs, environ.Netrc(args.Netrc))
 
 		// if the clone image is customized, override
 		// the default image.

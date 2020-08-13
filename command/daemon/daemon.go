@@ -93,6 +93,11 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		if err == context.Canceled {
 			break
 		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("cannot ping the docker daemon")
@@ -111,6 +116,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	runner := &runtime.Runner{
 		Client:   cli,
 		Machine:  config.Runner.Name,
+		Environ:  config.Runner.Environ,
 		Reporter: tracer,
 		Lookup:   resource.Lookup,
 		Lint:     linter.New().Lint,
@@ -120,11 +126,12 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			config.Limit.Trusted,
 		),
 		Compiler: &compiler.Compiler{
-			Clone:       config.Runner.Clone,
-			Privileged:  append(config.Runner.Privileged, compiler.Privileged...),
-			Networks:    config.Runner.Networks,
-			NetworkOpts: config.Runner.NetworkOpts,
-			Volumes:     config.Runner.Volumes,
+			Clone:          config.Runner.Clone,
+			Privileged:     append(config.Runner.Privileged, compiler.Privileged...),
+			Networks:       config.Runner.Networks,
+			NetworkOpts:    config.Runner.NetworkOpts,
+			NetrcCloneOnly: config.Netrc.CloneOnly,
+			Volumes:        config.Runner.Volumes,
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
 				MemorySwap: config.Resources.MemorySwap,
