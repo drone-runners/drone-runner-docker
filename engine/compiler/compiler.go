@@ -463,6 +463,8 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	if len(step.Entrypoint) > 0 {
 		return false
 	}
+	// privileged-by-default mode is disabled if the
+	// pipeline step mounts a restricted volume.
 	for _, mount := range step.Volumes {
 		path, _ := filepath.Abs(mount.MountPath)
 		path = strings.ToLower(path)
@@ -472,6 +474,24 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 		case path == "/var":
 			return false
 		case strings.Contains(path, "/var/run"):
+			return false
+		case strings.Contains(path, "/proc"):
+			return false
+		case strings.Contains(path, "/mount"):
+			return false
+		case strings.Contains(path, "/bin"):
+			return false
+		case strings.Contains(path, "/usr/local/bin"):
+			return false
+		case strings.Contains(path, "/mnt"):
+			return false
+		case strings.Contains(path, "/media"):
+			return false
+		case strings.Contains(path, "/sys"):
+			return false
+		case strings.Contains(path, "/dev"):
+			return false
+		case strings.Contains(path, "/etc/docker"):
 			return false
 		}
 	}
