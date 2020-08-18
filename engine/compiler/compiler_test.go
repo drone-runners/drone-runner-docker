@@ -211,3 +211,41 @@ func dump(v interface{}) {
 	enc.SetIndent("", "  ")
 	enc.Encode(v)
 }
+
+// This test verifies that privileged whitelisting is disabled when
+// certain attributes, such as the entrypoint, command or commands
+// are configured.
+func TestIsPrivileged(t *testing.T) {
+	c := new(Compiler)
+	c.Privileged = []string{"foo"}
+	if c.isPrivileged(&resource.Step{Image: "foo", Commands: []string{"echo hello", "echo world"}}) {
+		t.Errorf("Disable privileged mode if commands are specified")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Command: []string{"echo hello", "echo world"}}) {
+		t.Errorf("Disable privileged mode if the Docker command is specified")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Entrypoint: []string{"/bin/sh"}}) {
+		t.Errorf("Disable privileged mode if the Docker entrypoint is specified")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/var/run/docker.sock"}}}) {
+		t.Errorf("Disable privileged mode if /var/run/docker.sock mounted")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/var"}}}) {
+		t.Errorf("Disable privileged mode if /var mounted")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/var/"}}}) {
+		t.Errorf("Disable privileged mode if /var mounted")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/var//"}}}) {
+		t.Errorf("Disable privileged mode if /var mounted")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/var/run"}}}) {
+		t.Errorf("Disable privileged mode if /var/run mounted")
+	}
+	if c.isPrivileged(&resource.Step{Image: "foo", Volumes: []*resource.VolumeMount{{MountPath: "/"}}}) {
+		t.Errorf("Disable privileged mode if / mounted")
+	}
+	if !c.isPrivileged(&resource.Step{Image: "foo"}) {
+		t.Errorf("Enable privileged mode for privileged image")
+	}
+}

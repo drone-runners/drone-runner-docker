@@ -6,6 +6,7 @@ package compiler
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -461,6 +462,18 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	}
 	if len(step.Entrypoint) > 0 {
 		return false
+	}
+	for _, mount := range step.Volumes {
+		path, _ := filepath.Abs(mount.MountPath)
+		path = strings.ToLower(path)
+		switch {
+		case path == "/":
+			return false
+		case path == "/var":
+			return false
+		case strings.Contains(path, "/var/run"):
+			return false
+		}
 	}
 	// if the container image matches any image
 	// in the whitelist, return true.
