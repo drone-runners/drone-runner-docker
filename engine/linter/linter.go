@@ -19,15 +19,6 @@ import (
 // have the same name.
 var ErrDuplicateStepName = errors.New("linter: duplicate step names")
 
-// ErrMissingDependency is returned when a Pipeline step
-// defines dependencies that are invlid or unknown.
-var ErrMissingDependency = errors.New("linter: invalid or unknown step dependency")
-
-// ErrCyclicalDependency is returned when a Pipeline step
-// defines a cyclical dependency, which would result in an
-// infinite execution loop.
-var ErrCyclicalDependency = errors.New("linter: cyclical step dependency detected")
-
 // Opts provides linting options.
 type Opts struct {
 	Trusted bool
@@ -80,11 +71,26 @@ func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
 
 func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 	steps := append(pipeline.Services, pipeline.Steps...)
+	names := map[string]struct{}{}
+	if !pipeline.Clone.Disable {
+		names["clone"] = struct{}{}
+	}
 	for _, step := range steps {
 		if step == nil {
 			return errors.New("linter: nil step")
 		}
+
+		// unique list of names
+		_, ok := names[step.Name]
+		if ok {
+			return ErrDuplicateStepName
+		}
+		names[step.Name] = struct{}{}
+
 		if err := checkStep(step, trusted); err != nil {
+			return err
+		}
+		if err := checkDeps(step, names); err != nil {
 			return err
 		}
 	}
@@ -168,6 +174,19 @@ func checkHostPathVolume(volume *resource.VolumeHostPath, trusted bool) error {
 func checkEmptyDirVolume(volume *resource.VolumeEmptyDir, trusted bool) error {
 	if trusted == false && volume.Medium == "memory" {
 		return errors.New("linter: untrusted repositories cannot mount in-memory volumes")
+	}
+	return nil
+}
+
+func checkDeps(step *resource.Step, deps map[string]struct{}) error {
+	for _, dep := range step.DependsOn {
+		_, ok := deps[dep]
+		if !ok {
+			return fmt.Errorf("linter: unknown step dependency detected: %s references %s", step.Name, dep)
+		}
+		if step.Name == dep {
+			return fmt.Errorf("linter: cyclical step dependency detected: %s", dep)
+		}
 	}
 	return nil
 }
