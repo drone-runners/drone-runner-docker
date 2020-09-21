@@ -1,6 +1,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.5.2
+### Added
+- trace logging for semaphore acquisition and release
+
+### Fixed
+- failure to acquire semaphore due to error should fail the pipeline
+- failure to acquire semaphore due to context deadline should cancel the pipeline
+
 ## 1.5.1
 ### Fixed
 - cancel a build should result in cancel status, not error status
