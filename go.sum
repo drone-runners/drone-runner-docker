@@ -52,6 +52,10 @@ github.com/drone/runner-go v1.6.1-0.20200915182738-e567c860a85f h1:MGMpEIlsJGhjL
 github.com/drone/runner-go v1.6.1-0.20200915182738-e567c860a85f/go.mod h1:+Zc4z9/xqlqkFkAcqOtuYjYS77d2PeuWh0PxxibHfNs=
 github.com/drone/runner-go v1.6.1-0.20200915183738-9497cc9f42d2 h1:Dl/C3J3w4SQXQXOXIYvI6JwwZHRpkBqD51RiC/kBkDI=
 github.com/drone/runner-go v1.6.1-0.20200915183738-9497cc9f42d2/go.mod h1:+Zc4z9/xqlqkFkAcqOtuYjYS77d2PeuWh0PxxibHfNs=
+github.com/drone/runner-go v1.6.1-0.20200921133603-3bba1bdfc563 h1:swfE/yWVK8ElkDAM4mGR25I7wkxvHgxFI053rIhBXfY=
+github.com/drone/runner-go v1.6.1-0.20200921133603-3bba1bdfc563/go.mod h1:+Zc4z9/xqlqkFkAcqOtuYjYS77d2PeuWh0PxxibHfNs=
+github.com/drone/runner-go v1.6.1-0.20200921171532-3b4667a1ac54 h1:wcvBrqRl9QX7f1Uo+hJUXH3PxGVzQ0dVOcpqoc3AhSs=
+github.com/drone/runner-go v1.6.1-0.20200921171532-3b4667a1ac54/go.mod h1:+Zc4z9/xqlqkFkAcqOtuYjYS77d2PeuWh0PxxibHfNs=
 github.com/drone/signal v1.0.0 h1:NrnM2M/4yAuU/tXs6RP1a1ZfxnaHwYkd0kJurA1p6uI=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
