@@ -13,6 +13,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/jsonmessage"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
+	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
 
@@ -156,7 +157,7 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 		return nil, errors.TrimExtraInfo(err)
 	}
 	// wait for the response
-	return e.wait(ctx, step.ID)
+	return e.waitRetry(ctx, step.ID)
 }
 
 //
@@ -249,6 +250,29 @@ func (e *Docker) start(ctx context.Context, id string) error {
 
 // helper function emulates the `docker wait` command, blocking
 // until the container stops and returning the exit code.
+func (e *Docker) waitRetry(ctx context.Context, id string) (*runtime.State, error) {
+	for {
+		// if the context is canceled, meaning the
+		// pipeline timed out or was killed by the
+		// end-user, we should exit with an error.
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		state, err := e.wait(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if state.Exited {
+			return state, err
+		}
+		logger.FromContext(ctx).
+			WithField("container", id).
+			Trace("docker wait exited unexpectedly")
+	}
+}
+
+// helper function emulates the `docker wait` command, blocking
+// until the container stops and returning the exit code.
 func (e *Docker) wait(ctx context.Context, id string) (*runtime.State, error) {
 	wait, errc := e.client.ContainerWait(ctx, id, container.WaitConditionNotRunning)
 	select {
@@ -260,13 +284,9 @@ func (e *Docker) wait(ctx context.Context, id string) (*runtime.State, error) {
 	if err != nil {
 		return nil, err
 	}
-	if info.State.Running {
-		// TODO(bradrydewski) if the state is still running
-		// we should call wait again.
-	}
 
 	return &runtime.State{
-		Exited:    true,
+		Exited:    !info.State.Running,
 		ExitCode:  info.State.ExitCode,
 		OOMKilled: info.State.OOMKilled,
 	}, nil
