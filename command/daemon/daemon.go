@@ -275,6 +275,7 @@ func setupLogger(config Config) {
 	if config.Trace {
 		logrus.SetLevel(logrus.TraceLevel)
 	}
+	logrus.SetFormatter(&logrus.JSONFormatter{})
 }
 
 // Register the daemon command.
