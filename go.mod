@@ -17,7 +17,7 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/drone/drone-go v1.2.1-0.20200326064413-195394da1018
 	github.com/drone/envsubst v1.0.2
-	github.com/drone/runner-go v1.6.1-0.20200921171532-3b4667a1ac54
+	github.com/drone/runner-go v1.6.1-0.20201016191343-2020a87dfb8c
 	github.com/drone/signal v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506 // indirect
