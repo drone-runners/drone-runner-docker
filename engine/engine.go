@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
@@ -23,6 +24,8 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 )
+
+var terminationGracePeriod = 30 * time.Second
 
 // Opts configures the Docker engine.
 type Opts struct {
@@ -105,7 +108,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range spec.Steps {
-		e.client.ContainerKill(ctx, step.ID, "9")
+		e.client.ContainerStop(ctx, step.ID, &terminationGracePeriod)
 	}
 
 	// cleanup all containers
