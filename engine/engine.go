@@ -8,7 +8,6 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
@@ -106,7 +105,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range spec.Steps {
-		e.client.ContainerStop(ctx, step.ID, time.Seconds(30))
+		e.client.ContainerStop(ctx, step.ID, 30 * time.Second)
 	}
 
 	// cleanup all containers
