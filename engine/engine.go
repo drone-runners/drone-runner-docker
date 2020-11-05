@@ -8,7 +8,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-        "time"
+	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
