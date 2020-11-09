@@ -78,7 +78,7 @@ remote_debug() {
 	fi
 }
 
-if [ "${DRONE_DEBUG}" = "true" ]; then
+if [ "${DRONE_BUILD_DEBUG}" = "true" ]; then
 	trap remote_debug EXIT
 fi
 `

@@ -15,9 +15,9 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v0.0.0-00010101000000-000000000000
 	github.com/docker/go-connections v0.3.0 // indirect
-	github.com/drone/drone-go v1.2.1-0.20200326064413-195394da1018
+	github.com/drone/drone-go v1.4.1-0.20201109202657-b9e58bbbcf27
 	github.com/drone/envsubst v1.0.2
-	github.com/drone/runner-go v1.6.1-0.20201016191343-2020a87dfb8c
+	github.com/drone/runner-go v1.6.1-0.20201109204555-a2c975273a49
 	github.com/drone/signal v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506 // indirect
