@@ -25,6 +25,8 @@ import (
 	"github.com/docker/docker/client"
 )
 
+var terminationGracePeriod = 30 * time.Second
+
 // Opts configures the Docker engine.
 type Opts struct {
 	HidePull bool
@@ -106,7 +108,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range spec.Steps {
-		e.client.ContainerStop(ctx, step.ID, 30 * time.Second)
+		e.client.ContainerStop(ctx, step.ID, &terminationGracePeriod)
 	}
 
 	// cleanup all containers
