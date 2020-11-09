@@ -18,6 +18,7 @@ func Script(commands []string) string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintln(buf)
 	fmt.Fprintf(buf, optionScript)
+	fmt.Fprintf(buf, tmateScript)
 	fmt.Fprintln(buf)
 	for _, command := range commands {
 		escaped := fmt.Sprintf("%q", command)
@@ -54,3 +55,43 @@ const traceScript = `
 echo + %s
 %s
 `
+
+const tmateScript = `
+remote_debug() {
+	if [ "$?" -ne "0" ];
+	then
+
+		if command -v apt-get &> /dev/null
+		then
+			apt-get update -qq
+			apt-get install xz-utils --assume-yes -qq
+		fi
+
+		rm -rf tmate-2.4.0-static-linux-amd64.tar.xz
+		wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
+		tar -xf tmate-2.4.0-static-linux-amd64.tar.xz
+		mv tmate-2.4.0-static-linux-amd64/tmate /usr/bin/
+		chmod +x /usr/bin/tmate
+		rm -rf tmate-2.4.0-static-linux-amd64
+		tmate -F
+
+	fi
+}
+
+if [ "${DRONE_DEBUG}" = "true" ]; then
+	trap remote_debug EXIT
+fi
+`
+
+// TODO(bradrydzewski) add timeout 30m to tmate
+
+//
+// TODO(bradrydzewski) support custom tmate config options:
+//
+//   if [ ! -z "${DRONE_TMATE_SERVER_HOST}" ]; then
+// 	  echo "set -g tmate-server-host \"$DRONE_TMATE_SERVER_HOST\"" >> $HOME/.tmate.conf
+// 	  echo "set -g tmate-server-port $DRONE_TMATE_SERVER_PORT" >> $HOME/.tmate.conf
+// 	  echo "set -g tmate-server-rsa-fingerprint \"$DRONE_TMATE_SERVER_RSA_FINGERPRINT\"" >> $HOME/.tmate.conf
+// 	  echo "set -g tmate-server-ed25519-fingerprint \"$DRONE_TMATE_SERVER_ED25519_FINGERPRINT\"" >> $HOME/.tmate.conf
+//   fi
+//
