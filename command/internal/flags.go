@@ -59,6 +59,7 @@ func ParseFlags(cmd *kingpin.CmdClause) *Flags {
 	cmd.Flag("build-action", "build action").Default("").StringVar(&f.Build.Action)
 	cmd.Flag("build-cron", "build cron trigger").Default("").StringVar(&f.Build.Cron)
 	cmd.Flag("build-target", "build deploy target").Default("").StringVar(&f.Build.Deploy)
+	cmd.Flag("build-debug", "build debug").Default("false").BoolVar(&f.Build.Debug)
 	cmd.Flag("build-created", "build created").Default(now).Int64Var(&f.Build.Created)
 	cmd.Flag("build-updated", "build updated").Default(now).Int64Var(&f.Build.Updated)
 
