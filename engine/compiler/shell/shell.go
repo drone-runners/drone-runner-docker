@@ -67,12 +67,12 @@ remote_debug() {
 			apt-get install xz-utils --assume-yes -qq
 		fi
 
-		rm -rf tmate-2.4.0-static-linux-amd64.tar.xz
 		wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
 		tar -xf tmate-2.4.0-static-linux-amd64.tar.xz
 		mv tmate-2.4.0-static-linux-amd64/tmate /usr/bin/
 		chmod +x /usr/bin/tmate
 		rm -rf tmate-2.4.0-static-linux-amd64
+		rm -rf tmate-2.4.0-static-linux-amd64.tar.xz
 		tmate -F
 
 	fi
