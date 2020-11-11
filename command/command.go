@@ -25,6 +25,7 @@ func Command() {
 	app := kingpin.New("drone", "drone docker runner")
 	registerCompile(app)
 	registerExec(app)
+	registerCopy(app)
 	daemon.Register(app)
 
 	kingpin.Version(version)

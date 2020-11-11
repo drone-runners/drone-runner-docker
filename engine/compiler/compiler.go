@@ -327,8 +327,8 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			Labels:     labels,
 			Pull:       engine.PullIfNotExists,
 			Image:      image.Expand(c.Tmate.Image),
-			Entrypoint: []string{"/bin/sh", "-c"},
-			Command:    []string{"cp /bin/tmate /usr/drone/bin/"},
+			Entrypoint: []string{"/bin/drone-runner-docker"},
+			Command:    []string{"copy"},
 			Network:    "none",
 		})
 
