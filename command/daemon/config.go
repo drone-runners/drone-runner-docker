@@ -108,8 +108,8 @@ type Config struct {
 	}
 
 	Tmate struct {
-		Enabled bool   `envconfig:"DRONE_TMATE_ENABLED" default:"true"`
-		Image   string `envconfig:"DRONE_TMATE_IMAGE"   default:"drone/drone-runner-docker:latest"`
+		Enabled bool   `envconfig:"DRONE_TMATE_ENABLED" default:"false"`
+		Image   string `envconfig:"DRONE_TMATE_IMAGE"   default:"drone/drone-runner-docker:1"`
 	}
 }
 
