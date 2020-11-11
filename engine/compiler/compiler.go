@@ -53,6 +53,12 @@ type Resources struct {
 	ShmSize    int64
 }
 
+// Tmate defines tmate settings.
+type Tmate struct {
+	Image   string
+	Enabled bool
+}
+
 // Compiler compiles the Yaml configuration file to an
 // intermediate representation optimized for simple execution.
 type Compiler struct {
@@ -91,6 +97,10 @@ type Compiler struct {
 	// Resources provides global resource constraints
 	// applies to pipeline containers.
 	Resources Resources
+
+	// Tate provides global configration options for tmate
+	// live debugging.
+	Tmate Tmate
 
 	// Secret returns a named secret value that can be injected
 	// into the pipeline step.
@@ -307,6 +317,38 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 	}
 
+	// create internal steps if build running in debug mode
+	if c.Tmate.Enabled && args.Build.Debug && pipeline.Platform.OS != "windows" {
+		// first we need to add an internal setup step to the pipeline
+		// to copy over the tmate binary. Internal steps are not visible
+		// to the end user.
+		spec.Internal = append(spec.Internal, &engine.Step{
+			ID:         random(),
+			Labels:     labels,
+			Pull:       engine.PullIfNotExists,
+			Image:      image.Expand(c.Tmate.Image),
+			Entrypoint: []string{"/bin/sh", "-c"},
+			Command:    []string{"cp /bin/tmate /usr/drone/bin/"},
+			Network:    "none",
+		})
+
+		// next we create a temporary volume to share the tmate binary
+		// with the pipeline containers.
+		for _, step := range append(spec.Steps, spec.Internal...) {
+			step.Volumes = append(step.Volumes, &engine.VolumeMount{
+				Name: "_addons",
+				Path: "/usr/drone/bin",
+			})
+		}
+		spec.Volumes = append(spec.Volumes, &engine.Volume{
+			EmptyDir: &engine.VolumeEmptyDir{
+				ID:     random(),
+				Name:   "_addons",
+				Labels: labels,
+			},
+		})
+	}
+
 	if isGraph(spec) == false {
 		configureSerial(spec)
 	} else if pipeline.Clone.Disable == false {
@@ -345,7 +387,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 	}
 
-	for _, step := range spec.Steps {
+	for _, step := range append(spec.Steps, spec.Internal...) {
 	STEPS:
 		for _, cred := range creds {
 			if image.MatchHostname(step.Image, cred.Address) {

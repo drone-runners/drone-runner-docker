@@ -58,23 +58,8 @@ echo + %s
 
 const tmateScript = `
 remote_debug() {
-	if [ "$?" -ne "0" ];
-	then
-
-		if command -v apt-get &> /dev/null
-		then
-			apt-get update -qq
-			apt-get install xz-utils --assume-yes -qq
-		fi
-
-		wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-amd64.tar.xz
-		tar -xf tmate-2.4.0-static-linux-amd64.tar.xz
-		mv tmate-2.4.0-static-linux-amd64/tmate /usr/bin/
-		chmod +x /usr/bin/tmate
-		rm -rf tmate-2.4.0-static-linux-amd64
-		rm -rf tmate-2.4.0-static-linux-amd64.tar.xz
-		tmate -F
-
+	if [ "$?" -ne "0" ]; then
+		/usr/drone/bin/tmate -F
 	fi
 }
 

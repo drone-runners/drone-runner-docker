@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
@@ -90,6 +91,35 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		Labels:  spec.Network.Labels,
 	})
 
+	// launches the inernal setup steps
+	for _, step := range spec.Internal {
+		if err := e.create(ctx, spec, step, ioutil.Discard); err != nil {
+			logger.FromContext(ctx).
+				WithError(err).
+				WithField("container", step.ID).
+				Errorln("cannot create tmate container")
+			return err
+		}
+		if err := e.start(ctx, step.ID); err != nil {
+			logger.FromContext(ctx).
+				WithError(err).
+				WithField("container", step.ID).
+				Errorln("cannot start tmate container")
+			return err
+		}
+		if !step.Detach {
+			// the internal containers perform short-lived tasks
+			// and should not require > 1 minute to execute.
+			//
+			// just to be on the safe side we apply a timeout to
+			// ensure we never block pipeline execution because we
+			// are waiting on an internal task.
+			ctx, cancel := context.WithTimeout(ctx, time.Minute)
+			defer cancel()
+			e.wait(ctx, step.ID)
+		}
+	}
+
 	return errors.TrimExtraInfo(err)
 }
 
@@ -104,12 +134,12 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 	}
 
 	// stop all containers
-	for _, step := range spec.Steps {
+	for _, step := range append(spec.Steps, spec.Internal...) {
 		e.client.ContainerKill(ctx, step.ID, "9")
 	}
 
 	// cleanup all containers
-	for _, step := range spec.Steps {
+	for _, step := range append(spec.Steps, spec.Internal...) {
 		e.client.ContainerRemove(ctx, step.ID, removeOpts)
 	}
 

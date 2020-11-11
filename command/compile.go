@@ -37,6 +37,7 @@ type compileCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Tmate      compiler.Tmate
 	Clone      bool
 	Config     string
 }
@@ -101,6 +102,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Environ:    provider.Static(c.Environ),
 		Labels:     c.Labels,
 		Resources:  c.Resources,
+		Tmate:      c.Tmate,
 		Privileged: append(c.Privileged, compiler.Privileged...),
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
@@ -191,6 +193,13 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("docker-config", "path to the docker config file").
 		StringVar(&c.Config)
+
+	cmd.Flag("tmate-image", "tmate docker image").
+		Default("drone/drone-runner-docker:latest").
+		StringVar(&c.Tmate.Image)
+
+	cmd.Flag("tmate-enabled", "tmate enabled").
+		BoolVar(&c.Tmate.Enabled)
 
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)

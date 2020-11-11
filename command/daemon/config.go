@@ -106,6 +106,11 @@ type Config struct {
 		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
 		Stream bool   `envconfig:"DRONE_DOCKER_STREAM_PULL" default:"true"`
 	}
+
+	Tmate struct {
+		Enabled bool   `envconfig:"DRONE_TMATE_ENABLED" default:"true"`
+		Image   string `envconfig:"DRONE_TMATE_IMAGE"   default:"drone/drone-runner-docker:latest"`
+	}
 }
 
 // legacy environment variables. the key is the legacy

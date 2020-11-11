@@ -17,6 +17,7 @@ type (
 	Spec struct {
 		Platform Platform  `json:"platform,omitempty"`
 		Steps    []*Step   `json:"steps,omitempty"`
+		Internal []*Step   `json:"internal,omitempty"`
 		Volumes  []*Volume `json:"volumes,omitempty"`
 		Network  Network   `json:"network"`
 	}
