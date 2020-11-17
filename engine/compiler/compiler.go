@@ -123,6 +123,14 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	// create the workspace paths
 	base, path, full := createWorkspace(pipeline)
 
+	// reset the workspace path if attempting to mount
+	// volumes that are internal use only.
+	if isRestrictedVolume(full) {
+		base = "/drone/src"
+		path = ""
+		full = "/drone/src"
+	}
+
 	// if the source code is mounted from the host, the
 	// target mount path inside the container must be the
 	// full workspace path.
@@ -504,12 +512,23 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	if len(step.Entrypoint) > 0 {
 		return false
 	}
+	if len(step.Volumes) > 0 {
+		return false
+	}
 	// privileged-by-default mode is disabled if the
-	// pipeline step mounts a restricted volume.
+	// pipeline step mounts a volume restricted for
+	// internal use only.
+	// note: this is deprecated.
 	for _, mount := range step.Volumes {
 		if isRestrictedVolume(mount.MountPath) {
 			return false
 		}
+	}
+	// privileged-by-default mode is disabled if the
+	// pipeline step attempts to use an environment
+	// variable restricted for internal use only.
+	if isRestrictedVariable(step.Environment) {
+		return false
 	}
 	// if the container image matches any image
 	// in the whitelist, return true.

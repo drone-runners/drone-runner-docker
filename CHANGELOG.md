@@ -1,6 +1,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.1
+### Changed
+- restrict temporary volumes used with docker plugins
+- restrict environment variables used with docker plugins
+
 ## 1.6.0
 ### Added
 - experimental support for remote debugging with tmate, disabled by default
