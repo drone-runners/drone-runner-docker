@@ -146,11 +146,14 @@ func isRestrictedVolume(path string) bool {
 	switch {
 	case path == "/":
 	case path == "/var":
+	case path == "/etc":
 	case strings.Contains(path, "/var/run"):
 	case strings.Contains(path, "/proc"):
 	case strings.Contains(path, "/mount"):
 	case strings.Contains(path, "/bin"):
 	case strings.Contains(path, "/usr/local/bin"):
+	case strings.Contains(path, "/usr/local/sbin"):
+	case strings.Contains(path, "/usr/bin"):
 	case strings.Contains(path, "/mnt"):
 	case strings.Contains(path, "/media"):
 	case strings.Contains(path, "/sys"):
@@ -160,4 +163,24 @@ func isRestrictedVolume(path string) bool {
 		return false
 	}
 	return true
+}
+
+// helper function returns true if the environment variable
+// is restricted for internal-use only.
+func isRestrictedVariable(env map[string]*manifest.Variable) bool {
+	for _, name := range restrictedVars {
+		if _, ok := env[name]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// list of restricted variables
+var restrictedVars = []string{
+	"XDG_RUNTIME_DIR",
+	"DOCKER_OPTS",
+	"DOCKER_HOST",
+	"PATH",
+	"HOME",
 }
