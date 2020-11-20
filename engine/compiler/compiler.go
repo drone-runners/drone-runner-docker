@@ -57,6 +57,10 @@ type Resources struct {
 type Tmate struct {
 	Image   string
 	Enabled bool
+	Server  string
+	Port    string
+	RSA     string
+	ED25519 string
 }
 
 // Compiler compiles the Yaml configuration file to an
@@ -234,6 +238,14 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		envs["DRONE_DOCKER_VOLUME_ID"] = volume.EmptyDir.ID
 	} else {
 		envs["DRONE_DOCKER_VOLUME_PATH"] = volume.HostPath.Path
+	}
+
+	// create tmate variables
+	if c.Tmate.Server != "" {
+		envs["DRONE_TMATE_HOST"] = c.Tmate.Server
+		envs["DRONE_TMATE_PORT"] = c.Tmate.Port
+		envs["DRONE_TMATE_FINGERPRINT_RSA"] = c.Tmate.RSA
+		envs["DRONE_TMATE_FINGERPRINT_ED25519"] = c.Tmate.ED25519
 	}
 
 	// create the .netrc environment variables if not

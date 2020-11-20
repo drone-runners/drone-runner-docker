@@ -63,20 +63,14 @@ remote_debug() {
 	fi
 }
 
+if [ ! -z "${DRONE_TMATE_HOST}" ]; then
+	echo "set -g tmate-server-host $DRONE_TMATE_HOST" >> $HOME/.tmate.conf
+	echo "set -g tmate-server-port $DRONE_TMATE_PORT" >> $HOME/.tmate.conf
+	echo "set -g tmate-server-rsa-fingerprint $DRONE_TMATE_FINGERPRINT_RSA" >> $HOME/.tmate.conf
+	echo "set -g tmate-server-ed25519-fingerprint $DRONE_TMATE_FINGERPRINT_ED25519" >> $HOME/.tmate.conf
+fi
+
 if [ "${DRONE_BUILD_DEBUG}" = "true" ]; then
 	trap remote_debug EXIT
 fi
 `
-
-// TODO(bradrydzewski) add timeout 30m to tmate
-
-//
-// TODO(bradrydzewski) support custom tmate config options:
-//
-//   if [ ! -z "${DRONE_TMATE_SERVER_HOST}" ]; then
-// 	  echo "set -g tmate-server-host \"$DRONE_TMATE_SERVER_HOST\"" >> $HOME/.tmate.conf
-// 	  echo "set -g tmate-server-port $DRONE_TMATE_SERVER_PORT" >> $HOME/.tmate.conf
-// 	  echo "set -g tmate-server-rsa-fingerprint \"$DRONE_TMATE_SERVER_RSA_FINGERPRINT\"" >> $HOME/.tmate.conf
-// 	  echo "set -g tmate-server-ed25519-fingerprint \"$DRONE_TMATE_SERVER_ED25519_FINGERPRINT\"" >> $HOME/.tmate.conf
-//   fi
-//
