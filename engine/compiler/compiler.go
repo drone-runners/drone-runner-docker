@@ -6,6 +6,7 @@ package compiler
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -511,6 +512,11 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	return spec
 }
 
+// feature toggle that disables the check that restricts
+// docker plugins from mounting volumes.
+// DO NOT USE: THIS WILL BE DEPRECATED IN THE FUTURE
+var allowDockerPluginVolumes = os.Getenv("DRONE_FLAG_ALLOW_DOCKER_PLUGIN_VOLUMES") == "true"
+
 func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	// privileged-by-default containers are only
 	// enabled for plugins steps that do not define
@@ -524,9 +530,13 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	if len(step.Entrypoint) > 0 {
 		return false
 	}
-	if len(step.Volumes) > 0 {
-		return false
+
+	if allowDockerPluginVolumes == false {
+		if len(step.Volumes) > 0 {
+			return false
+		}
 	}
+
 	// privileged-by-default mode is disabled if the
 	// pipeline step mounts a volume restricted for
 	// internal use only.
