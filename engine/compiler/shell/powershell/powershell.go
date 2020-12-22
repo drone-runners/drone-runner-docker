@@ -34,13 +34,12 @@ func Script(commands []string) string {
 // optionScript is a helper script this is added to the build
 // to set shell options, in this case, to exit on error.
 const optionScript = `
-$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 if ($Env:DRONE_NETRC_MACHINE) {
 @"
 machine $Env:DRONE_NETRC_MACHINE
 login $Env:DRONE_NETRC_USERNAME
 password $Env:DRONE_NETRC_PASSWORD
-"@ > (Join-Path $Env:USERPROFILE '_netrc');
+"@ | out-file (Join-Path $Env:USERPROFILE '_netrc') -encoding ascii;
 }
 [Environment]::SetEnvironmentVariable("DRONE_NETRC_USERNAME", $null);
 [Environment]::SetEnvironmentVariable("DRONE_NETRC_PASSWORD", $null);
