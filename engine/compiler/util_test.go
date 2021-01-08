@@ -198,3 +198,23 @@ func Test_removeCloneDeps_CloneEnabled(t *testing.T) {
 		t.Log(diff)
 	}
 }
+
+func TestIsRestricedVolume(t *testing.T) {
+	tests := map[string]bool{
+		"/var/run":         true,
+		"//var/run":        true,
+		"/var/run/":        true,
+		"/var/run/.":       true,
+		"/var/run//":       true,
+		"/var/run/test/..": true,
+		"/var/./run":       true,
+		"/":                true,
+		"/drone":           false,
+		"/drone/var/run":   false,
+	}
+	for path, ok := range tests {
+		if got, want := isRestrictedVolume(path), ok; got != want {
+			t.Errorf("Want restriced %v for path %q", want, path)
+		}
+	}
+}
