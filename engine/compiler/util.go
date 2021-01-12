@@ -156,7 +156,7 @@ func isRestrictedVolume(path string) bool {
 	case strings.HasPrefix(path, "/usr/bin"):
 	case strings.HasPrefix(path, "/mnt"):
 	case strings.HasPrefix(path, "/media"):
-	case strings.Contains(path, "/sys"):
+	case strings.HasPrefix(path, "/sys"):
 	case strings.HasPrefix(path, "/dev"):
 	case strings.HasPrefix(path, "/etc/docker"):
 	default:
