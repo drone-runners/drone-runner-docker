@@ -1,6 +1,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.3
+### Fixed
+- use path prefix when evaluating restricted volume mounts. See [#ea74fa2](https://github.com/drone-runners/drone-runner-docker/commit/ea74fa2ba442eacb0812ad5983c305a16b6763bc).
+
 ## 1.6.2
 ### Added
 - support for self-hosted tmate instances
