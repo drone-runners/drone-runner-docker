@@ -91,6 +91,10 @@ type Compiler struct {
 	// the netrc file into the clone setp.
 	NetrcCloneOnly bool
 
+	// Devices provides a set of devices the should be
+	// mounted into each pipeline container.
+	Devices []string
+
 	// Volumes provides a set of volumes that should be
 	// mounted to each pipeline container.
 	Volumes map[string]string
@@ -482,6 +486,26 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 				Path: v,
 			}
 			step.Volumes = append(step.Volumes, mount)
+		}
+	}
+
+	for _, v := range c.Devices {
+		id := random()
+		volume := &engine.Volume{
+			HostPath: &engine.VolumeHostPath{
+				ID:       id,
+				Name:     id,
+				Path:     v,
+				ReadOnly: true,
+			},
+		}
+		spec.Volumes = append(spec.Volumes, volume)
+		for _, step := range spec.Steps {
+			device := &engine.VolumeDevice{
+				Name:       id,
+				DevicePath: v,
+			}
+			step.Devices = append(step.Devices, device)
 		}
 	}
 

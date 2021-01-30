@@ -44,6 +44,7 @@ type execCommand struct {
 	Exclude    []string
 	Privileged []string
 	Networks   []string
+	Devices    []string
 	Volumes    map[string]string
 	Environ    map[string]string
 	Labels     map[string]string
@@ -123,6 +124,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		Resources:  c.Resources,
 		Tmate:      c.Tmate,
 		Privileged: append(c.Privileged, compiler.Privileged...),
+		Devices:    c.Devices,
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
 		Secret:     secret.StaticVars(c.Secrets),
@@ -295,6 +297,9 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("networks", "container networks").
 		StringsVar(&c.Networks)
+
+	cmd.Flag("devices", "container devices").
+		StringsVar(&c.Devices)
 
 	cmd.Flag("volumes", "container volumes").
 		StringMapVar(&c.Volumes)
