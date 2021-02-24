@@ -6,6 +6,7 @@ package daemon
 
 import (
 	"context"
+	"github.com/drone/drone-go/drone"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -191,7 +192,12 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 
 	poller := &poller.Poller{
 		Client:   cli,
-		Dispatch: runner.Run,
+		Dispatch: func(ctx context.Context, stage *drone.Stage) error {
+			runnerCapacityGauge.WithLabelValues(config.Runner.Name).Dec()
+			defer runnerCapacityGauge.WithLabelValues(config.Runner.Name).Inc()
+
+			return runner.Run(ctx, stage)
+		},
 		Filter: &client.Filter{
 			Kind:    resource.Kind,
 			Type:    resource.Type,
