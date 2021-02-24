@@ -54,6 +54,9 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	// setup the global logrus logger.
 	setupLogger(config)
 
+	// setup the metrics exposition
+	go setupMetrics(config)
+
 	ctx, cancel := context.WithCancel(nocontext)
 	defer cancel()
 
@@ -240,6 +243,8 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	}
 
 	g.Go(func() error {
+		runnerCapacityGauge.WithLabelValues(config.Runner.Name).Set(float64(config.Runner.Capacity))
+
 		logrus.WithField("capacity", config.Runner.Capacity).
 			WithField("endpoint", config.Client.Address).
 			WithField("kind", resource.Kind).

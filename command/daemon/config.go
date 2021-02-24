@@ -41,6 +41,10 @@ type Config struct {
 		Acme  bool   `envconfig:"DRONE_HTTP_ACME"`
 	}
 
+	Metrics struct {
+		Address string `envconfig:"DRONE_METRICS_BIND" default:":8080"`
+	}
+
 	Runner struct {
 		Name        string            `envconfig:"DRONE_RUNNER_NAME"`
 		Capacity    int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
