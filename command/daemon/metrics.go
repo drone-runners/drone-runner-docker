@@ -12,7 +12,7 @@ var (
 	availableCapacityGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "drone",
 		Subsystem: "runner",
-		Name: "capacity",
+		Name: "available_capacity",
 	}, []string{"name"})
 
 	configuredCapacityGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
