@@ -193,8 +193,8 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	poller := &poller.Poller{
 		Client:   cli,
 		Dispatch: func(ctx context.Context, stage *drone.Stage) error {
-			runnerCapacityGauge.WithLabelValues(config.Runner.Name).Dec()
-			defer runnerCapacityGauge.WithLabelValues(config.Runner.Name).Inc()
+			availableCapacityGauge.WithLabelValues(config.Runner.Name).Dec()
+			defer availableCapacityGauge.WithLabelValues(config.Runner.Name).Inc()
 
 			return runner.Run(ctx, stage)
 		},
@@ -249,7 +249,8 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	}
 
 	g.Go(func() error {
-		runnerCapacityGauge.WithLabelValues(config.Runner.Name).Set(float64(config.Runner.Capacity))
+		availableCapacityGauge.WithLabelValues(config.Runner.Name).Set(float64(config.Runner.Capacity))
+		configuredCapacityGauge.WithLabelValues(config.Runner.Name).Set(float64(config.Runner.Capacity))
 
 		logrus.WithField("capacity", config.Runner.Capacity).
 			WithField("endpoint", config.Client.Address).
