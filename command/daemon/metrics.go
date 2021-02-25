@@ -10,9 +10,9 @@ import (
 
 var (
 	runnerCapacityGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "drone",
+		Namespace: "drone",
 		Subsystem: "runner",
-		Namespace: "capacity",
+		Name: "capacity",
 	}, []string{"hostname"})
 )
 
