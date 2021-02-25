@@ -13,7 +13,7 @@ var (
 		Namespace: "drone",
 		Subsystem: "runner",
 		Name: "capacity",
-	}, []string{"hostname"})
+	}, []string{"name"})
 )
 
 func setupMetrics(config Config) {
