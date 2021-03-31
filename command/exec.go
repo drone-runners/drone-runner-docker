@@ -348,6 +348,9 @@ func registerExec(app *kingpin.Application) {
 	cmd.Flag("tmate-server-ed25519-fingerprint", "tmate server rsa fingerprint").
 		StringVar(&c.Tmate.ED25519)
 
+	cmd.Flag("tmate-authorized-keys", "tmate authorized keys").
+		StringVar(&c.Tmate.AuthorizedKeys)
+
 	cmd.Flag("debug", "enable debug logging").
 		BoolVar(&c.Debug)
 
