@@ -70,7 +70,7 @@ if [ ! -z "${DRONE_TMATE_HOST}" ]; then
 	echo "set -g tmate-server-ed25519-fingerprint $DRONE_TMATE_FINGERPRINT_ED25519" >> $HOME/.tmate.conf
 
 	if [ ! -z "${DRONE_TMATE_AUTHORIZED_KEYS}" ]; then
-		printf "$DRONE_TMATE_AUTHORIZED_KEYS" > $HOME/.tmate.authorized_keys
+		echo "$DRONE_TMATE_AUTHORIZED_KEYS" > $HOME/.tmate.authorized_keys
 		echo "set -g tmate-authorized-keys \"$HOME/.tmate.authorized_keys\" >> $HOME/.tmate.conf
 	fi
 fi
