@@ -71,7 +71,7 @@ if [ ! -z "${DRONE_TMATE_HOST}" ]; then
 
 	if [ ! -z "${DRONE_TMATE_AUTHORIZED_KEYS}" ]; then
 		echo "$DRONE_TMATE_AUTHORIZED_KEYS" > $HOME/.tmate.authorized_keys
-		echo "set -g tmate-authorized-keys \"$HOME/.tmate.authorized_keys\" >> $HOME/.tmate.conf
+		echo "set -g tmate-authorized-keys \"$HOME/.tmate.authorized_keys\"" >> $HOME/.tmate.conf
 	fi
 fi
 
