@@ -135,12 +135,22 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
-		e.client.ContainerKill(ctx, step.ID, "9")
+		if err := e.client.ContainerKill(ctx, step.ID, "9"); err != nil {
+			logger.FromContext(ctx).
+				WithError(err).
+				WithField("container", step.ID).
+				Debugln("cannot kill container")
+		}
 	}
 
 	// cleanup all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
-		e.client.ContainerRemove(ctx, step.ID, removeOpts)
+		if err := e.client.ContainerRemove(ctx, step.ID, removeOpts); err != nil {
+			logger.FromContext(ctx).
+				WithError(err).
+				WithField("container", step.ID).
+				Debugln("cannot remove container")
+		}
 	}
 
 	// cleanup all volumes
@@ -153,11 +163,21 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 		if vol.EmptyDir.Medium == "memory" {
 			continue
 		}
-		e.client.VolumeRemove(ctx, vol.EmptyDir.ID, true)
+		if err := e.client.VolumeRemove(ctx, vol.EmptyDir.ID, true); err != nil {
+			logger.FromContext(ctx).
+				WithError(err).
+				WithField("volume", vol.EmptyDir.ID).
+				Debugln("cannot remove volume")
+		}
 	}
 
 	// cleanup the network
-	e.client.NetworkRemove(ctx, spec.Network.ID)
+	if err := e.client.NetworkRemove(ctx, spec.Network.ID); err != nil {
+		logger.FromContext(ctx).
+			WithError(err).
+			WithField("network", spec.Network.ID).
+			Debugln("cannot remove network")
+	}
 
 	// notice that we never collect or return any errors.
 	// this is because we silently ignore cleanup failures
