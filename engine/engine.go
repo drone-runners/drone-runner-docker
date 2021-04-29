@@ -6,8 +6,11 @@ package engine
 
 import (
 	"context"
+	goerrors "errors"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
@@ -27,20 +30,23 @@ import (
 
 // Opts configures the Docker engine.
 type Opts struct {
-	HidePull bool
+	HidePull        bool
+	SecretsRequired bool
 }
 
 // Docker implements a Docker pipeline engine.
 type Docker struct {
-	client   client.APIClient
-	hidePull bool
+	client          client.APIClient
+	hidePull        bool
+	secretsRequired bool
 }
 
 // New returns a new engine.
 func New(client client.APIClient, opts Opts) *Docker {
 	return &Docker{
-		client:   client,
-		hidePull: opts.HidePull,
+		client:          client,
+		hidePull:        opts.HidePull,
+		secretsRequired: opts.SecretsRequired,
 	}
 }
 
@@ -220,6 +226,20 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		if pullerr != nil {
 			return pullerr
 		}
+	}
+
+	var secretErrors []string
+	for _, secret := range step.Secrets {
+		if !secret.Found {
+			secretErrors = append(secretErrors, fmt.Sprintf("Could not find secret `%s` to be mounted on env variable `%s`. ", secret.Name, secret.Env))
+		}
+	}
+	if len(secretErrors) > 0 {
+		message := "some secrets could not be mounted. Check Drone's (and your external secret provider's) logs for more info. \n" + strings.Join(secretErrors, "\n")
+		if e.secretsRequired {
+			return goerrors.New(message)
+		}
+		logger.FromContext(ctx).Info(message)
 	}
 
 	_, err := e.client.ContainerCreate(ctx,

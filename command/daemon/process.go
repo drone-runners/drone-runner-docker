@@ -53,7 +53,8 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 	)
 
 	opts := engine.Opts{
-		HidePull: !config.Docker.Stream,
+		HidePull:        !config.Docker.Stream,
+		SecretsRequired: config.Runner.SecretsRequired,
 	}
 	engine, err := engine.NewEnv(opts)
 	if err != nil {
