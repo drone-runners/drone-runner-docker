@@ -230,7 +230,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 
 	var secretErrors []string
 	for _, secret := range step.Secrets {
-		if !secret.Found {
+		if len(secret.Data) == 0 {
 			secretErrors = append(secretErrors, fmt.Sprintf("Could not find secret `%s` to be mounted on env variable `%s`. ", secret.Name, secret.Env))
 		}
 	}

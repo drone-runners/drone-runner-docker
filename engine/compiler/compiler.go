@@ -381,7 +381,6 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
-			s.Found = ok
 			if ok {
 				s.Data = []byte(secret)
 			}

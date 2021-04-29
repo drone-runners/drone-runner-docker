@@ -61,11 +61,10 @@ type (
 
 	// Secret represents a secret variable.
 	Secret struct {
-		Name  string `json:"name,omitempty"`
-		Env   string `json:"env,omitempty"`
-		Data  []byte `json:"data,omitempty"`
-		Mask  bool   `json:"mask,omitempty"`
-		Found bool
+		Name string `json:"name,omitempty"`
+		Env  string `json:"env,omitempty"`
+		Data []byte `json:"data,omitempty"`
+		Mask bool   `json:"mask,omitempty"`
 	}
 
 	// Platform defines the target platform.
