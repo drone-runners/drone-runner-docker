@@ -53,8 +53,7 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 	)
 
 	opts := engine.Opts{
-		HidePull:        !config.Docker.Stream,
-		SecretsRequired: config.Runner.SecretsRequired,
+		HidePull: !config.Docker.Stream,
 	}
 	engine, err := engine.NewEnv(opts)
 	if err != nil {
@@ -115,6 +114,7 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 					config.Secret.SkipVerify,
 				),
 			),
+			SecretsRequired: config.Runner.SecretsRequired,
 		},
 		Exec: runtime.NewExecer(
 			remote,

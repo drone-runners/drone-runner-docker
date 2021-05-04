@@ -111,6 +111,9 @@ type Compiler struct {
 	// into the pipeline step.
 	Secret secret.Provider
 
+	// SecretsRequired will disallow unset secrets if true
+	SecretsRequired bool
+
 	// Registry returns a list of registry credentials that can be
 	// used to pull private container images.
 	Registry registry.Provider
@@ -182,6 +185,10 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 	}
 
+	secretsRequired := c.SecretsRequired
+	if s := pipeline.SecretsRequired; s != nil {
+		secretsRequired = *s
+	}
 	spec := &engine.Spec{
 		Network: engine.Network{
 			ID:      random(),
@@ -194,7 +201,8 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			Variant: pipeline.Platform.Variant,
 			Version: pipeline.Platform.Version,
 		},
-		Volumes: []*engine.Volume{volume},
+		Volumes:         []*engine.Volume{volume},
+		SecretsRequired: secretsRequired,
 	}
 
 	// list the global environment variables

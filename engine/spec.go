@@ -15,11 +15,12 @@ type (
 	// required instructions for reproducible pipeline
 	// execution.
 	Spec struct {
-		Platform Platform  `json:"platform,omitempty"`
-		Steps    []*Step   `json:"steps,omitempty"`
-		Internal []*Step   `json:"internal,omitempty"`
-		Volumes  []*Volume `json:"volumes,omitempty"`
-		Network  Network   `json:"network"`
+		Platform        Platform  `json:"platform,omitempty"`
+		Steps           []*Step   `json:"steps,omitempty"`
+		Internal        []*Step   `json:"internal,omitempty"`
+		Volumes         []*Volume `json:"volumes,omitempty"`
+		Network         Network   `json:"network"`
+		SecretsRequired bool      `json:"disallow_unset_secrets"`
 	}
 
 	// Step defines a pipeline step.

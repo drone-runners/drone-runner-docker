@@ -30,23 +30,20 @@ import (
 
 // Opts configures the Docker engine.
 type Opts struct {
-	HidePull        bool
-	SecretsRequired bool
+	HidePull bool
 }
 
 // Docker implements a Docker pipeline engine.
 type Docker struct {
-	client          client.APIClient
-	hidePull        bool
-	secretsRequired bool
+	client   client.APIClient
+	hidePull bool
 }
 
 // New returns a new engine.
 func New(client client.APIClient, opts Opts) *Docker {
 	return &Docker{
-		client:          client,
-		hidePull:        opts.HidePull,
-		secretsRequired: opts.SecretsRequired,
+		client:   client,
+		hidePull: opts.HidePull,
 	}
 }
 
@@ -236,7 +233,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	}
 	if len(secretErrors) > 0 {
 		message := "some secrets could not be mounted. Check Drone's (and your external secret provider's) logs for more info. \n" + strings.Join(secretErrors, "\n")
-		if e.secretsRequired {
+		if spec.SecretsRequired {
 			return goerrors.New(message)
 		}
 		logger.FromContext(ctx).Info(message)
