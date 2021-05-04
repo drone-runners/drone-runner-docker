@@ -40,7 +40,7 @@ type Pipeline struct {
 	Volumes         []*Volume         `json:"volumes,omitempty"`
 	PullSecrets     []string          `json:"image_pull_secrets,omitempty" yaml:"image_pull_secrets"`
 	Workspace       Workspace         `json:"workspace,omitempty"`
-	SecretsRequired *bool             `json:"disallow_unset_secrets,omitempty"`
+	SecretsRequired *bool             `json:"disallow_unset_secrets,omitempty" yaml:"disallow_unset_secrets"`
 }
 
 // GetVersion returns the resource version.

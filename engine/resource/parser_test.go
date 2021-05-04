@@ -19,6 +19,7 @@ func TestParse(t *testing.T) {
 		return
 	}
 
+	secretsRequired := true
 	want := []manifest.Resource{
 		&manifest.Signature{
 			Kind: "signature",
@@ -48,7 +49,8 @@ func TestParse(t *testing.T) {
 			Clone: manifest.Clone{
 				Depth: 50,
 			},
-			PullSecrets: []string{"dockerconfigjson"},
+			PullSecrets:     []string{"dockerconfigjson"},
+			SecretsRequired: &secretsRequired,
 			Trigger: manifest.Conditions{
 				Branch: manifest.Condition{
 					Include: []string{"master"},
