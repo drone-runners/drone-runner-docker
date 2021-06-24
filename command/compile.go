@@ -214,6 +214,9 @@ func registerCompile(app *kingpin.Application) {
 	cmd.Flag("tmate-server-ed25519-fingerprint", "tmate server rsa fingerprint").
 		StringVar(&c.Tmate.ED25519)
 
+	cmd.Flag("tmate-authorized-keys", "tmate authorized keys").
+		StringVar(&c.Tmate.AuthorizedKeys)
+
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)
 }
