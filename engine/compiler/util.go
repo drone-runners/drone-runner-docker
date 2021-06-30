@@ -5,11 +5,11 @@
 package compiler
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"
 )
@@ -136,33 +136,6 @@ func convertPullPolicy(s string) engine.PullPolicy {
 	default:
 		return engine.PullDefault
 	}
-}
-
-// helper function returns true if mounting the volume
-// is restricted for un-trusted containers.
-func isRestrictedVolume(path string) bool {
-	path, _ = filepath.Abs(path)
-	path = strings.ToLower(path)
-	switch {
-	case path == "/":
-	case path == "/var":
-	case path == "/etc":
-	case strings.HasPrefix(path, "/var/run"):
-	case strings.HasPrefix(path, "/proc"):
-	case strings.HasPrefix(path, "/mount"):
-	case strings.HasPrefix(path, "/bin"):
-	case strings.HasPrefix(path, "/usr/local/bin"):
-	case strings.HasPrefix(path, "/usr/local/sbin"):
-	case strings.HasPrefix(path, "/usr/bin"):
-	case strings.HasPrefix(path, "/mnt"):
-	case strings.HasPrefix(path, "/media"):
-	case strings.HasPrefix(path, "/sys"):
-	case strings.HasPrefix(path, "/dev"):
-	case strings.HasPrefix(path, "/etc/docker"):
-	default:
-		return false
-	}
-	return true
 }
 
 // helper function returns true if the environment variable
