@@ -31,6 +31,7 @@ import (
 	"github.com/drone/runner-go/secret"
 	"github.com/drone/signal"
 
+	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -47,6 +48,7 @@ type execCommand struct {
 	Volumes    map[string]string
 	Environ    map[string]string
 	Labels     map[string]string
+	SecretFile string
 	Secrets    map[string]string
 	Resources  compiler.Resources
 	Tmate      compiler.Tmate
@@ -125,7 +127,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		Privileged: append(c.Privileged, compiler.Privileged...),
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
-		Secret:     secret.StaticVars(c.Secrets),
+		Secret:     secret.StaticVars(readParams(c.SecretFile)),
 		Registry: registry.Combine(
 			registry.File(c.Config),
 		),
@@ -146,6 +148,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		Repo:     c.Repo,
 		Stage:    c.Stage,
 		System:   c.System,
+		Secret:   secret.StaticVars(c.Secrets),
 	}
 	spec := comp.Compile(nocontext, args).(*engine.Spec)
 
@@ -278,6 +281,9 @@ func registerExec(app *kingpin.Application) {
 	cmd.Flag("clone", "enable cloning").
 		BoolVar(&c.Clone)
 
+	cmd.Flag("secret-file", "secret file, define values that can be used with from_secret").
+		StringVar(&c.SecretFile)
+
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)
 
@@ -371,4 +377,10 @@ func registerExec(app *kingpin.Application) {
 
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)
+}
+
+// helper function reads secrets from a key-value file.
+func readParams(path string) map[string]string {
+	data, _ := godotenv.Read(path)
+	return data
 }
