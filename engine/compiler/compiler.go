@@ -14,6 +14,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	"github.com/drone/runner-go/clone"
+	"github.com/drone/runner-go/container"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/labels"
@@ -131,7 +132,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 
 	// reset the workspace path if attempting to mount
 	// volumes that are internal use only.
-	if isRestrictedVolume(full) {
+	if container.IsRestrictedVolume(full) {
 		base = "/drone/src"
 		path = ""
 		full = "/drone/src"
@@ -551,7 +552,7 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 	// internal use only.
 	// note: this is deprecated.
 	for _, mount := range step.Volumes {
-		if isRestrictedVolume(mount.MountPath) {
+		if container.IsRestrictedVolume(mount.MountPath) {
 			return false
 		}
 	}
