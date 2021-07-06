@@ -84,8 +84,10 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 		}
 	}
 
-	if len(step.Volumes) != 0 {
+	if len(step.Devices) != 0 {
 		config.Devices = toDeviceSlice(spec, step)
+	}
+	if len(step.Volumes) != 0 {
 		config.Binds = toVolumeSlice(spec, step)
 		config.Mounts = toVolumeMounts(spec, step)
 	}

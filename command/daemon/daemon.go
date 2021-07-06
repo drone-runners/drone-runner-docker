@@ -131,6 +131,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			Networks:       config.Runner.Networks,
 			NetworkOpts:    config.Runner.NetworkOpts,
 			NetrcCloneOnly: config.Netrc.CloneOnly,
+			Devices:        config.Runner.Devices,
 			Volumes:        config.Runner.Volumes,
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
