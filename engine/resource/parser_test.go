@@ -48,6 +48,7 @@ func TestParse(t *testing.T) {
 			Clone: manifest.Clone{
 				Depth: 50,
 			},
+			Deps: []string{"dependency"},
 			PullSecrets: []string{"dockerconfigjson"},
 			Trigger: manifest.Conditions{
 				Branch: manifest.Condition{
