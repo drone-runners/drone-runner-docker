@@ -224,6 +224,8 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 	if c.Trace {
 		logrus.SetLevel(logrus.TraceLevel)
 	}
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+
 	logger.Default = logger.Logrus(
 		logrus.NewEntry(
 			logrus.StandardLogger(),
