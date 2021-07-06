@@ -30,13 +30,21 @@ func TestFunc(t *testing.T) {
 			match:   true,
 			matcher: Func([]string{"spaceghost/*", "octocat/*"}, []string{"push"}, true),
 		},
-		// repoisitory matching
+		// repository matching
 		{
 			repo:    "octocat/hello-world",
 			event:   "pull_request",
 			trusted: false,
 			match:   true,
 			matcher: Func([]string{"spaceghost/*", "octocat/*"}, []string{}, false),
+		},
+		// repository matching, skipping an org
+		{
+			repo:    "octocat/hello-world",
+			event:   "pull_request",
+			trusted: false,
+			match:   true,
+			matcher: Func([]string{"!spaceghost/*", "octocat/*"}, []string{}, false),
 		},
 		// event matching
 		{
@@ -66,6 +74,22 @@ func TestFunc(t *testing.T) {
 			trusted: false,
 			match:   false,
 			matcher: Func([]string{"octocat/*"}, []string{}, false),
+		},
+		// repository matching, skip all repos in the org
+		{
+			repo:    "spaceghost/hello-world",
+			event:   "pull_request",
+			trusted: false,
+			match:   false,
+			matcher: Func([]string{"!spaceghost/*"}, []string{}, false),
+		},
+		// repository matching, skip a concrete repo
+		{
+			repo:    "spaceghost/hello-world",
+			event:   "pull_request",
+			trusted: false,
+			match:   false,
+			matcher: Func([]string{"!spaceghost/hello-world"}, []string{}, false),
 		},
 		// event matching
 		{
