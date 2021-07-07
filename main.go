@@ -14,6 +14,7 @@ import (
 	"github.com/earthly/earthly/util/llbutil/pllb"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/client/llb"
+	"golang.org/x/sync/errgroup"
 	"io"
 
 	// "github.com/earthly/earthly/util/llbutil/pllb"
@@ -51,7 +52,22 @@ func main() {
 		},
 	}
 	ch := make(chan *client.SolveStatus)
-	_, _ = bkClient.Solve(ctx, dt, *solveOpt, ch)
+	con := conslogging.Current(conslogging.ForceColor, conslogging.DefaultPadding, false)
+	sm := newSolverMonitor(con, true, true)
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		_, _ = bkClient.Solve(ctx, dt, *solveOpt, ch)
+		return nil
+	})
+	sm.PrintTiming()
+	var vertexFailureOutput string
 
+	eg.Go(func() error {
+		var err error
+		vertexFailureOutput, err = sm.monitorProgress(ctx, ch, "", true)
+		return err
+	})
+	eg.Wait()
+	fmt.Print(vertexFailureOutput)
 	fmt.Print(bkClient)
 }
