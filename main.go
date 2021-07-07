@@ -5,10 +5,13 @@
 package main
 
 import (
-	"github.com/drone-runners/drone-runner-docker/command"
+	"fmt"
+	"github.com/earthly/earthly/earthfile2llb"
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	command.Command()
+	//command.Command()
+	targets, _ := earthfile2llb.GetTargets("Earthfile")
+	fmt.Print(targets)
 }
