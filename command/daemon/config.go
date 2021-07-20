@@ -106,6 +106,16 @@ type Config struct {
 		Config string `envconfig:"DRONE_DOCKER_CONFIG"`
 		Stream bool   `envconfig:"DRONE_DOCKER_STREAM_PULL" default:"true"`
 	}
+
+	Tmate struct {
+		Enabled        bool   `envconfig:"DRONE_TMATE_ENABLED" default:"false"`
+		Image          string `envconfig:"DRONE_TMATE_IMAGE"   default:"drone/drone-runner-docker:1"`
+		Server         string `envconfig:"DRONE_TMATE_HOST"`
+		Port           string `envconfig:"DRONE_TMATE_PORT"`
+		RSA            string `envconfig:"DRONE_TMATE_FINGERPRINT_RSA"`
+		ED25519        string `envconfig:"DRONE_TMATE_FINGERPRINT_ED25519"`
+		AuthorizedKeys string `envconfig:"DRONE_TMATE_AUTHORIZED_KEYS"`
+	}
 }
 
 // legacy environment variables. the key is the legacy

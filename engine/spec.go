@@ -17,6 +17,7 @@ type (
 	Spec struct {
 		Platform Platform  `json:"platform,omitempty"`
 		Steps    []*Step   `json:"steps,omitempty"`
+		Internal []*Step   `json:"internal,omitempty"`
 		Volumes  []*Volume `json:"volumes,omitempty"`
 		Network  Network   `json:"network"`
 	}
@@ -158,6 +159,7 @@ func (s *Step) GetRunPolicy() runtime.RunPolicy  { return s.RunPolicy }
 func (s *Step) GetSecretAt(i int) runtime.Secret { return s.Secrets[i] }
 func (s *Step) GetSecretLen() int                { return len(s.Secrets) }
 func (s *Step) IsDetached() bool                 { return s.Detach }
+func (s *Step) GetImage() string                 { return s.Image }
 func (s *Step) Clone() runtime.Step {
 	dst := new(Step)
 	*dst = *s

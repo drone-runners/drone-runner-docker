@@ -78,6 +78,23 @@ steps:
     - refs/heads/master
     - refs/tags/*
 
+- name: publish_ppc64le
+  image: plugins/docker
+  pull: if-not-exists
+  settings:
+    repo: drone/drone-runner-docker
+    auto_tag: true
+    auto_tag_suffix: linux-ppc64le
+    dockerfile: docker/Dockerfile.linux.ppc64le
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+  when:
+    ref:
+    - refs/heads/master
+    - refs/tags/*
+
 volumes:
 - name: go
   temp: {}

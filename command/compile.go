@@ -37,6 +37,7 @@ type compileCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Tmate      compiler.Tmate
 	Clone      bool
 	Config     string
 }
@@ -101,6 +102,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Environ:    provider.Static(c.Environ),
 		Labels:     c.Labels,
 		Resources:  c.Resources,
+		Tmate:      c.Tmate,
 		Privileged: append(c.Privileged, compiler.Privileged...),
 		Networks:   c.Networks,
 		Volumes:    c.Volumes,
@@ -125,6 +127,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Repo:     c.Repo,
 		Stage:    c.Stage,
 		System:   c.System,
+		Secret:   secret.StaticVars(c.Secrets),
 	}
 	spec := comp.Compile(nocontext, args)
 
@@ -191,6 +194,28 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("docker-config", "path to the docker config file").
 		StringVar(&c.Config)
+
+	cmd.Flag("tmate-image", "tmate docker image").
+		Default("drone/drone-runner-docker:1").
+		StringVar(&c.Tmate.Image)
+
+	cmd.Flag("tmate-enabled", "tmate enabled").
+		BoolVar(&c.Tmate.Enabled)
+
+	cmd.Flag("tmate-server-host", "tmate server host").
+		StringVar(&c.Tmate.Server)
+
+	cmd.Flag("tmate-server-port", "tmate server port").
+		StringVar(&c.Tmate.Port)
+
+	cmd.Flag("tmate-server-rsa-fingerprint", "tmate server rsa fingerprint").
+		StringVar(&c.Tmate.RSA)
+
+	cmd.Flag("tmate-server-ed25519-fingerprint", "tmate server rsa fingerprint").
+		StringVar(&c.Tmate.ED25519)
+
+	cmd.Flag("tmate-authorized-keys", "tmate authorized keys").
+		StringVar(&c.Tmate.AuthorizedKeys)
 
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)

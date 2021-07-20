@@ -141,6 +141,15 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				CPUSet:     config.Resources.CPUSet,
 				ShmSize:    config.Resources.ShmSize,
 			},
+			Tmate: compiler.Tmate{
+				Image:          config.Tmate.Image,
+				Enabled:        config.Tmate.Enabled,
+				Server:         config.Tmate.Server,
+				Port:           config.Tmate.Port,
+				RSA:            config.Tmate.RSA,
+				ED25519:        config.Tmate.ED25519,
+				AuthorizedKeys: config.Tmate.AuthorizedKeys,
+			},
 			Environ: provider.Combine(
 				provider.Static(config.Runner.Environ),
 				provider.External(

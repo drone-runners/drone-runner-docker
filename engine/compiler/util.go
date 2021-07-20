@@ -5,11 +5,11 @@
 package compiler
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"
 )
@@ -138,26 +138,22 @@ func convertPullPolicy(s string) engine.PullPolicy {
 	}
 }
 
-// helper function returns true if mounting the volume
-// is restricted for un-trusted containers.
-func isRestrictedVolume(path string) bool {
-	path, _ = filepath.Abs(path)
-	path = strings.ToLower(path)
-	switch {
-	case path == "/":
-	case path == "/var":
-	case strings.Contains(path, "/var/run"):
-	case strings.Contains(path, "/proc"):
-	case strings.Contains(path, "/mount"):
-	case strings.Contains(path, "/bin"):
-	case strings.Contains(path, "/usr/local/bin"):
-	case strings.Contains(path, "/mnt"):
-	case strings.Contains(path, "/media"):
-	case strings.Contains(path, "/sys"):
-	case strings.Contains(path, "/dev"):
-	case strings.Contains(path, "/etc/docker"):
-	default:
-		return false
+// helper function returns true if the environment variable
+// is restricted for internal-use only.
+func isRestrictedVariable(env map[string]*manifest.Variable) bool {
+	for _, name := range restrictedVars {
+		if _, ok := env[name]; ok {
+			return true
+		}
 	}
-	return true
+	return false
+}
+
+// list of restricted variables
+var restrictedVars = []string{
+	"XDG_RUNTIME_DIR",
+	"DOCKER_OPTS",
+	"DOCKER_HOST",
+	"PATH",
+	"HOME",
 }

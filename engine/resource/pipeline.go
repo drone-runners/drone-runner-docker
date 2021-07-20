@@ -26,7 +26,7 @@ type Pipeline struct {
 	Kind    string   `json:"kind,omitempty"`
 	Type    string   `json:"type,omitempty"`
 	Name    string   `json:"name,omitempty"`
-	Deps    []string `json:"depends_on,omitempty"`
+	Deps    []string `json:"depends_on,omitempty" yaml:"depends_on"`
 
 	Clone       manifest.Clone       `json:"clone,omitempty"`
 	Concurrency manifest.Concurrency `json:"concurrency,omitempty"`
