@@ -56,6 +56,7 @@ type execCommand struct {
 	Procs      int64
 	Debug      bool
 	Trace      bool
+	LogJSON    bool
 	Dump       bool
 	PublicKey  string
 	PrivateKey string
@@ -224,7 +225,9 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 	if c.Trace {
 		logrus.SetLevel(logrus.TraceLevel)
 	}
-	logrus.SetFormatter(&logrus.JSONFormatter{})
+	if c.LogJSON {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	}
 
 	logger.Default = logger.Logrus(
 		logrus.NewEntry(
@@ -358,6 +361,9 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("trace", "enable trace logging").
 		BoolVar(&c.Trace)
+
+	cmd.Flag("log-json", "enable JSON structured logging").
+		BoolVar(&c.LogJSON)
 
 	cmd.Flag("dump", "dump the pipeline state to stdout").
 		BoolVar(&c.Dump)
