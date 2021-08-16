@@ -6,6 +6,8 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
@@ -91,7 +93,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		Labels:  spec.Network.Labels,
 	})
 
-	// launches the inernal setup steps
+	// launches the internal setup steps
 	for _, step := range spec.Internal {
 		if err := e.create(ctx, spec, step, ioutil.Discard); err != nil {
 			logger.FromContext(ctx).
@@ -171,8 +173,14 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 	spec := specv.(*Spec)
 	step := stepv.(*Step)
 
+	b, err := json.Marshal(step.Envs)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+	}
+	fmt.Println(string(b))
+
 	// create the container
-	err := e.create(ctx, spec, step, output)
+	err = e.create(ctx, spec, step, output)
 	if err != nil {
 		return nil, errors.TrimExtraInfo(err)
 	}

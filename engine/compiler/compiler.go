@@ -6,12 +6,13 @@ package compiler
 
 import (
 	"context"
-	"os"
-	"strings"
-
+	"github.com/dchest/authcookie"
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/drone/runner-go/clone"
 	"github.com/drone/runner-go/environ"
@@ -30,6 +31,10 @@ import (
 var random = func() string {
 	return "drone-" + uniuri.NewLen(20)
 }
+
+var host = os.Getenv("DRONE_RPC_HOST")
+var proto = os.Getenv("DRONE_RPC_PROTO")
+var authSecret = os.Getenv("DRONE_INTERNAL_AUTH_SECRET")
 
 // Privileged provides a list of plugins that execute
 // with privileged capabilities in order to run Docker
@@ -248,6 +253,11 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		envs["DRONE_TMATE_FINGERPRINT_RSA"] = c.Tmate.RSA
 		envs["DRONE_TMATE_FINGERPRINT_ED25519"] = c.Tmate.ED25519
 	}
+
+	// create auth token for plugins
+	envs["DRONE_AUTH_TOKEN"] = authcookie.NewSinceNow(envs["DRONE_REPO_OWNER"], 24 * time.Hour, []byte(authSecret))
+	envs["DRONE_RPC_HOST"] = host
+	envs["DRONE_RPC_PROTO"] = proto
 
 	// create the .netrc environment variables if not
 	// explicitly disabled
@@ -508,7 +518,6 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 		spec.Volumes = append(spec.Volumes, src)
 	}
-
 	return spec
 }
 
