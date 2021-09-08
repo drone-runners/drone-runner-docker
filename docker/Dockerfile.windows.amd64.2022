@@ -1,0 +1,12 @@
+# escape=`
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+USER ContainerAdministrator
+
+EXPOSE 3000
+ENV GODEBUG netdns=go
+ENV DRONE_PLATFORM_OS windows
+ENV DRONE_PLATFORM_ARCH amd64
+ENV DRONE_PLATFORM_KERNEL 2022
+
+ADD release/windows/amd64/drone-runner-docker.exe C:/drone-runner-docker.exe
+ENTRYPOINT [ "C:\\drone-runner-docker.exe" ]

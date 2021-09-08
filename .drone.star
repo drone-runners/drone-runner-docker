@@ -9,6 +9,7 @@ def main(ctx):
         pipeline_linux(),
         pipeline_windows("1903"),
         pipeline_windows("1809"),
+        pipeline_windows("2022"),
         pipeline_manifest(),
         # manifest
     ]
