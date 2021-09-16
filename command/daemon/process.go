@@ -28,13 +28,13 @@ type processCommand struct {
 
 func (c *processCommand) run(*kingpin.ParseContext) error {
 	// load the configuration from the environment
-	config, err := fromEnviron()
+	config, err := FromEnviron()
 	if err != nil {
 		return err
 	}
 
 	// setup the global logrus logger.
-	setupLogger(config)
+	SetupLogger(config)
 
 	cli := client.New(
 		config.Client.Address,

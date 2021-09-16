@@ -26,6 +26,7 @@ func Command() {
 	registerCompile(app)
 	registerExec(app)
 	registerCopy(app)
+	registerDelegate(app)
 	daemon.Register(app)
 
 	kingpin.Version(version)

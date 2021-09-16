@@ -237,7 +237,7 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	err = runtime.NewExecer(
 		pipeline.NopReporter(),
-		console.New(c.Pretty),
+		console.New(c.Pretty), // look at using this in the delegate
 		engine,
 		c.Procs,
 	).Exec(ctx, spec, state)

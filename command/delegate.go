@@ -2,12 +2,14 @@
 // Use of this source code is governed by the Polyform License
 // that can be found in the LICENSE file.
 
-package daemon
+package command
 
 import (
 	"context"
+	"net/http"
 	"time"
 
+	"github.com/drone-runners/drone-runner-docker/command/daemon"
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
@@ -16,7 +18,6 @@ import (
 
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
-	"github.com/drone/runner-go/handler/router"
 	"github.com/drone/runner-go/logger"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/pipeline/reporter/history"
@@ -34,25 +35,22 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-// empty context.
-var nocontext = context.Background()
-
-type daemonCommand struct {
+type delegateCommand struct {
 	envfile string
 }
 
-func (c *daemonCommand) run(*kingpin.ParseContext) error {
+func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	// load environment variables from file.
 	godotenv.Load(c.envfile)
 
 	// load the configuration from the environment
-	config, err := FromEnviron()
+	config, err := daemon.FromEnviron()
 	if err != nil {
 		return err
 	}
 
 	// setup the global logrus logger.
-	SetupLogger(config)
+	daemon.SetupLogger(config)
 
 	ctx, cancel := context.WithCancel(nocontext)
 	defer cancel()
@@ -83,13 +81,13 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	opts := engine.Opts{
 		HidePull: !config.Docker.Stream,
 	}
-	engine, err := engine.NewEnv(opts)
+	engineInstance, err := engine.NewEnv(opts)
 	if err != nil {
 		logrus.WithError(err).
 			Fatalln("cannot load the docker engine")
 	}
 	for {
-		err := engine.Ping(ctx)
+		err := engineInstance.Ping(ctx)
 		if err == context.Canceled {
 			break
 		}
@@ -182,7 +180,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		Exec: runtime.NewExecer(
 			tracer,
 			remote,
-			engine,
+			engineInstance,
 			config.Runner.Procs,
 		).Exec,
 	}
@@ -203,12 +201,8 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 
 	var g errgroup.Group
 	server := server.Server{
-		Addr: config.Server.Port,
-		Handler: router.New(tracer, hook, router.Config{
-			Username: config.Dashboard.Username,
-			Password: config.Dashboard.Password,
-			Realm:    config.Dashboard.Realm,
-		}),
+		Addr:    config.Server.Port,
+		Handler: delegateListener(engineInstance),
 	}
 
 	logrus.WithField("addr", config.Server.Port).
@@ -220,25 +214,25 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 
 	// Ping the server and block until a successful connection
 	// to the server has been established.
-	for {
-		err := cli.Ping(ctx, config.Runner.Name)
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-		}
-		if ctx.Err() != nil {
-			break
-		}
-		if err != nil {
-			logrus.WithError(err).
-				Errorln("cannot ping the remote server")
-			time.Sleep(time.Second)
-		} else {
-			logrus.Infoln("successfully pinged the remote server")
-			break
-		}
-	}
+	// for {
+	// 	err := cli.Ping(ctx, config.Runner.Name)
+	// 	select {
+	// 	case <-ctx.Done():
+	// 		return nil
+	// 	default:
+	// 	}
+	// 	if ctx.Err() != nil {
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		logrus.WithError(err).
+	// 			Errorln("cannot ping the remote server")
+	// 		time.Sleep(time.Second)
+	// 	} else {
+	// 		logrus.Infoln("successfully pinged the remote server")
+	// 		break
+	// 	}
+	// }
 
 	g.Go(func() error {
 		logrus.WithField("capacity", config.Runner.Capacity).
@@ -261,33 +255,80 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	return err
 }
 
-// helper function configures the global logger from
-// the loaded configuration.
-func SetupLogger(config Config) {
-	logger.Default = logger.Logrus(
-		logrus.NewEntry(
-			logrus.StandardLogger(),
-		),
-	)
-	if config.Debug {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-	if config.Trace {
-		logrus.SetLevel(logrus.TraceLevel)
+func delegateListener(engine *engine.Docker) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/setup", handleSetup(engine))
+	mux.HandleFunc("/destroy", handleDestroy(engine))
+	mux.HandleFunc("/step", handleStep(engine))
+
+	// // omit dashboard handlers when no password configured.
+	// if config.Password == "" {
+	// 	return mux
+	// }
+
+	// // middleware to require basic authentication.
+	// auth := basicauth.New(config.Realm, map[string][]string{
+	// 	config.Username: {config.Password},
+	// })
+
+	// // handler to serve static assets for the dashboard.
+	// fs := http.FileServer(static.New())
+
+	// // dashboard handles.
+	// mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// mux.Handle("/logs", auth(handler.HandleLogHistory(history)))
+	// mux.Handle("/view", auth(handler.HandleStage(tracer, history)))
+	// mux.Handle("/", auth(handler.HandleIndex(tracer)))
+	return mux
+}
+
+func handleSetup(eng *engine.Docker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vol := engine.Volume{
+			EmptyDir: nil,
+			HostPath: &engine.VolumeHostPath{
+				ID:   "drone-saasd",
+				Name: "_workspace",
+				Path: "/home/tp/workspace/drone-runner-docker",
+			},
+		}
+		vols := []*engine.Volume{&vol}
+		speccy := engine.Spec{
+			Network: engine.Network{
+				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s",
+				},
+				Options: nil,
+			},
+			Volumes: vols,
+		}
+		setupErr := eng.Setup(r.Context(), &speccy)
+		if setupErr != nil {
+			logrus.WithError(setupErr).
+				Errorln("cannot setup the docker environment")
+		}
+		w.WriteHeader(200)
 	}
 }
 
-// Register the daemon command.
-func Register(app *kingpin.Application) {
-	registerDaemon(app)
-	registerProcess(app)
+func handleStep(eng *engine.Docker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("step"))
+		w.WriteHeader(200)
+	}
 }
 
-func registerDaemon(app *kingpin.Application) {
-	c := new(daemonCommand)
+func handleDestroy(eng *engine.Docker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("destroy"))
+		w.WriteHeader(200)
+	}
+}
+func registerDelegate(app *kingpin.Application) {
+	c := new(delegateCommand)
 
-	cmd := app.Command("daemon", "starts the runner daemon").
-		Default().
+	cmd := app.Command("delegate", "starts the delegate").
 		Action(c.run)
 
 	cmd.Arg("envfile", "load the environment variable file").
