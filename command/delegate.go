@@ -11,21 +11,11 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/command/daemon"
 	"github.com/drone-runners/drone-runner-docker/engine"
-	"github.com/drone-runners/drone-runner-docker/engine/compiler"
-	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
-	"github.com/drone-runners/drone-runner-docker/internal/match"
 
 	"github.com/drone/runner-go/client"
-	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/logger"
 	loghistory "github.com/drone/runner-go/logger/history"
-	"github.com/drone/runner-go/pipeline/reporter/history"
-	"github.com/drone/runner-go/pipeline/reporter/remote"
-	"github.com/drone/runner-go/pipeline/runtime"
-	"github.com/drone/runner-go/poller"
-	"github.com/drone/runner-go/registry"
-	"github.com/drone/runner-go/secret"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
 
@@ -106,98 +96,98 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 		}
 	}
 
-	remote := remote.New(cli)
-	tracer := history.New(remote)
+	//remote := remote.New(cli)
+	//tracer := history.New(remote)
 	hook := loghistory.New()
 	logrus.AddHook(hook)
 
-	runner := &runtime.Runner{
-		Client:   cli,
-		Machine:  config.Runner.Name,
-		Environ:  config.Runner.Environ,
-		Reporter: tracer,
-		Lookup:   resource.Lookup,
-		Lint:     linter.New().Lint,
-		Match: match.Func(
-			config.Limit.Repos,
-			config.Limit.Events,
-			config.Limit.Trusted,
-		),
-		Compiler: &compiler.Compiler{
-			Clone:          config.Runner.Clone,
-			Privileged:     append(config.Runner.Privileged, compiler.Privileged...),
-			Networks:       config.Runner.Networks,
-			NetworkOpts:    config.Runner.NetworkOpts,
-			NetrcCloneOnly: config.Netrc.CloneOnly,
-			Volumes:        config.Runner.Volumes,
-			Resources: compiler.Resources{
-				Memory:     config.Resources.Memory,
-				MemorySwap: config.Resources.MemorySwap,
-				CPUQuota:   config.Resources.CPUQuota,
-				CPUPeriod:  config.Resources.CPUPeriod,
-				CPUShares:  config.Resources.CPUShares,
-				CPUSet:     config.Resources.CPUSet,
-				ShmSize:    config.Resources.ShmSize,
-			},
-			Tmate: compiler.Tmate{
-				Image:          config.Tmate.Image,
-				Enabled:        config.Tmate.Enabled,
-				Server:         config.Tmate.Server,
-				Port:           config.Tmate.Port,
-				RSA:            config.Tmate.RSA,
-				ED25519:        config.Tmate.ED25519,
-				AuthorizedKeys: config.Tmate.AuthorizedKeys,
-			},
-			Environ: provider.Combine(
-				provider.Static(config.Runner.Environ),
-				provider.External(
-					config.Environ.Endpoint,
-					config.Environ.Token,
-					config.Environ.SkipVerify,
-				),
-			),
-			Registry: registry.Combine(
-				registry.File(
-					config.Docker.Config,
-				),
-				registry.External(
-					config.Registry.Endpoint,
-					config.Registry.Token,
-					config.Registry.SkipVerify,
-				),
-			),
-			Secret: secret.Combine(
-				secret.StaticVars(
-					config.Runner.Secrets,
-				),
-				secret.External(
-					config.Secret.Endpoint,
-					config.Secret.Token,
-					config.Secret.SkipVerify,
-				),
-			),
-		},
-		Exec: runtime.NewExecer(
-			tracer,
-			remote,
-			engineInstance,
-			config.Runner.Procs,
-		).Exec,
-	}
+	// runner := &runtime.Runner{
+	// 	Client:   cli,
+	// 	Machine:  config.Runner.Name,
+	// 	Environ:  config.Runner.Environ,
+	// 	Reporter: tracer,
+	// 	Lookup:   resource.Lookup,
+	// 	Lint:     linter.New().Lint,
+	// 	Match: match.Func(
+	// 		config.Limit.Repos,
+	// 		config.Limit.Events,
+	// 		config.Limit.Trusted,
+	// 	),
+	// 	Compiler: &compiler.Compiler{
+	// 		Clone:          config.Runner.Clone,
+	// 		Privileged:     append(config.Runner.Privileged, compiler.Privileged...),
+	// 		Networks:       config.Runner.Networks,
+	// 		NetworkOpts:    config.Runner.NetworkOpts,
+	// 		NetrcCloneOnly: config.Netrc.CloneOnly,
+	// 		Volumes:        config.Runner.Volumes,
+	// 		Resources: compiler.Resources{
+	// 			Memory:     config.Resources.Memory,
+	// 			MemorySwap: config.Resources.MemorySwap,
+	// 			CPUQuota:   config.Resources.CPUQuota,
+	// 			CPUPeriod:  config.Resources.CPUPeriod,
+	// 			CPUShares:  config.Resources.CPUShares,
+	// 			CPUSet:     config.Resources.CPUSet,
+	// 			ShmSize:    config.Resources.ShmSize,
+	// 		},
+	// 		Tmate: compiler.Tmate{
+	// 			Image:          config.Tmate.Image,
+	// 			Enabled:        config.Tmate.Enabled,
+	// 			Server:         config.Tmate.Server,
+	// 			Port:           config.Tmate.Port,
+	// 			RSA:            config.Tmate.RSA,
+	// 			ED25519:        config.Tmate.ED25519,
+	// 			AuthorizedKeys: config.Tmate.AuthorizedKeys,
+	// 		},
+	// 		Environ: provider.Combine(
+	// 			provider.Static(config.Runner.Environ),
+	// 			provider.External(
+	// 				config.Environ.Endpoint,
+	// 				config.Environ.Token,
+	// 				config.Environ.SkipVerify,
+	// 			),
+	// 		),
+	// 		Registry: registry.Combine(
+	// 			registry.File(
+	// 				config.Docker.Config,
+	// 			),
+	// 			registry.External(
+	// 				config.Registry.Endpoint,
+	// 				config.Registry.Token,
+	// 				config.Registry.SkipVerify,
+	// 			),
+	// 		),
+	// 		Secret: secret.Combine(
+	// 			secret.StaticVars(
+	// 				config.Runner.Secrets,
+	// 			),
+	// 			secret.External(
+	// 				config.Secret.Endpoint,
+	// 				config.Secret.Token,
+	// 				config.Secret.SkipVerify,
+	// 			),
+	// 		),
+	// 	},
+	// 	Exec: runtime.NewExecer(
+	// 		tracer,
+	// 		remote,
+	// 		engineInstance,
+	// 		config.Runner.Procs,
+	// 	).Exec,
+	// }
 
-	poller := &poller.Poller{
-		Client:   cli,
-		Dispatch: runner.Run,
-		Filter: &client.Filter{
-			Kind:    resource.Kind,
-			Type:    resource.Type,
-			OS:      config.Platform.OS,
-			Arch:    config.Platform.Arch,
-			Variant: config.Platform.Variant,
-			Kernel:  config.Platform.Kernel,
-			Labels:  config.Runner.Labels,
-		},
-	}
+	// poller := &poller.Poller{
+	// 	Client:   cli,
+	// 	Dispatch: runner.Run,
+	// 	Filter: &client.Filter{
+	// 		Kind:    resource.Kind,
+	// 		Type:    resource.Type,
+	// 		OS:      config.Platform.OS,
+	// 		Arch:    config.Platform.Arch,
+	// 		Variant: config.Platform.Variant,
+	// 		Kernel:  config.Platform.Kernel,
+	// 		Labels:  config.Runner.Labels,
+	// 	},
+	// }
 
 	var g errgroup.Group
 	server := server.Server{
@@ -243,7 +233,7 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 			WithField("arch", config.Platform.Arch).
 			Infoln("polling the remote server")
 
-		poller.Poll(ctx, config.Runner.Capacity)
+		//poller.Poll(ctx, config.Runner.Capacity)
 		return nil
 	})
 
@@ -290,6 +280,9 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 				ID:   "drone-saasd",
 				Name: "_workspace",
 				Path: "/home/tp/workspace/drone-runner-docker",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s"},
+				ReadOnly: false,
 			},
 		}
 		vols := []*engine.Volume{&vol}
@@ -321,8 +314,33 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 
 func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("destroy"))
-		w.WriteHeader(200)
+		vol := engine.Volume{
+			EmptyDir: nil,
+			HostPath: &engine.VolumeHostPath{
+				ID:   "drone-saasd",
+				Name: "_workspace",
+				Path: "/home/tp/workspace/drone-runner-docker",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s"},
+				ReadOnly: false,
+			},
+		}
+		vols := []*engine.Volume{&vol}
+		speccy := engine.Spec{
+			Network: engine.Network{
+				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s",
+				},
+				Options: nil,
+			},
+			Volumes: vols,
+		}
+		destroyErr := eng.Destroy(r.Context(), &speccy)
+		if destroyErr != nil {
+			logrus.WithError(destroyErr).
+				Errorln("cannot destroy the docker environment")
+		}
 	}
 }
 func registerDelegate(app *kingpin.Application) {
