@@ -6,7 +6,9 @@ package command
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/command/daemon"
@@ -307,13 +309,6 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 
 func handleStep(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("step"))
-		w.WriteHeader(200)
-	}
-}
-
-func handleDestroy(eng *engine.Docker) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
 		vol := engine.Volume{
 			EmptyDir: nil,
 			HostPath: &engine.VolumeHostPath{
@@ -335,6 +330,62 @@ func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 				Options: nil,
 			},
 			Volumes: vols,
+		}
+		// create a step to run, why do we do this ? why not use the engine.spec
+		steppy := engine.Step{
+			ID:         "drone-SJyV7YFTXHtNg4rC0V3x",
+			Name:       "test",
+			WorkingDir: "/drone/src",
+			Command:    []string{"go version"},
+			Entrypoint: []string{"/bin/sh", "-c"},
+			Image:      "docker.io/library/golang:latest",
+		}
+		// create a writer
+		bla := os.Stderr
+		state, stepErr := eng.Run(r.Context(), &speccy, &steppy, bla)
+		if stepErr != nil {
+			logrus.WithError(stepErr).
+				Errorln("running the step failed. this is a runner error")
+		}
+		w.WriteHeader(200)
+		whatHappened := fmt.Sprintf("%v\n", state)
+		w.Write([]byte(whatHappened))
+	}
+}
+
+func handleDestroy(eng *engine.Docker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vol := engine.Volume{
+			EmptyDir: nil,
+			HostPath: &engine.VolumeHostPath{
+				ID:   "drone-SJyV7YFTXHtNg4rC0V3x",
+				Name: "_workspace",
+				Path: "/home/tp/workspace/drone-runner-docker",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s"},
+				ReadOnly: false,
+			},
+		}
+		vols := []*engine.Volume{&vol}
+		steppy := engine.Step{
+			ID:         "drone-SJyV7YFTXHtNg4rC0V3x",
+			Name:       "test",
+			WorkingDir: "/drone/src",
+			Command:    []string{"go version"},
+			Entrypoint: []string{"/bin/sh", "-c"},
+			Image:      "docker.io/library/golang:latest",
+		}
+
+		speccy := engine.Spec{
+			Network: engine.Network{
+				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
+				Labels: map[string]string{
+					"io.drone.ttl": "1h0m0s",
+				},
+				Options: nil,
+			},
+			Volumes: vols,
+			Steps:   []*engine.Step{&steppy},
 		}
 		destroyErr := eng.Destroy(r.Context(), &speccy)
 		if destroyErr != nil {
