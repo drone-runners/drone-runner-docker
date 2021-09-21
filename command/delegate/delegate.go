@@ -2,11 +2,11 @@
 // Use of this source code is governed by the Polyform License
 // that can be found in the LICENSE file.
 
-package command
+package delegate
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"os"
 	"time"
@@ -44,7 +44,7 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	// setup the global logrus logger.
 	daemon.SetupLogger(config)
 
-	ctx, cancel := context.WithCancel(nocontext)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// listen for termination signals to gracefully shutdown
@@ -302,8 +302,10 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 		if setupErr != nil {
 			logrus.WithError(setupErr).
 				Errorln("cannot setup the docker environment")
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
-		w.WriteHeader(200)
 	}
 }
 
@@ -346,10 +348,16 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		if stepErr != nil {
 			logrus.WithError(stepErr).
 				Errorln("running the step failed. this is a runner error")
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
-		w.WriteHeader(200)
-		whatHappened := fmt.Sprintf("%v\n", state)
-		w.Write([]byte(whatHappened))
+		w.Header().Set("Content-Type", "application/json")
+		writeErr := json.NewEncoder(w).Encode(state)
+		if writeErr != nil {
+			logrus.WithError(writeErr).
+				Errorln("cannot write the step state")
+		}
 	}
 }
 
@@ -391,10 +399,13 @@ func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 		if destroyErr != nil {
 			logrus.WithError(destroyErr).
 				Errorln("cannot destroy the docker environment")
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }
-func registerDelegate(app *kingpin.Application) {
+func RegisterDelegate(app *kingpin.Application) {
 	c := new(delegateCommand)
 
 	cmd := app.Command("delegate", "starts the delegate").
