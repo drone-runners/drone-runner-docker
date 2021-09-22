@@ -276,133 +276,134 @@ func delegateListener(engine *engine.Docker) http.Handler {
 
 func handleSetup(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vol := engine.Volume{
-			EmptyDir: nil,
-			HostPath: &engine.VolumeHostPath{
-				ID:   "drone-saasd",
-				Name: "_workspace",
-				Path: "/home/tp/workspace/drone-runner-docker",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s"},
-				ReadOnly: false,
-			},
+		if r.Method != http.MethodPost {
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			return
 		}
-		vols := []*engine.Volume{&vol}
-		speccy := engine.Spec{
-			Network: engine.Network{
-				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s",
-				},
-				Options: nil,
-			},
-			Volumes: vols,
+
+		reqData, err := GetSetupRequest(r.Body)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
 		}
-		setupErr := eng.Setup(r.Context(), &speccy)
-		if setupErr != nil {
-			logrus.WithError(setupErr).
+
+		stageID := reqData.StageID
+
+		spec, err := CompileDelegateStage()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = Stages.Store(stageID, spec)
+		if err != nil {
+			logrus.WithError(err).
+				Errorln("failed to store spec")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		err = eng.Setup(r.Context(), spec)
+		if err != nil {
+			logrus.WithError(err).
 				Errorln("cannot setup the docker environment")
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
 		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func handleStep(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vol := engine.Volume{
-			EmptyDir: nil,
-			HostPath: &engine.VolumeHostPath{
-				ID:   "drone-saasd",
-				Name: "_workspace",
-				Path: "/home/tp/workspace/drone-runner-docker",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s"},
-				ReadOnly: false,
-			},
+		if r.Method != http.MethodPost {
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			return
 		}
-		vols := []*engine.Volume{&vol}
-		speccy := engine.Spec{
-			Network: engine.Network{
-				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s",
-				},
-				Options: nil,
-			},
-			Volumes: vols,
+
+		reqData, err := GetExecStepRequest(r.Body)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
 		}
+
+		stageID := reqData.StageID
+
+		spec, err := Stages.Get(stageID)
+		if err != nil {
+			logrus.WithError(err).
+				Errorln("failed to get the stage")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if spec == nil {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			return
+		}
+
+		stepID := random()
+
 		// create a step to run, why do we do this ? why not use the engine.spec
 		steppy := engine.Step{
-			ID:         "drone-SJyV7YFTXHtNg4rC0V3x",
+			ID:         stepID,
 			Name:       "test",
 			WorkingDir: "/drone/src",
 			Command:    []string{"go version"},
 			Entrypoint: []string{"/bin/sh", "-c"},
 			Image:      "docker.io/library/golang:latest",
 		}
+
 		// create a writer
 		bla := os.Stderr
-		state, stepErr := eng.Run(r.Context(), &speccy, &steppy, bla)
-		if stepErr != nil {
-			logrus.WithError(stepErr).
+		state, err := eng.Run(r.Context(), spec, &steppy, bla)
+		if err != nil {
+			logrus.WithError(err).
 				Errorln("running the step failed. this is a runner error")
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
+			return
 		}
+
 		w.Header().Set("Content-Type", "application/json")
-		writeErr := json.NewEncoder(w).Encode(state)
-		if writeErr != nil {
-			logrus.WithError(writeErr).
-				Errorln("cannot write the step state")
-		}
+		w.WriteHeader(http.StatusOK)
+
+		_ = json.NewEncoder(w).Encode(state)
 	}
 }
 
 func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vol := engine.Volume{
-			EmptyDir: nil,
-			HostPath: &engine.VolumeHostPath{
-				ID:   "drone-SJyV7YFTXHtNg4rC0V3x",
-				Name: "_workspace",
-				Path: "/home/tp/workspace/drone-runner-docker",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s"},
-				ReadOnly: false,
-			},
-		}
-		vols := []*engine.Volume{&vol}
-		steppy := engine.Step{
-			ID:         "drone-SJyV7YFTXHtNg4rC0V3x",
-			Name:       "test",
-			WorkingDir: "/drone/src",
-			Command:    []string{"go version"},
-			Entrypoint: []string{"/bin/sh", "-c"},
-			Image:      "docker.io/library/golang:latest",
+		if r.Method != http.MethodPost {
+			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+			return
 		}
 
-		speccy := engine.Spec{
-			Network: engine.Network{
-				ID: "drone-SJyV7YFTXHtNg4rC0V3x",
-				Labels: map[string]string{
-					"io.drone.ttl": "1h0m0s",
-				},
-				Options: nil,
-			},
-			Volumes: vols,
-			Steps:   []*engine.Step{&steppy},
+		reqData, err := GetDestroyRequest(r.Body)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
 		}
-		destroyErr := eng.Destroy(r.Context(), &speccy)
-		if destroyErr != nil {
-			logrus.WithError(destroyErr).
+
+		stageID := reqData.StageID
+
+		spec, err := Stages.Get(stageID)
+		if err != nil {
+			logrus.WithError(err).
+				Errorln("failed to delete the stage")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = eng.Destroy(r.Context(), spec)
+		if err != nil {
+			logrus.WithError(err).
 				Errorln("cannot destroy the docker environment")
 			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
+			return
 		}
+
+		_, _ = Stages.Remove(stageID)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 func RegisterDelegate(app *kingpin.Application) {
