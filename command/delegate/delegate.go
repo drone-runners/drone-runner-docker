@@ -346,11 +346,11 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		// create a step to run, why do we do this ? why not use the engine.spec
 		steppy := engine.Step{
 			ID:         stepID,
-			Name:       "test",
+			Name:       reqData.StepID,
 			WorkingDir: "/drone/src",
-			Command:    []string{"go version"},
+			Command:    []string{reqData.Command},
 			Entrypoint: []string{"/bin/sh", "-c"},
-			Image:      "docker.io/library/golang:latest",
+			Image:      reqData.Image,
 		}
 
 		// create a writer
