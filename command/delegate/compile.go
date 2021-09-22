@@ -1,6 +1,8 @@
 package delegate
 
 import (
+	"os"
+
 	"github.com/dchest/uniuri"
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone/runner-go/pipeline/runtime"
@@ -17,13 +19,17 @@ func CompileDelegateStage() (runtime.Spec, error) {
 	volumeID := random()
 	networkID := random()
 
+	currentWorkingDirectory, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
 	vol := engine.Volume{
 		EmptyDir: nil,
 		HostPath: &engine.VolumeHostPath{
 			ID:   volumeID,
 			Name: "_workspace",
-			//Path: "/home/tp/workspace/drone-runner-docker",
-			Path: "/Users/markogacesa/volume",
+			Path: currentWorkingDirectory,
 			Labels: map[string]string{
 				"io.drone.ttl": "1h0m0s"},
 			ReadOnly: false,
