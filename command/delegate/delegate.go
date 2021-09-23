@@ -11,17 +11,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/drone-runners/drone-runner-docker/command/daemon"
-	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
-	"github.com/drone/runner-go/client"
-	"github.com/drone/runner-go/logger"
+	"github.com/drone-runners/drone-runner-docker/engine"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
 
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -33,16 +29,9 @@ type delegateCommand struct {
 
 func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	// load environment variables from file.
-	godotenv.Load(c.envfile)
+	//godotenv.Load(c.envfile)
 
-	// load the configuration from the environment
-	config, err := daemon.FromEnviron()
-	if err != nil {
-		return err
-	}
-
-	// setup the global logrus logger.
-	daemon.SetupLogger(config)
+	logrus.SetLevel(logrus.TraceLevel)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -54,24 +43,25 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 		cancel()
 	})
 
-	cli := client.New(
-		config.Client.Address,
-		config.Client.Secret,
-		config.Client.SkipVerify,
-	)
-	if config.Client.Dump {
-		cli.Dumper = logger.StandardDumper(
-			config.Client.DumpBody,
-		)
-	}
-	cli.Logger = logger.Logrus(
-		logrus.NewEntry(
-			logrus.StandardLogger(),
-		),
-	)
+	//cli := client.New(
+	//	config.Client.Address,
+	//	config.Client.Secret,
+	//	config.Client.SkipVerify,
+	//)
+	//if config.Client.Dump {
+	//	cli.Dumper = logger.StandardDumper(
+	//		config.Client.DumpBody,
+	//	)
+	//}
+	//cli.Logger = logger.Logrus(
+	//	logrus.NewEntry(
+	//		logrus.StandardLogger(),
+	//	),
+	//)
 
 	opts := engine.Opts{
-		HidePull: !config.Docker.Stream,
+		//HidePull: !config.Docker.Stream,
+		HidePull: false,
 	}
 	engineInstance, err := engine.NewEnv(opts)
 	if err != nil {
@@ -193,11 +183,11 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 
 	var g errgroup.Group
 	server := server.Server{
-		Addr:    config.Server.Port,
+		Addr:    ":3000", // config.Server.Port,
 		Handler: delegateListener(engineInstance),
 	}
 
-	logrus.WithField("addr", config.Server.Port).
+	logrus.WithField("addr", ":3000" /*config.Server.Port*/).
 		Infoln("starting the server")
 
 	g.Go(func() error {
@@ -227,12 +217,12 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	// }
 
 	g.Go(func() error {
-		logrus.WithField("capacity", config.Runner.Capacity).
-			WithField("endpoint", config.Client.Address).
+		logrus.WithField("capacity", 2 /*config.Runner.Capacity*/).
+			//WithField("endpoint", config.Client.Address).
 			WithField("kind", resource.Kind).
 			WithField("type", resource.Type).
-			WithField("os", config.Platform.OS).
-			WithField("arch", config.Platform.Arch).
+			WithField("os", "linux" /*config.Platform.OS*/).
+			WithField("arch", "amd64" /*config.Platform.Arch*/).
 			Infoln("polling the remote server")
 
 		//poller.Poll(ctx, config.Runner.Capacity)
