@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v3"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -183,9 +183,10 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	if res.StatusCode > 299 {
 		// if the response body includes an error message
 		// we should return the error string.
+		out := new(Error)
 		if len(body) != 0 {
 			if err := json.Unmarshal(body, out); err != nil {
-				return res, fmt.Errorf("could not unmarshal. Error: %s", err)
+				return res, new(Error)
 			}
 			return res, errors.New(
 				string(body),

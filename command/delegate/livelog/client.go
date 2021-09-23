@@ -9,6 +9,16 @@ import (
 	"context"
 )
 
+// Error represents a json-encoded API error.
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+func (e *Error) Error() string {
+	return e.Message
+}
+
 // A Client manages communication with the runner.
 type Client interface {
 	// Batch batch writes logs to the build logs.
