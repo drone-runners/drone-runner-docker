@@ -346,7 +346,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		c := livelog.NewHTTPClient("http://localhost:8079", "accountID", "token", true)
 
 		// create a writer
-		wc := livelog.New(c, stepID)
+		wc := livelog.New(c, reqData.Dump.Step.LogKey)
 		defer wc.Close()
 		state, err := eng.Run(r.Context(), spec, &steppy, wc)
 		if err != nil {
