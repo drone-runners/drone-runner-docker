@@ -11,9 +11,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/buildkite/yaml v2.1.0+incompatible
 	github.com/cenkalti/backoff/v3 v3.2.2
-	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/containerd/containerd v1.3.4 // indirect
-	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v0.0.0-00010101000000-000000000000

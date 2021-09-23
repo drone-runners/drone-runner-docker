@@ -12,8 +12,8 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
-	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
+	"github.com/drone-runners/drone-runner-docker/engine"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"

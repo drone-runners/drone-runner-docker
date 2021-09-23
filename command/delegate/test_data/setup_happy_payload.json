@@ -1,0 +1,317 @@
+{
+    "stage_id": "1",
+    "dump": {
+        "@class": "io.harness.delegate.beans.ci.CIK8BuildTaskParams",
+        "delegateSelectors": null,
+        "k8sConnector": {
+            "connectorConfig": {
+                "credential": {
+                    "type": "ManualConfig",
+                    "spec": {
+                        "masterUrl": "https://34.69.8.11",
+                        "auth": {
+                            "type": "UsernamePassword",
+                            "spec": {
+                                "username": "admin",
+                                "usernameRef": null,
+                                "passwordRef": "account.testK8sSecretFSGxPuvjmJ"
+                            }
+                        }
+                    }
+                },
+                "delegateSelectors": []
+            },
+            "connectorType": "K8sCluster",
+            "identifier": "testK8sConnectorKjDs9iexsz",
+            "orgIdentifier": null,
+            "projectIdentifier": null,
+            "delegateSelectors": null,
+            "encryptedDataDetails": [
+                {
+                    "encryptedData": {
+                        "uuid": "61482861ace5a066b1ed68b2",
+                        "name": "testK8sSecretLESy1wlWkU",
+                        "path": null,
+                        "parameters": null,
+                        "encryptionKey": "KxgDawYdSkGFmnGsAfgmWw",
+                        "encryptedValue": "\\üîOÌø?Ç\u0003\u000Bíòmñw©ÍzÜ\u0002Dó]¼ã\u0019Ø!@\u0005]\u001Aéó\u001Eò=;÷\u0019\u001C¸Ô&®ÝXû\u001D",
+                        "kmsId": null,
+                        "encryptionType": "LOCAL",
+                        "backupEncryptedValue": null,
+                        "backupEncryptionKey": null,
+                        "backupKmsId": null,
+                        "backupEncryptionType": null,
+                        "base64Encoded": false,
+                        "additionalMetadata": null
+                    },
+                    "encryptionConfig": {
+                        "name": null,
+                        "uuid": null,
+                        "encryptionType": "LOCAL",
+                        "accountId": "kmpySmUISimoRrJL6NL73w",
+                        "numOfEncryptedValue": 0,
+                        "encryptedBy": null,
+                        "createdBy": null,
+                        "createdAt": 0,
+                        "lastUpdatedBy": null,
+                        "lastUpdatedAt": 0,
+                        "nextTokenRenewIteration": null,
+                        "manuallyEnteredSecretEngineMigrationIteration": null,
+                        "usageRestrictions": null,
+                        "scopedToAccount": false,
+                        "templatizedFields": null,
+                        "validationCriteria": "encryption type: LOCAL",
+                        "encryptionServiceUrl": null,
+                        "default": false,
+                        "templatized": false
+                    },
+                    "fieldName": "passwordRef",
+                    "identifier": {
+                        "kmsId": null,
+                        "encryptionKey": "KxgDawYdSkGFmnGsAfgmWw"
+                    }
+                }
+            ],
+            "sshKeyDetails": null,
+            "envToSecretsMap": {}
+        },
+        "cik8PodParams": {
+            "name": "harnessci-downloadplugins-h9prtvh4",
+            "namespace": "harness-delegate",
+            "annotations": null,
+            "labels": {
+                "accountID": "kmpySmUISimoRrJL6NL73w",
+                "pipelineExecutionID": "MZaehbPSQeu5tXAdN32kPg",
+                "projectID": "CITestDemoProRTLkAppBQ4",
+                "orgID": "CITestDemoOrgE6o7coEGPk",
+                "pipelineID": "cipipeline0wcWFjcrzk",
+                "stageID": "download_plugin_success"
+            },
+            "containerParamsList": [
+                {
+                    "name": "lite-engine",
+                    "imageDetailsWithConnector": {
+                        "imageConnectorDetails": null,
+                        "imageDetails": {
+                            "name": "harness/ci-lite-engine",
+                            "tag": "release-21",
+                            "sourceName": null,
+                            "registryUrl": null,
+                            "username": null,
+                            "usernameRef": null,
+                            "password": null,
+                            "domainName": null
+                        }
+                    },
+                    "commands": null,
+                    "args": null,
+                    "workingDir": "/harness",
+                    "ports": null,
+                    "envVars": {
+                        "DELEGATE_SERVICE_ENDPOINT": "6.tcp.ngrok.io:10773",
+                        "HARNESS_LOG_PREFIX": "accountId:kmpySmUISimoRrJL6NL73w/orgId:CITestDemoOrgE6o7coEGPk/projectId:CITestDemoProRTLkAppBQ4/pipelineId:cipipeline0wcWFjcrzk/runSequence:1/level0:pipeline/level1:stages/level2:download_plugin_success",
+                        "HARNESS_PIPELINE_ID": "cipipeline0wcWFjcrzk",
+                        "HARNESS_ACCOUNT_ID": "kmpySmUISimoRrJL6NL73w",
+                        "HARNESS_PROJECT_ID": "CITestDemoProRTLkAppBQ4",
+                        "HARNESS_BUILD_ID": "1",
+                        "DELEGATE_SERVICE_ID": "delegate-grpc-service",
+                        "HARNESS_STAGE_ID": "download_plugin_success",
+                        "HARNESS_WORKSPACE": "/harness",
+                        "HARNESS_ORG_ID": "CITestDemoOrgE6o7coEGPk"
+                    },
+                    "envVarsWithSecretRef": null,
+                    "secretEnvVars": null,
+                    "secretVolumes": null,
+                    "imageSecret": null,
+                    "volumeToMountPath": {
+                        "addon": "/addon",
+                        "harness": "/harness"
+                    },
+                    "containerResourceParams": {
+                        "resourceRequestMemoryMiB": 600,
+                        "resourceLimitMemoryMiB": 600,
+                        "resourceRequestMilliCpu": 500,
+                        "resourceLimitMilliCpu": 500
+                    },
+                    "containerSecrets": {
+                        "secretVariableDetails": [],
+                        "connectorDetailsMap": {},
+                        "functorConnectors": {},
+                        "plainTextSecretsByName": {
+                            "HARNESS_LOG_SERVICE_TOKEN": {
+                                "value": "WVVyTGYydHRjSGxUYlZWSlUybHRiMUp5U2t3MlRrdzNNM2UyTHU5dU1EaTNKYnUzbWRwVEF1ek1QTGloc2RCRjE2cDF4SWpXYkNIY2tn",
+                                "secretKey": "HARNESS_LOG_SERVICE_TOKEN",
+                                "type": "TEXT"
+                            },
+                            "HARNESS_LOG_SERVICE_ENDPOINT": {
+                                "value": "aHR0cHM6Ly9xYS5oYXJuZXNzLmlvL2xvZy1zZXJ2aWNlLw==",
+                                "secretKey": "HARNESS_LOG_SERVICE_ENDPOINT",
+                                "type": "TEXT"
+                            },
+                            "HARNESS_TI_SERVICE_TOKEN": {
+                                "value": "WVVyTGdHdHRjSGxUYlZWSlUybHRiMUp5U2t3MlRrdzNNM2ZIZGxSSmNuRTBXWGpLWHltSGpESy1ZNTFoUkNnQjlaNFk4ZkhNdlVidWl3",
+                                "secretKey": "HARNESS_TI_SERVICE_TOKEN",
+                                "type": "TEXT"
+                            },
+                            "HARNESS_TI_SERVICE_ENDPOINT": {
+                                "value": "aHR0cHM6Ly9xYS5oYXJuZXNzLmlvL3RpLXNlcnZpY2Uv",
+                                "secretKey": "HARNESS_TI_SERVICE_ENDPOINT",
+                                "type": "TEXT"
+                            }
+                        }
+                    },
+                    "runAsUser": null,
+                    "privileged": false,
+                    "imagePullPolicy": null,
+                    "containerType": "LITE_ENGINE",
+                    "type": "K8"
+                },
+                {
+                    "name": "step-1",
+                    "imageDetailsWithConnector": {
+                        "imageConnectorDetails": {
+                            "connectorConfig": {
+                                "dockerRegistryUrl": "https://index.docker.io/v2/",
+                                "providerType": "DockerHub",
+                                "auth": {
+                                    "type": "Anonymous"
+                                },
+                                "delegateSelectors": []
+                            },
+                            "connectorType": "DockerRegistry",
+                            "identifier": "testDockerConnectorU5SdCBkjrB",
+                            "orgIdentifier": null,
+                            "projectIdentifier": null,
+                            "delegateSelectors": null,
+                            "encryptedDataDetails": null,
+                            "sshKeyDetails": null,
+                            "envToSecretsMap": {}
+                        },
+                        "imageDetails": {
+                            "name": "shubham149/test",
+                            "tag": "plugin3",
+                            "sourceName": null,
+                            "registryUrl": null,
+                            "username": null,
+                            "usernameRef": null,
+                            "password": null,
+                            "domainName": null
+                        }
+                    },
+                    "commands": [
+                        "/addon/bin/ci-addon"
+                    ],
+                    "args": [
+                        "--port",
+                        "20002"
+                    ],
+                    "workingDir": "/harness",
+                    "ports": [
+                        20002
+                    ],
+                    "envVars": {
+                        "HARNESS_LOG_PREFIX": "accountId:kmpySmUISimoRrJL6NL73w/orgId:CITestDemoOrgE6o7coEGPk/projectId:CITestDemoProRTLkAppBQ4/pipelineId:cipipeline0wcWFjcrzk/runSequence:1/level0:pipeline/level1:stages/level2:download_plugin_success",
+                        "HARNESS_PIPELINE_ID": "cipipeline0wcWFjcrzk",
+                        "HARNESS_ACCOUNT_ID": "kmpySmUISimoRrJL6NL73w",
+                        "HARNESS_PROJECT_ID": "CITestDemoProRTLkAppBQ4",
+                        "HARNESS_BUILD_ID": "1",
+                        "DRONE_BUILD_NUMBER": "1",
+                        "HARNESS_STAGE_ID": "download_plugin_success",
+                        "HARNESS_WORKSPACE": "/harness",
+                        "PLUGIN_ARTIFACT_FILE": "artifactfile",
+                        "HARNESS_ORG_ID": "CITestDemoOrgE6o7coEGPk"
+                    },
+                    "envVarsWithSecretRef": {},
+                    "secretEnvVars": null,
+                    "secretVolumes": null,
+                    "imageSecret": null,
+                    "volumeToMountPath": {
+                        "addon": "/addon",
+                        "harness": "/harness"
+                    },
+                    "containerResourceParams": {
+                        "resourceRequestMemoryMiB": 10,
+                        "resourceLimitMemoryMiB": 500,
+                        "resourceRequestMilliCpu": 10,
+                        "resourceLimitMilliCpu": 400
+                    },
+                    "containerSecrets": {
+                        "secretVariableDetails": [],
+                        "connectorDetailsMap": {},
+                        "functorConnectors": {},
+                        "plainTextSecretsByName": {}
+                    },
+                    "runAsUser": null,
+                    "privileged": false,
+                    "imagePullPolicy": null,
+                    "containerType": "PLUGIN",
+                    "type": "K8"
+                }
+            ],
+            "initContainerParamsList": [
+                {
+                    "name": "setup-addon",
+                    "imageDetailsWithConnector": {
+                        "imageConnectorDetails": null,
+                        "imageDetails": {
+                            "name": "shubham149/test",
+                            "tag": "addont2",
+                            "sourceName": null,
+                            "registryUrl": null,
+                            "username": null,
+                            "usernameRef": null,
+                            "password": null,
+                            "domainName": null
+                        }
+                    },
+                    "commands": [
+                        "sh",
+                        "-c",
+                        "--"
+                    ],
+                    "args": [
+                        "mkdir -p /addon/bin; mkdir -p /addon/tmp; chmod -R 776 /addon/tmp; cp /usr/local/bin/ci-addon-linux-amd64 /addon/bin/ci-addon; chmod +x /addon/bin/ci-addon; cp /usr/local/bin/java-agent.jar /addon/bin/java-agent.jar; chmod +x /addon/bin/java-agent.jar"
+                    ],
+                    "workingDir": null,
+                    "ports": null,
+                    "envVars": {
+                        "HARNESS_WORKSPACE": "/harness"
+                    },
+                    "envVarsWithSecretRef": null,
+                    "secretEnvVars": null,
+                    "secretVolumes": null,
+                    "imageSecret": null,
+                    "volumeToMountPath": {
+                        "addon": "/addon",
+                        "harness": "/harness"
+                    },
+                    "containerResourceParams": null,
+                    "containerSecrets": {
+                        "secretVariableDetails": [],
+                        "connectorDetailsMap": {},
+                        "functorConnectors": {},
+                        "plainTextSecretsByName": {}
+                    },
+                    "runAsUser": null,
+                    "privileged": false,
+                    "imagePullPolicy": null,
+                    "containerType": "ADD_ON",
+                    "type": "K8"
+                }
+            ],
+            "pvcParamList": [],
+            "hostAliasParamsList": null,
+            "runAsUser": null,
+            "serviceAccountName": null,
+            "gitConnector": null,
+            "branchName": null,
+            "commitId": null,
+            "stepExecVolumeName": null,
+            "stepExecWorkingDir": null,
+            "type": "K8"
+        },
+        "servicePodParams": null,
+        "podMaxWaitUntilReadySecs": 480,
+        "type": "GCP_K8"
+    }
+}
