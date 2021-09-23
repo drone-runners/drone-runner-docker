@@ -8,12 +8,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
+	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
@@ -343,9 +343,12 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Image:      reqData.Image,
 		}
 
+		c := livelog.NewHTTPClient("http://localhost:8079", "accountID", "token", true)
+
 		// create a writer
-		bla := os.Stderr
-		state, err := eng.Run(r.Context(), spec, &steppy, bla)
+		wc := livelog.New(c, reqData.Dump.Step.LogKey)
+		defer wc.Close()
+		state, err := eng.Run(r.Context(), spec, &steppy, wc)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("running the step failed. this is a runner error")
