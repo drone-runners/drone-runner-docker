@@ -50,7 +50,7 @@ func TestClone(t *testing.T) {
 			RunPolicy:  runtime.RunAlways,
 			WorkingDir: "/drone/src",
 			Volumes: []*engine.VolumeMount{
-				{
+				&engine.VolumeMount{
 					Name: "_workspace",
 					Path: "/drone/src",
 				},

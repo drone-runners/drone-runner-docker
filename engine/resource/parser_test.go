@@ -48,7 +48,7 @@ func TestParse(t *testing.T) {
 			Clone: manifest.Clone{
 				Depth: 50,
 			},
-			Deps:        []string{"dependency"},
+			Deps: []string{"dependency"},
 			PullSecrets: []string{"dockerconfigjson"},
 			Trigger: manifest.Conditions{
 				Branch: manifest.Condition{
@@ -74,8 +74,8 @@ func TestParse(t *testing.T) {
 						"go test",
 					},
 					Environment: map[string]*manifest.Variable{
-						"GOOS":   {Value: "linux"},
-						"GOARCH": {Value: "arm64"},
+						"GOOS":   &manifest.Variable{Value: "linux"},
+						"GOARCH": &manifest.Variable{Value: "arm64"},
 					},
 					MemLimit:     manifest.BytesSize(1073741824),
 					MemSwapLimit: manifest.BytesSize(2147483648),

@@ -55,7 +55,7 @@ func New(client client.Client, id string) *Writer {
 	}
 	err := client.Open(context.Background(), id)
 	if err != nil {
-		fmt.Println("error while opening log stream")
+		fmt.Println("error while opening log stream: ", err)
 	}
 	go b.start()
 	return b
