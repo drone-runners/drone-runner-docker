@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform License
 // that can be found in the LICENSE file.
 
-package client
+package livelog
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/drone-runners/drone-runner-docker/types"
 	"github.com/cenkalti/backoff/v4"
 	"io"
 	"io/ioutil"
@@ -34,7 +33,7 @@ var defaultClient = &http.Client{
 }
 
 // New returns a new runner client.
-func New(endpoint, accountID, secret string, skipverify bool) *HTTPClient {
+func NewHTTPClient(endpoint, accountID, secret string, skipverify bool) *HTTPClient {
 	client := &HTTPClient{
 		Endpoint:   endpoint,
 		AccountID: accountID,
@@ -67,13 +66,13 @@ type HTTPClient struct {
 }
 
 // Batch batch writes logs to the build logs.
-func (c *HTTPClient) Batch(ctx context.Context, key string, lines []*types.Line) error {
+func (c *HTTPClient) Batch(ctx context.Context, key string, lines []*Line) error {
 	path := fmt.Sprintf(endpointBatch, c.AccountID, key)
 	_, err := c.do(ctx, c.Endpoint+path, "PUT", &lines, nil)
 	return err
 }
 
-func (c *HTTPClient) Upload(ctx context.Context, key string, lines []*types.Line) error {
+func (c *HTTPClient) Upload(ctx context.Context, key string, lines []*Line) error {
 	path := fmt.Sprintf(endpointUpload, c.AccountID, key)
 	backoff := createBackoff(10 * time.Second)
 	_, err := c.retry(ctx, c.Endpoint+path, "POST", &lines, nil, false, backoff)
@@ -233,4 +232,3 @@ func createBackoff(maxElapsedTime time.Duration) *backoff.ExponentialBackOff {
 	exp.MaxElapsedTime = maxElapsedTime
 	return exp
 }
-

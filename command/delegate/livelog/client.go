@@ -3,20 +3,19 @@
 // that can be found in the LICENSE file.
 
 // Package client provides a client for using the runner API.
-package client
+package livelog
 
 import (
 	"context"
-	"github.com/drone-runners/drone-runner-docker/types"
 )
 
 // A Client manages communication with the runner.
 type Client interface {
 	// Batch batch writes logs to the build logs.
-	Batch(ctx context.Context, key string, lines []*types.Line) error
+	Batch(ctx context.Context, key string, lines []*Line) error
 
 	// Upload uploads the full logs to the server.
-	Upload(ctx context.Context, key string, lines []*types.Line) error
+	Upload(ctx context.Context, key string, lines []*Line) error
 
 	// Open opens the stream to write logs
 	Open(ctx context.Context, key string) error

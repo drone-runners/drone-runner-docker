@@ -9,8 +9,6 @@ package livelog
 import (
 	"context"
 	"fmt"
-	"github.com/drone-runners/drone-runner-docker/client"
-	"github.com/drone-runners/drone-runner-docker/types"
 	"strings"
 	"sync"
 	"time"
@@ -23,7 +21,7 @@ const defaultLimit = 5242880 // 5MB
 type Writer struct {
 	sync.Mutex
 
-	client client.Client
+	client Client
 
 	key   string
 	num   int
@@ -32,8 +30,8 @@ type Writer struct {
 	limit int
 
 	interval time.Duration
-	pending  []*types.Line
-	history  []*types.Line
+	pending  []*Line
+	history  []*Line
 
 	closed bool
 	close  chan struct{}
@@ -41,7 +39,7 @@ type Writer struct {
 }
 
 // New returns a new Writer.
-func New(client client.Client, id string) *Writer {
+func New(client Client, id string) *Writer {
 	// Harness Log service uses a string key to log everything.
 	// Keeping it as 'id' for now assuming that it's unique everywhere
 	b := &Writer{
@@ -75,7 +73,7 @@ func (b *Writer) SetInterval(interval time.Duration) {
 func (b *Writer) Write(p []byte) (n int, err error) {
 	fmt.Print(string(p))
 	for _, part := range split(p) {
-		line := &types.Line{
+		line := &Line{
 			Number:    b.num,
 			Message:   part,
 			Timestamp: time.Now(),
@@ -146,7 +144,7 @@ func (b *Writer) flush() error {
 }
 
 // copy returns a copy of the buffered lines.
-func (b *Writer) copy() []*types.Line {
+func (b *Writer) copy() []*Line {
 	return append(b.pending[:0:0], b.pending...)
 }
 
