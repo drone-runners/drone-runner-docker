@@ -7,14 +7,14 @@ package delegate
 import (
 	"context"
 	"encoding/json"
-	"github.com/drone-runners/drone-runner-docker/livelog"
 	"net/http"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
-	"github.com/drone-runners/drone-runner-docker/engine"
 	minclient "github.com/drone-runners/drone-runner-docker/client"
+	"github.com/drone-runners/drone-runner-docker/engine"
+	"github.com/drone-runners/drone-runner-docker/livelog"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
