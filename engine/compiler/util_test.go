@@ -93,8 +93,8 @@ func Test_configureSerial(t *testing.T) {
 
 func Test_convertStaticEnv(t *testing.T) {
 	vars := map[string]*manifest.Variable{
-		"username": &manifest.Variable{Value: "octocat"},
-		"password": &manifest.Variable{Secret: "password"},
+		"username": {Value: "octocat"},
+		"password": {Secret: "password"},
 	}
 	envs := convertStaticEnv(vars)
 	want := map[string]string{"username": "octocat"}
@@ -106,8 +106,8 @@ func Test_convertStaticEnv(t *testing.T) {
 
 func Test_convertSecretEnv(t *testing.T) {
 	vars := map[string]*manifest.Variable{
-		"USERNAME": &manifest.Variable{Value: "octocat"},
-		"PASSWORD": &manifest.Variable{Secret: "password"},
+		"USERNAME": {Value: "octocat"},
+		"PASSWORD": {Secret: "password"},
 	}
 	envs := convertSecretEnv(vars)
 	want := []*engine.Secret{

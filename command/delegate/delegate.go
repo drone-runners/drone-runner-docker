@@ -7,13 +7,14 @@ package delegate
 import (
 	"context"
 	"encoding/json"
+	"github.com/drone-runners/drone-runner-docker/livelog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
+	minclient "github.com/drone-runners/drone-runner-docker/client"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
@@ -343,9 +344,12 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Image:      reqData.Image,
 		}
 
+		c := minclient.New("http://localhost:8079", "accountID", "token", true)
+
 		// create a writer
-		bla := os.Stderr
-		state, err := eng.Run(r.Context(), spec, &steppy, bla)
+		wc := livelog.New(c, stepID)
+		defer wc.Close()
+		state, err := eng.Run(r.Context(), spec, &steppy, wc)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("running the step failed. this is a runner error")
