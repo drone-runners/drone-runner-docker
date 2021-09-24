@@ -12,8 +12,8 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
-	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
+	"github.com/drone-runners/drone-runner-docker/engine"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
 	"github.com/drone/signal"
@@ -343,7 +343,22 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Image:      reqData.Image,
 		}
 
-		c := livelog.NewHTTPClient("http://localhost:8079", "accountID", "token", true)
+		logStreamURL := reqData.LogStreamURL
+		if logStreamURL == "" {
+			logStreamURL = "http://localhost:8079"
+		}
+
+		logStreamAccountID := reqData.LogStreamURL
+		if logStreamAccountID == "" {
+			logStreamAccountID = "accountID"
+		}
+
+		logStreamToken := reqData.LogStreamToken
+		if logStreamToken == "" {
+			logStreamToken = "token"
+		}
+
+		c := livelog.NewHTTPClient(logStreamURL, logStreamAccountID, logStreamToken, true)
 
 		// create a writer
 		wc := livelog.New(c, reqData.Dump.Step.LogKey)

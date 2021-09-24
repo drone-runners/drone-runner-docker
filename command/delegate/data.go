@@ -294,11 +294,15 @@ func GetExecStepRequest(r io.Reader) (*ExecStepRequest, error) {
 }
 
 type ExecStepRequest struct {
-	StageID string           `json:"stage_id"`
-	StepID  string           `json:"step_id"`
-	Command string           `json:"command"`
-	Image   string           `json:"image"`
-	Dump    ExecStepDataDump `json:"dump"`
+	StageID            string `json:"stage_id"`
+	StepID             string `json:"step_id"`
+	Command            string `json:"command"`
+	Image              string `json:"image"`
+	LogStreamURL       string `json:"log_stream_url"`
+	LogStreamAccountID string `json:"log_stream_account_id"`
+	LogStreamToken     string `json:"log_stream_token"`
+
+	Dump ExecStepDataDump `json:"dump"`
 }
 
 type ExecStepDataDump struct {
