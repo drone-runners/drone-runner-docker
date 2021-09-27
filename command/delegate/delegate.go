@@ -7,6 +7,7 @@ package delegate
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -267,16 +268,18 @@ func delegateListener(engine *engine.Docker) http.Handler {
 func handleSetup(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			fmt.Println("failed to read setup post request")
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 			return
 		}
 
 		reqData, err := GetSetupRequest(r.Body)
 		if err != nil {
+			fmt.Println("failed to read setup request")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-
+		fmt.Printf("\n\nExecuting setup: %v\n", reqData)
 		stageID := reqData.StageID
 
 		spec, err := CompileDelegateStage()
@@ -306,16 +309,19 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 func handleStep(eng *engine.Docker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			fmt.Println("failed to read setup step request")
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 			return
 		}
 
 		reqData, err := GetExecStepRequest(r.Body)
 		if err != nil {
+			fmt.Println("failed to read step request")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
+		fmt.Printf("\n\nExecuting step: %v\n", reqData)
 		stageID := reqData.StageID
 
 		spec, err := Stages.Get(stageID)
@@ -348,7 +354,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			logStreamURL = "http://localhost:8079"
 		}
 
-		logStreamAccountID := reqData.LogStreamURL
+		logStreamAccountID := reqData.LogStreamAccountID
 		if logStreamAccountID == "" {
 			logStreamAccountID = "accountID"
 		}
@@ -361,7 +367,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		c := livelog.NewHTTPClient(logStreamURL, logStreamAccountID, logStreamToken, true)
 
 		// create a writer
-		wc := livelog.New(c, reqData.Dump.Step.LogKey)
+		wc := livelog.New(c, reqData.LogKey)
 		defer wc.Close()
 		state, err := eng.Run(r.Context(), spec, &steppy, wc)
 		if err != nil {
@@ -391,6 +397,7 @@ func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 			return
 		}
 
+		fmt.Printf("\n\nExecuting cleanup: %v\n", reqData)
 		stageID := reqData.StageID
 
 		spec, err := Stages.Get(stageID)

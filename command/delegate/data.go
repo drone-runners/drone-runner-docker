@@ -298,6 +298,7 @@ type ExecStepRequest struct {
 	StepID             string `json:"step_id"`
 	Command            string `json:"command"`
 	Image              string `json:"image"`
+	LogKey             string `json:"log_key"`
 	LogStreamURL       string `json:"log_stream_url"`
 	LogStreamAccountID string `json:"log_stream_account_id"`
 	LogStreamToken     string `json:"log_stream_token"`

@@ -72,10 +72,10 @@ func (c *HTTPClient) Batch(ctx context.Context, key string, lines []*Line) error
 	return err
 }
 
-func (c *HTTPClient) Upload(ctx context.Context, key string, lines []*Line) error {
+func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error {
 	path := fmt.Sprintf(endpointUpload, c.AccountID, key)
 	backoff := createBackoff(10 * time.Second)
-	_, err := c.retry(ctx, c.Endpoint+path, "POST", &lines, nil, false, backoff)
+	_, err := c.retry(ctx, c.Endpoint+path, "POST", r, nil, true, backoff)
 	return err
 }
 
