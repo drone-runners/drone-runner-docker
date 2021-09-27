@@ -7,6 +7,7 @@ package livelog
 
 import (
 	"context"
+	"io"
 )
 
 // Error represents a json-encoded API error.
@@ -25,7 +26,7 @@ type Client interface {
 	Batch(ctx context.Context, key string, lines []*Line) error
 
 	// Upload uploads the full logs to the server.
-	Upload(ctx context.Context, key string, lines []*Line) error
+	Upload(ctx context.Context, key string, r io.Reader) error
 
 	// Open opens the stream to write logs
 	Open(ctx context.Context, key string) error

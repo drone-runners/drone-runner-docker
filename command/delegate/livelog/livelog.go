@@ -7,7 +7,9 @@
 package livelog
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -77,6 +79,7 @@ func (b *Writer) Write(p []byte) (n int, err error) {
 			Number:    b.num,
 			Message:   part,
 			Timestamp: time.Now(),
+			Level:     "info",
 		}
 
 		for b.size+len(p) > b.limit {
@@ -126,8 +129,16 @@ func (b *Writer) Close() error {
 
 // upload uploads the full log history to the server.
 func (b *Writer) upload() error {
+	data := new(bytes.Buffer)
+	for _, l := range b.history {
+		buf := new(bytes.Buffer)
+		if err := json.NewEncoder(buf).Encode(l); err != nil {
+			return err
+		}
+		data.Write(buf.Bytes())
+	}
 	return b.client.Upload(
-		context.Background(), b.key, b.history)
+		context.Background(), b.key, data)
 }
 
 // flush batch uploads all buffered logs to the server.
