@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/drone/runner-go/environ"
+
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
 	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
@@ -288,7 +290,7 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 			return
 		}
 
-		err = Stages.Store(stageID, spec)
+		err = Stages.Store(stageID, spec, reqData.StageEnvVars, reqData.SecretEnvVars)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to store spec")
@@ -324,7 +326,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		fmt.Printf("\n\nExecuting step: %v\n", reqData)
 		stageID := reqData.StageID
 
-		spec, err := Stages.Get(stageID)
+		spec, envVars, secretVars, err := Stages.Get(stageID)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to get the stage")
@@ -347,6 +349,16 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Command:    []string{reqData.Command},
 			Entrypoint: []string{"/bin/sh", "-c"},
 			Image:      reqData.Image,
+			Envs:       environ.Combine(envVars, secretVars),
+		}
+
+		for name, value := range secretVars {
+			steppy.Secrets = append(steppy.Secrets, &engine.Secret{
+				Name: name,
+				Env:  name,
+				Data: []byte(value),
+				Mask: true,
+			})
 		}
 
 		logStreamURL := reqData.LogStreamURL
@@ -400,7 +412,7 @@ func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 		fmt.Printf("\n\nExecuting cleanup: %v\n", reqData)
 		stageID := reqData.StageID
 
-		spec, err := Stages.Get(stageID)
+		spec, _, _, err := Stages.Get(stageID)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to delete the stage")

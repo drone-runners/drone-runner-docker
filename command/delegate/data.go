@@ -40,13 +40,15 @@ func GetSetupRequest(r io.Reader) (*SetupRequest, error) {
 }
 
 type SetupRequest struct {
-	StageID      string        `json:"stage_id"`
-	StageEnvStr  string        `json:"stage_env"`
-	SecretEnvStr string        `json:"secret_env"`
-	DataDump     SetupDataDump `json:"dump"`
+	StageID string `json:"stage_id"`
 
-	StageEnvVars  map[string]string
+	StageEnvStr  string `json:"stage_env"`
+	StageEnvVars map[string]string
+
+	SecretEnvStr  string `json:"secret_env"`
 	SecretEnvVars map[string]string
+
+	DataDump SetupDataDump `json:"dump"`
 }
 
 type SetupDataDump struct {
@@ -323,18 +325,19 @@ func GetExecStepRequest(r io.Reader) (*ExecStepRequest, error) {
 }
 
 type ExecStepRequest struct {
-	StageID            string           `json:"stage_id"`
-	StepID             string           `json:"step_id"`
-	Command            string           `json:"command"`
-	Image              string           `json:"image"`
-	LogKey             string           `json:"log_key"`
-	LogStreamURL       string           `json:"log_stream_url"`
-	LogStreamAccountID string           `json:"log_stream_account_id"`
-	LogStreamToken     string           `json:"log_stream_token"`
-	EnvStr             string           `json:"env"`
-	Dump               ExecStepDataDump `json:"dump"`
+	StageID            string `json:"stage_id"`
+	StepID             string `json:"step_id"`
+	Command            string `json:"command"`
+	Image              string `json:"image"`
+	LogKey             string `json:"log_key"`
+	LogStreamURL       string `json:"log_stream_url"`
+	LogStreamAccountID string `json:"log_stream_account_id"`
+	LogStreamToken     string `json:"log_stream_token"`
 
+	EnvStr  string `json:"env"`
 	EnvVars map[string]string
+
+	Dump ExecStepDataDump `json:"dump"`
 }
 
 type ExecStepDataDump struct {
