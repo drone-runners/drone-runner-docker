@@ -20,12 +20,33 @@ func GetSetupRequest(r io.Reader) (*SetupRequest, error) {
 		return nil, err
 	}
 
+	if d.StageEnvStr != "" {
+		var env map[string]string
+		if err := json.Unmarshal([]byte(d.StageEnvStr), &env); err != nil {
+			return nil, err
+		}
+		d.StageEnvVars = env
+	}
+
+	if d.SecretEnvStr != "" {
+		var secretEnv map[string]string
+		if err := json.Unmarshal([]byte(d.SecretEnvStr), &secretEnv); err != nil {
+			return nil, err
+		}
+		d.SecretEnvVars = secretEnv
+	}
+
 	return d, nil
 }
 
 type SetupRequest struct {
-	StageID  string        `json:"stage_id"`
-	DataDump SetupDataDump `json:"dump"`
+	StageID      string        `json:"stage_id"`
+	StageEnvStr  string        `json:"stage_env"`
+	SecretEnvStr string        `json:"secret_env"`
+	DataDump     SetupDataDump `json:"dump"`
+
+	StageEnvVars  map[string]string
+	SecretEnvVars map[string]string
 }
 
 type SetupDataDump struct {
@@ -290,20 +311,30 @@ func GetExecStepRequest(r io.Reader) (*ExecStepRequest, error) {
 		return nil, err
 	}
 
+	if d.EnvStr != "" {
+		var env map[string]string
+		if err := json.Unmarshal([]byte(d.EnvStr), &env); err != nil {
+			return nil, err
+		}
+		d.EnvVars = env
+	}
+
 	return d, nil
 }
 
 type ExecStepRequest struct {
-	StageID            string `json:"stage_id"`
-	StepID             string `json:"step_id"`
-	Command            string `json:"command"`
-	Image              string `json:"image"`
-	LogKey             string `json:"log_key"`
-	LogStreamURL       string `json:"log_stream_url"`
-	LogStreamAccountID string `json:"log_stream_account_id"`
-	LogStreamToken     string `json:"log_stream_token"`
+	StageID            string           `json:"stage_id"`
+	StepID             string           `json:"step_id"`
+	Command            string           `json:"command"`
+	Image              string           `json:"image"`
+	LogKey             string           `json:"log_key"`
+	LogStreamURL       string           `json:"log_stream_url"`
+	LogStreamAccountID string           `json:"log_stream_account_id"`
+	LogStreamToken     string           `json:"log_stream_token"`
+	EnvStr             string           `json:"env"`
+	Dump               ExecStepDataDump `json:"dump"`
 
-	Dump ExecStepDataDump `json:"dump"`
+	EnvVars map[string]string
 }
 
 type ExecStepDataDump struct {
