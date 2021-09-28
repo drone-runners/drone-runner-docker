@@ -288,7 +288,7 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 			return
 		}
 
-		err = Stages.Store(stageID, spec)
+		err = Stages.Store(stageID, spec, reqData.Secrets)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to store spec")
@@ -324,7 +324,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		fmt.Printf("\n\nExecuting step: %v\n", reqData)
 		stageID := reqData.StageID
 
-		spec, err := Stages.Get(stageID)
+		spec, secrets, err := Stages.Get(stageID)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to get the stage")
@@ -347,6 +347,16 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Command:    []string{reqData.Command},
 			Entrypoint: []string{"/bin/sh", "-c"},
 			Image:      reqData.Image,
+			Envs:       nil,
+		}
+
+		for _, secret := range secrets {
+			steppy.Secrets = append(steppy.Secrets, &engine.Secret{
+				Name: secret.Name,
+				Env:  secret.Env,
+				Data: []byte(secret.Value),
+				Mask: true,
+			})
 		}
 
 		logStreamURL := reqData.LogStreamURL
@@ -400,7 +410,7 @@ func handleDestroy(eng *engine.Docker) http.HandlerFunc {
 		fmt.Printf("\n\nExecuting cleanup: %v\n", reqData)
 		stageID := reqData.StageID
 
-		spec, err := Stages.Get(stageID)
+		spec, _, err := Stages.Get(stageID)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("failed to delete the stage")

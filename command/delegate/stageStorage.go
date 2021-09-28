@@ -20,9 +20,9 @@ func init() {
 }
 
 type StageStorage interface {
-	Store(id string, spec runtime.Spec) error
+	Store(id string, spec runtime.Spec, secrets []SecretInfo) error
 	Remove(id string) (bool, error)
-	Get(id string) (runtime.Spec, error)
+	Get(id string) (runtime.Spec, []SecretInfo, error)
 }
 
 type storage struct {
@@ -35,9 +35,10 @@ type stageStorageEntry struct {
 
 	AddedAt time.Time
 	Spec    runtime.Spec
+	Secrets []SecretInfo
 }
 
-func (s *storage) Store(id string, spec runtime.Spec) error {
+func (s *storage) Store(id string, spec runtime.Spec, secrets []SecretInfo) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -49,6 +50,7 @@ func (s *storage) Store(id string, spec runtime.Spec) error {
 	s.storage[id] = &stageStorageEntry{
 		AddedAt: time.Now(),
 		Spec:    spec,
+		Secrets: secrets,
 	}
 
 	return nil
@@ -68,11 +70,11 @@ func (s *storage) Remove(id string) (bool, error) {
 	return true, nil
 }
 
-func (s *storage) Get(id string) (runtime.Spec, error) {
+func (s *storage) Get(id string) (runtime.Spec, []SecretInfo, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	spec := s.storage[id]
+	entry := s.storage[id]
 
-	return spec.Spec, nil
+	return entry.Spec, entry.Secrets, nil
 }

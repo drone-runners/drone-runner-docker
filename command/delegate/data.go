@@ -25,7 +25,14 @@ func GetSetupRequest(r io.Reader) (*SetupRequest, error) {
 
 type SetupRequest struct {
 	StageID  string        `json:"stage_id"`
+	Secrets  []SecretInfo  `json:"secrets"`
 	DataDump SetupDataDump `json:"dump"`
+}
+
+type SecretInfo struct {
+	Name  string
+	Env   string
+	Value string
 }
 
 type SetupDataDump struct {
@@ -294,10 +301,13 @@ func GetExecStepRequest(r io.Reader) (*ExecStepRequest, error) {
 }
 
 type ExecStepRequest struct {
-	StageID            string `json:"stage_id"`
-	StepID             string `json:"step_id"`
-	Command            string `json:"command"`
-	Image              string `json:"image"`
+	StageID string `json:"stage_id"`
+	StepID  string `json:"step_id"`
+	Command string `json:"command"`
+	Image   string `json:"image"`
+
+	EnvVars map[string]string `json:"env_vars"`
+
 	LogKey             string `json:"log_key"`
 	LogStreamURL       string `json:"log_stream_url"`
 	LogStreamAccountID string `json:"log_stream_account_id"`
