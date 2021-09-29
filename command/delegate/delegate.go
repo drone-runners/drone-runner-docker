@@ -346,11 +346,20 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			ID:         stepID,
 			Name:       reqData.StepID,
 			WorkingDir: "/drone/src",
-			Command:    []string{reqData.Command},
-			Entrypoint: []string{"/bin/sh", "-c"},
 			Image:      reqData.Image,
 			Envs:       environ.Combine(reqData.EnvVars, envVars, secretVars),
 		}
+
+		if reqData.Command != "" {
+			steppy.Command = []string{reqData.Command}
+			steppy.Entrypoint = []string{"/bin/sh", "-c"}
+		}
+		// mount := &engine.VolumeMount{
+		// 	Name: "_workspace",
+		// 	Path: "/drone/src",
+		// }
+
+		// steppy.Volumes = append(steppy.Volumes, mount)
 
 		for name, value := range secretVars {
 			steppy.Secrets = append(steppy.Secrets, &engine.Secret{
@@ -360,6 +369,8 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 				Mask: true,
 			})
 		}
+
+		fmt.Println(steppy)
 
 		logStreamURL := reqData.LogStreamURL
 		if logStreamURL == "" {
