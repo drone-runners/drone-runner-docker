@@ -402,7 +402,7 @@ func handleStep(eng *engine.Docker, dockerClient *client.Client) http.HandlerFun
 		wc := livelog.New(c, reqData.LogKey)
 		defer wc.Close()
 
-		out := io.MultiWriter( /*wc, */ os.Stdout)
+		out := io.MultiWriter(wc, os.Stdout)
 		fmt.Fprintf(os.Stdout, "--- step=%s end --- vvv ---\n", steppy.Name)
 
 		state, err := eng.Run(r.Context(), spec, &steppy, out)
