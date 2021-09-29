@@ -8,14 +8,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/docker/docker/api/types"
+
+	"github.com/docker/docker/client"
 
 	"github.com/drone/runner-go/environ"
 
+	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 
-	"github.com/drone-runners/drone-runner-docker/command/delegate/livelog"
 	"github.com/drone-runners/drone-runner-docker/engine"
 	loghistory "github.com/drone/runner-go/logger/history"
 	"github.com/drone/runner-go/server"
@@ -62,15 +68,19 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	//	),
 	//)
 
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		logrus.WithError(err).
+			Fatalln("cannot create the docker client")
+	}
+
 	opts := engine.Opts{
 		//HidePull: !config.Docker.Stream,
 		HidePull: false,
 	}
-	engineInstance, err := engine.NewEnv(opts)
-	if err != nil {
-		logrus.WithError(err).
-			Fatalln("cannot load the docker engine")
-	}
+
+	engineInstance := engine.New(dockerClient, opts)
+
 	for {
 		err := engineInstance.Ping(ctx)
 		if err == context.Canceled {
@@ -187,7 +197,7 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	var g errgroup.Group
 	server := server.Server{
 		Addr:    ":3000", // config.Server.Port,
-		Handler: delegateListener(engineInstance),
+		Handler: delegateListener(engineInstance, dockerClient),
 	}
 
 	logrus.WithField("addr", ":3000" /*config.Server.Port*/).
@@ -240,11 +250,11 @@ func (c *delegateCommand) run(*kingpin.ParseContext) error {
 	return err
 }
 
-func delegateListener(engine *engine.Docker) http.Handler {
+func delegateListener(engine *engine.Docker, dockerClient *client.Client) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/setup", handleSetup(engine))
 	mux.HandleFunc("/destroy", handleDestroy(engine))
-	mux.HandleFunc("/step", handleStep(engine))
+	mux.HandleFunc("/step", handleStep(engine, dockerClient))
 
 	// // omit dashboard handlers when no password configured.
 	// if config.Password == "" {
@@ -308,7 +318,7 @@ func handleSetup(eng *engine.Docker) http.HandlerFunc {
 	}
 }
 
-func handleStep(eng *engine.Docker) http.HandlerFunc {
+func handleStep(eng *engine.Docker, dockerClient *client.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			fmt.Println("failed to read setup step request")
@@ -354,12 +364,13 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			steppy.Command = []string{reqData.Command}
 			steppy.Entrypoint = []string{"/bin/sh", "-c"}
 		}
-		// mount := &engine.VolumeMount{
-		// 	Name: "_workspace",
-		// 	Path: "/drone/src",
-		// }
 
-		// steppy.Volumes = append(steppy.Volumes, mount)
+		mount := &engine.VolumeMount{
+			Name: "_workspace",
+			Path: "/drone/src",
+		}
+
+		steppy.Volumes = append(steppy.Volumes, mount)
 
 		for name, value := range secretVars {
 			steppy.Secrets = append(steppy.Secrets, &engine.Secret{
@@ -369,8 +380,6 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 				Mask: true,
 			})
 		}
-
-		fmt.Println(steppy)
 
 		logStreamURL := reqData.LogStreamURL
 		if logStreamURL == "" {
@@ -392,18 +401,51 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 		// create a writer
 		wc := livelog.New(c, reqData.LogKey)
 		defer wc.Close()
-		state, err := eng.Run(r.Context(), spec, &steppy, wc)
+
+		out := io.MultiWriter( /*wc, */ os.Stdout)
+		fmt.Fprintf(os.Stdout, "--- step=%s end --- vvv ---\n", steppy.Name)
+
+		state, err := eng.Run(r.Context(), spec, &steppy, out)
 		if err != nil {
 			logrus.WithError(err).
 				Errorln("running the step failed. this is a runner error")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(os.Stdout, "--- step=%s end --- ^^^ ---\n", steppy.Name)
 
-		_ = json.NewEncoder(w).Encode(state)
+		if errKill := dockerClient.ContainerKill(context.Background(), steppy.ID, "9"); errKill != nil {
+			logrus.WithError(errKill).
+				WithField("container", steppy.ID).
+				Warnln("failed to kill container")
+		} else {
+			logrus.
+				WithField("container", steppy.ID).
+				Warnln("killed container")
+		}
+
+		removeOpts := types.ContainerRemoveOptions{
+			Force:         true,
+			RemoveLinks:   false,
+			RemoveVolumes: true,
+		}
+		if errRemove := dockerClient.ContainerRemove(context.Background(), steppy.ID, removeOpts); errRemove != nil {
+			logrus.WithError(errRemove).
+				WithField("container", steppy.ID).
+				Warnln("failed to remove container")
+		} else {
+			logrus.
+				WithField("container", steppy.ID).
+				Debugln("removed container")
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			_ = json.NewEncoder(w).Encode(state)
+		}
 	}
 }
 
