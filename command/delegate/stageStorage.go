@@ -20,9 +20,9 @@ func init() {
 }
 
 type StageStorage interface {
-	Store(id string, spec runtime.Spec) error
+	Store(id string, spec runtime.Spec, envVars, secretVars map[string]string) error
 	Remove(id string) (bool, error)
-	Get(id string) (runtime.Spec, error)
+	Get(id string) (runtime.Spec, map[string]string, map[string]string, error)
 }
 
 type storage struct {
@@ -33,11 +33,13 @@ type storage struct {
 type stageStorageEntry struct {
 	sync.Mutex
 
-	AddedAt time.Time
-	Spec    runtime.Spec
+	AddedAt    time.Time
+	Spec       runtime.Spec
+	EnvVars    map[string]string
+	SecretVars map[string]string
 }
 
-func (s *storage) Store(id string, spec runtime.Spec) error {
+func (s *storage) Store(id string, spec runtime.Spec, envVars, secretVars map[string]string) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -47,8 +49,10 @@ func (s *storage) Store(id string, spec runtime.Spec) error {
 	}
 
 	s.storage[id] = &stageStorageEntry{
-		AddedAt: time.Now(),
-		Spec:    spec,
+		AddedAt:    time.Now(),
+		Spec:       spec,
+		EnvVars:    envVars,
+		SecretVars: secretVars,
 	}
 
 	return nil
@@ -68,11 +72,11 @@ func (s *storage) Remove(id string) (bool, error) {
 	return true, nil
 }
 
-func (s *storage) Get(id string) (runtime.Spec, error) {
+func (s *storage) Get(id string) (runtime.Spec, map[string]string, map[string]string, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	spec := s.storage[id]
+	entry := s.storage[id]
 
-	return spec.Spec, nil
+	return entry.Spec, entry.EnvVars, entry.SecretVars, nil
 }

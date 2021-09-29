@@ -20,11 +20,34 @@ func GetSetupRequest(r io.Reader) (*SetupRequest, error) {
 		return nil, err
 	}
 
+	if d.StageEnvStr != "" {
+		var env map[string]string
+		if err := json.Unmarshal([]byte(d.StageEnvStr), &env); err != nil {
+			return nil, err
+		}
+		d.StageEnvVars = env
+	}
+
+	if d.SecretEnvStr != "" {
+		var secretEnv map[string]string
+		if err := json.Unmarshal([]byte(d.SecretEnvStr), &secretEnv); err != nil {
+			return nil, err
+		}
+		d.SecretEnvVars = secretEnv
+	}
+
 	return d, nil
 }
 
 type SetupRequest struct {
-	StageID  string        `json:"stage_id"`
+	StageID string `json:"stage_id"`
+
+	StageEnvStr  string `json:"stage_env"`
+	StageEnvVars map[string]string
+
+	SecretEnvStr  string `json:"secret_env"`
+	SecretEnvVars map[string]string
+
 	DataDump SetupDataDump `json:"dump"`
 }
 
@@ -290,6 +313,14 @@ func GetExecStepRequest(r io.Reader) (*ExecStepRequest, error) {
 		return nil, err
 	}
 
+	if d.EnvStr != "" {
+		var env map[string]string
+		if err := json.Unmarshal([]byte(d.EnvStr), &env); err != nil {
+			return nil, err
+		}
+		d.EnvVars = env
+	}
+
 	return d, nil
 }
 
@@ -302,6 +333,9 @@ type ExecStepRequest struct {
 	LogStreamURL       string `json:"log_stream_url"`
 	LogStreamAccountID string `json:"log_stream_account_id"`
 	LogStreamToken     string `json:"log_stream_token"`
+
+	EnvStr  string `json:"env"`
+	EnvVars map[string]string
 
 	Dump ExecStepDataDump `json:"dump"`
 }
