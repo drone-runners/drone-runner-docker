@@ -349,7 +349,7 @@ func handleStep(eng *engine.Docker) http.HandlerFunc {
 			Command:    []string{reqData.Command},
 			Entrypoint: []string{"/bin/sh", "-c"},
 			Image:      reqData.Image,
-			Envs:       environ.Combine(envVars, secretVars),
+			Envs:       environ.Combine(reqData.EnvVars, envVars, secretVars),
 		}
 
 		for name, value := range secretVars {
