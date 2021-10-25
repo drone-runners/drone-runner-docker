@@ -5,7 +5,10 @@
 package engine
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
@@ -132,7 +135,6 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 		RemoveLinks:   false,
 		RemoveVolumes: true,
 	}
-
 	// stop all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
 		e.client.ContainerKill(ctx, step.ID, "9")
@@ -164,6 +166,35 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 	// and instead ask the system admin to periodically run
 	// `docker prune` commands.
 	return nil
+}
+
+func (e *Docker) StreamFile(ctx context.Context, stepv runtime.Step, filePath string) (io.ReadCloser, error) {
+	step := stepv.(*Step)
+	data, _, err := e.client.CopyFromContainer(ctx, step.ID, filePath)
+	if data == nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	tr := tar.NewReader(data)
+	buf := new(bytes.Buffer)
+	for {
+		// hdr gives you the header of the tar file
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			// end of tar archive
+			break
+		}
+		if err != nil {
+			fmt.Printf("streaming file: %s", hdr.Name)
+		}
+		buf.ReadFrom(tr)
+	}
+	data.Close()
+	return ioutil.NopCloser(
+		buf,
+	), nil
 }
 
 // Run runs the pipeline step.

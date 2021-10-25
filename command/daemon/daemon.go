@@ -13,6 +13,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/match"
+	"github.com/drone/runner-go/pipeline/uploader"
 
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
@@ -109,6 +110,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	}
 
 	remote := remote.New(cli)
+	upload := uploader.New(cli)
 	tracer := history.New(remote)
 	hook := loghistory.New()
 	logrus.AddHook(hook)
@@ -182,6 +184,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 		Exec: runtime.NewExecer(
 			tracer,
 			remote,
+			upload,
 			engine,
 			config.Runner.Procs,
 		).Exec,

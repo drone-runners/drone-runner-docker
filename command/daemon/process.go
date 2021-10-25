@@ -9,6 +9,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone/runner-go/pipeline/uploader"
 
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
@@ -62,6 +63,7 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 	}
 
 	remote := remote.New(cli)
+	upload := uploader.New(cli)
 
 	runner := &runtime.Runner{
 		Client:   cli,
@@ -118,6 +120,7 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 		Exec: runtime.NewExecer(
 			remote,
 			remote,
+			upload,
 			engine,
 			config.Runner.Procs,
 		).Exec,
