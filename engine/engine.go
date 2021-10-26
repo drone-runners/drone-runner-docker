@@ -168,7 +168,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 	return nil
 }
 
-func (e *Docker) StreamFile(ctx context.Context, stepv runtime.Step, filePath string) (io.ReadCloser, error) {
+func (e *Docker) StreamFile(ctx context.Context, specv runtime.Spec, stepv runtime.Step, filePath string) (io.ReadCloser, error) {
 	step := stepv.(*Step)
 	data, _, err := e.client.CopyFromContainer(ctx, step.ID, filePath)
 	if data == nil {
