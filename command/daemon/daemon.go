@@ -13,7 +13,6 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/match"
-	"github.com/drone/runner-go/pipeline/uploader"
 
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
@@ -23,6 +22,7 @@ import (
 	"github.com/drone/runner-go/pipeline/reporter/history"
 	"github.com/drone/runner-go/pipeline/reporter/remote"
 	"github.com/drone/runner-go/pipeline/runtime"
+	"github.com/drone/runner-go/pipeline/uploader"
 	"github.com/drone/runner-go/poller"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"

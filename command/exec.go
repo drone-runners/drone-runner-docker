@@ -18,6 +18,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/envsubst"
 	"github.com/drone/runner-go/environ"
