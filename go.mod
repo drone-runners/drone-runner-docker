@@ -15,9 +15,9 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v0.0.0-00010101000000-000000000000
 	github.com/docker/go-connections v0.3.0 // indirect
-	github.com/drone/drone-go v1.6.0
+	github.com/drone/drone-go v1.7.1
 	github.com/drone/envsubst v1.0.3
-	github.com/drone/runner-go v1.8.0
+	github.com/drone/runner-go v1.10.0
 	github.com/drone/signal v1.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v0.0.0-20170307180453-100ba4e88506 // indirect
@@ -33,14 +33,11 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/lint v0.0.0-20190313153728-d0100b6bd8b3 // indirect
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
-	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
-	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
 )
