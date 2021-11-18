@@ -1,11 +1,20 @@
 # Changelog
 
-## [v1.7.0](https://github.com/drone-runners/drone-runner-docker/tree/v1.7.0) (2021-10-28)
+## [v1.8.0](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.0) (2021-11-18)
+
+[Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.7.0...v1.8.0)
+
+**Implemented enhancements:**
+
+- create and store card data [\#41](https://github.com/drone-runners/drone-runner-docker/pull/41) ([eoinmcafee00](https://github.com/eoinmcafee00))
+
+## [v1.7.0](https://github.com/drone-runners/drone-runner-docker/tree/v1.7.0) (2021-11-02)
 
 [Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.6.3...v1.7.0)
 
 **Implemented enhancements:**
 
+- \(maint\) prep for v1.7.0 [\#42](https://github.com/drone-runners/drone-runner-docker/pull/42) ([tphoney](https://github.com/tphoney))
 - Expose the authorized keys tmate feature [\#18](https://github.com/drone-runners/drone-runner-docker/pull/18) ([julienduchesne](https://github.com/julienduchesne))
 - Support ppc64le [\#17](https://github.com/drone-runners/drone-runner-docker/pull/17) ([isuruf](https://github.com/isuruf))
 - \(feat\) adding image field to step [\#14](https://github.com/drone-runners/drone-runner-docker/pull/14) ([tphoney](https://github.com/tphoney))
