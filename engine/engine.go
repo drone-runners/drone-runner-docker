@@ -23,6 +23,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 )
 
 // Opts configures the Docker engine.
@@ -135,7 +136,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
-		if err := e.client.ContainerKill(ctx, step.ID, "9"); err != nil {
+		if err := e.client.ContainerKill(ctx, step.ID, "9"); err != nil && !client.IsErrNotFound(err) && !errdefs.IsConflict(err) {
 			logger.FromContext(ctx).
 				WithError(err).
 				WithField("container", step.ID).
@@ -145,7 +146,7 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// cleanup all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
-		if err := e.client.ContainerRemove(ctx, step.ID, removeOpts); err != nil {
+		if err := e.client.ContainerRemove(ctx, step.ID, removeOpts); err != nil && !client.IsErrNotFound(err) {
 			logger.FromContext(ctx).
 				WithError(err).
 				WithField("container", step.ID).
