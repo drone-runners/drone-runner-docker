@@ -89,8 +89,8 @@ type Compiler struct {
 	// are used when creating the docker network.
 	NetworkOpts map[string]string
 
-	// NetrcCloneOnly instrucs the compiler to only inject
-	// the netrc file into the clone setp.
+	// NetrcCloneOnly instructs the compiler to only inject
+	// the netrc file into the clone step.
 	NetrcCloneOnly bool
 
 	// Volumes provides a set of volumes that should be
@@ -105,7 +105,7 @@ type Compiler struct {
 	// applies to pipeline containers.
 	Resources Resources
 
-	// Tate provides global configration options for tmate
+	// Tate provides global configuration options for tmate
 	// live debugging.
 	Tmate Tmate
 
