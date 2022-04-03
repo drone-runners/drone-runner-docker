@@ -107,6 +107,11 @@ func Test_expandImage(t *testing.T) {
 			from: "foo/bar?baz:boo",
 			want: "foo/bar?baz:boo",
 		},
+		// error cases, empy image
+		{
+			from: "",
+			want: "",
+		},
 	}
 	for _, test := range testdata {
 		got, want := Expand(test.from), test.want

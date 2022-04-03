@@ -98,15 +98,9 @@ func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 }
 
 func checkStep(step *resource.Step, trusted bool) error {
-	if step.Image == "" {
+	if trusted == false && step.Image == "" {
 		return errors.New("linter: invalid or missing image")
 	}
-	// if step.Name == "" {
-	// 	return errors.New("linter: invalid or missing name")
-	// }
-	// if len(step.Name) > 100 {
-	// 	return errors.New("linter: name exceeds maximum length")
-	// }
 	if trusted == false && step.Privileged {
 		return errors.New("linter: untrusted repositories cannot enable privileged mode")
 	}

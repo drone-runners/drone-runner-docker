@@ -107,6 +107,20 @@ type (
 		Path     string            `json:"path,omitempty"`
 		Labels   map[string]string `json:"labels,omitempty"`
 		ReadOnly bool              `json:"read_only,omitempty"`
+
+		// HACK
+		// Create indicates the host mount should be created
+		// before pipeline execution starts.
+		//
+		// Remove indicates the host mount should be deleted
+		// after pipeline execution.
+		//
+		// These values shoud be true when mounting a temporary
+		// host machine volume for the purpose of executing step
+		// commands directly on the host machine.
+
+		Create bool `json:"create,omitempty"`
+		Remove bool `json:"remove,omitempty"`
 	}
 
 	// VolumeDevice describes a mapping of a raw block

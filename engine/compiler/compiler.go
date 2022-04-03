@@ -7,6 +7,8 @@ package compiler
 import (
 	"context"
 	"os"
+
+	"path/filepath"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -125,7 +127,6 @@ type Compiler struct {
 // Compile compiles the configuration file.
 func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runtime.Spec {
 	pipeline := args.Pipeline.(*resource.Pipeline)
-	os := pipeline.Platform.OS
 
 	// create the workspace paths
 	base, path, full := createWorkspace(pipeline)
@@ -181,6 +182,24 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			Name:   mount.Name,
 			Path:   c.Mount,
 			Labels: labels,
+		}
+	}
+
+	// HACK
+	// this routing modifies the intermediate representation
+	// to allow executing commands directly on the host machine,
+	// if needed. This is an experimental feature that is meant
+	// to be easy to remove if we decide not to permanently adopt.
+	if c.Mount == "" && hasHostCommands(pipeline) {
+		rand := random()
+		volume.EmptyDir = nil
+		volume.HostPath = &engine.VolumeHostPath{
+			ID:     rand,
+			Name:   mount.Name,
+			Path:   filepath.Join(os.TempDir(), rand),
+			Labels: labels,
+			Create: true,
+			Remove: true,
 		}
 	}
 
@@ -309,7 +328,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
 		dst.Labels = labels
-		setupScript(src, dst, os)
+		setupScript(src, dst, pipeline.Platform.OS)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
 
@@ -330,7 +349,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
 		dst.Labels = labels
-		setupScript(src, dst, os)
+		setupScript(src, dst, pipeline.Platform.OS)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
 
@@ -519,6 +538,42 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		spec.Volumes = append(spec.Volumes, src)
 	}
 
+	// HACK
+	// this routing modifies the intermediate representation
+	// to allow executing commands directly on the host machine,
+	// if needed. This is an experimental feature that is meant
+	// to be easy to remove if we decide not to permanently adopt.
+	if hasHostCommands(pipeline) {
+
+		for _, step := range spec.Steps {
+			// skip steps that executed inside docker images;
+			// only need to modify steps executed on the host.
+			if step.Image != "" {
+				continue
+			}
+
+			// remove netrc from all steps without an image to prevent
+			// overwriting the netrc on the host operating system.
+			delete(step.Envs, "DRONE_NETRC_MACHINE")
+			delete(step.Envs, "DRONE_NETRC_USERNAME")
+			delete(step.Envs, "DRONE_NETRC_PASSWORD")
+			delete(step.Envs, "DRONE_NETRC_FILE")
+
+			// disable debug mode for steps that run directly on the
+			// host operating system until we have a solution for using
+			// tmate without mutating files on the host.
+			delete(step.Envs, "DRONE_BUILD_DEBUG")
+
+			// override the working directory for the step to use
+			// the host machine directory.
+			step.WorkingDir = volume.HostPath.Path
+
+			// no need for labels or volumes for host steps
+			step.Volumes = nil
+			step.Labels = nil
+		}
+	}
+
 	return spec
 }
 
@@ -568,6 +623,23 @@ func (c *Compiler) isPrivileged(step *resource.Step) bool {
 		a := img
 		b := step.Image
 		if image.Match(a, b) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// helper function returns true if there are any steps that
+// are configured to execute commands directly on the host.
+func hasHostCommands(pipeline *resource.Pipeline) bool {
+	for _, step := range pipeline.Steps {
+		if step.Image == "" {
+			return true
+		}
+	}
+	for _, step := range pipeline.Services {
+		if step.Image == "" {
 			return true
 		}
 	}

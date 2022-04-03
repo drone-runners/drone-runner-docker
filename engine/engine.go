@@ -6,14 +6,18 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/jsonmessage"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/stdcopy"
+	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
@@ -77,6 +81,22 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		})
 		if err != nil {
 			return errors.TrimExtraInfo(err)
+		}
+	}
+
+	// HACK
+	// this code creates the temporary workspace on the host
+	// machine if the pipeline is configured to execute steps
+	// directly on the host.
+	for _, vol := range spec.Volumes {
+		if vol.HostPath != nil && vol.HostPath.Create {
+			if err := os.MkdirAll(vol.HostPath.Path, 0777); err != nil {
+				logger.FromContext(ctx).
+					WithError(err).
+					WithField("path", vol.HostPath.Path).
+					Errorln("cannot create temporary workspace on host")
+				return err
+			}
 		}
 	}
 
@@ -180,6 +200,19 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 			Debugln("cannot remove network")
 	}
 
+	// HACK
+	// this code removes the temporary workspace on the host
+	// machine if the pipeline is configured to execute steps
+	// directly on the host.
+	for _, vol := range spec.Volumes {
+		if vol.HostPath != nil && vol.HostPath.Remove {
+			logger.FromContext(ctx).
+				WithField("path", vol.HostPath.Path).
+				Debugln("remove temporary workspace from host")
+			os.RemoveAll(vol.HostPath.Path)
+		}
+	}
+
 	// notice that we never collect or return any errors.
 	// this is because we silently ignore cleanup failures
 	// and instead ask the system admin to periodically run
@@ -191,6 +224,66 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step, output io.Writer) (*runtime.State, error) {
 	spec := specv.(*Spec)
 	step := stepv.(*Step)
+
+	// HACK
+	// execute the step commands on the host machine
+	// if not image is specified.
+	if step.Image == "" {
+		args := append(step.Entrypoint, step.Command...)
+
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Env = environ.Slice(step.Envs)
+		cmd.Dir = step.WorkingDir
+		cmd.Stdout = output
+		cmd.Stderr = output
+
+		for _, secret := range step.Secrets {
+			s := fmt.Sprintf("%s=%s", secret.Env, string(secret.Data))
+			cmd.Env = append(cmd.Env, s)
+		}
+
+		state := &runtime.State{
+			ExitCode:  0,
+			Exited:    true,
+			OOMKilled: false,
+		}
+
+		err := cmd.Start()
+		if err != nil {
+			state.ExitCode = 255
+			return nil, err
+		}
+
+		log := logger.FromContext(ctx)
+		log = log.WithField("process.pid", cmd.Process.Pid)
+		log.Debug("process started")
+
+		done := make(chan error)
+		go func() {
+			done <- cmd.Wait()
+		}()
+
+		select {
+		case err = <-done:
+		case <-ctx.Done():
+			cmd.Process.Kill()
+
+			log.Debug("process killed")
+			state.ExitCode = 137
+			return state, ctx.Err()
+		}
+
+		if err != nil {
+			state.ExitCode = 255
+		}
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			state.ExitCode = exiterr.ExitCode()
+		}
+
+		log.WithField("process.exit", state.ExitCode).
+			Debug("process finished")
+		return state, err
+	}
 
 	// create the container
 	err := e.create(ctx, spec, step, output)
