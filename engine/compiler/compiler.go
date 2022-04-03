@@ -564,6 +564,18 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			// tmate without mutating files on the host.
 			delete(step.Envs, "DRONE_BUILD_DEBUG")
 
+			// prevent git from hanging on a terminal prompt to
+			// authenticate if the user tries to manually clone
+			// a private repository without providing auth credentials
+			step.Envs["GIT_TERMINAL_PROMPT"] = "0"
+
+			// TODO consider moving this outside of the compiler
+			// function and using the default environment configuration
+			// parameter to provide this value.
+			if pipeline.Platform.OS != "windows" {
+				step.Envs["PATH"] = os.Getenv("PATH")
+			}
+
 			// override the working directory for the step to use
 			// the host machine directory.
 			step.WorkingDir = volume.HostPath.Path
