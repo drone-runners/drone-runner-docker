@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/internal/docker/errors"
@@ -202,10 +203,23 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 	if err != nil {
 		return nil, errors.TrimExtraInfo(err)
 	}
-	// tail the container
-	err = e.tail(ctx, step.ID, output)
-	if err != nil {
-		return nil, errors.TrimExtraInfo(err)
+	// this is an experimental feature that closes logging as the last step
+	var allowDeferTailLog = os.Getenv("DRONE_DEFER_TAIL_LOG") == "true"
+	if allowDeferTailLog {
+		// tail the container
+		logger.FromContext(ctx).
+			WithField("step id", step.ID).
+			Debugln("using deferred docker tail")
+		logs, tailErr := e.deferTail(ctx, step.ID, output)
+		if tailErr != nil {
+			return nil, errors.TrimExtraInfo(tailErr)
+		}
+		defer logs.Close()
+	} else {
+		err = e.tail(ctx, step.ID, output)
+		if err != nil {
+			return nil, errors.TrimExtraInfo(err)
+		}
 	}
 	// wait for the response
 	return e.waitRetry(ctx, step.ID)
@@ -343,8 +357,31 @@ func (e *Docker) wait(ctx context.Context, id string) (*runtime.State, error) {
 	}, nil
 }
 
-// helper function emulates the `docker logs -f` command, streaming
-// all container logs until the container stops.
+// helper function emulates the `docker logs -f` command, streaming all container logs until the container stops.
+func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (logs io.ReadCloser, err error) {
+	opts := types.ContainerLogsOptions{
+		Follow:     true,
+		ShowStdout: true,
+		ShowStderr: true,
+		Details:    false,
+		Timestamps: false,
+	}
+
+	logs, err = e.client.ContainerLogs(ctx, id, opts)
+	if err != nil {
+		logger.FromContext(ctx).
+			WithError(err).
+			WithField("container", id).
+			Debugln("failed to stream logs")
+		return nil, err
+	}
+
+	stdcopy.StdCopy(output, output, logs)
+
+	return logs, nil
+}
+
+// helper function emulates the `docker logs -f` command, streaming all container logs until the container stops.
 func (e *Docker) tail(ctx context.Context, id string, output io.Writer) error {
 	opts := types.ContainerLogsOptions{
 		Follow:     true,
