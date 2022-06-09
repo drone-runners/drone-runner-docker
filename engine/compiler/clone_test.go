@@ -134,9 +134,16 @@ func TestCloneParams(t *testing.T) {
 	if len(params) != 0 {
 		t.Errorf("Expect zero depth ignored")
 	}
-	params = cloneParams(manifest.Clone{Depth: 50, SkipVerify: true})
+	params = cloneParams(manifest.Clone{Retries: 0})
+	if len(params) != 0 {
+		t.Errorf("Expect zero retries ignored")
+	}
+	params = cloneParams(manifest.Clone{Depth: 50, SkipVerify: true, Retries: 4})
 	if params["PLUGIN_DEPTH"] != "50" {
 		t.Errorf("Expect clone depth 50")
+	}
+	if params["PLUGIN_RETRIES"] != "4" {
+		t.Errorf("Expect clone retries 4")
 	}
 	if params["GIT_SSL_NO_VERIFY"] != "true" {
 		t.Errorf("Expect GIT_SSL_NO_VERIFY is true")
