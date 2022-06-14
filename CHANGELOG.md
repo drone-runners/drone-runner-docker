@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.8.2](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.2) (2022-06-14)
+
+[Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.8.1...v1.8.2)
+
+**Implemented enhancements:**
+
+- Add retries option to the clone step [\#44](https://github.com/drone-runners/drone-runner-docker/pull/44) ([julienduchesne](https://github.com/julienduchesne))
+
 ## [v1.8.1](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.1) (2022-04-19)
 
 [Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.8.0...v1.8.1)
@@ -7,11 +15,12 @@
 **Fixed bugs:**
 
 - \(dron-254\) handle wait for log transfer [\#46](https://github.com/drone-runners/drone-runner-docker/pull/46) ([tphoney](https://github.com/tphoney))
+- Fix 3 doc typos in compiler.go [\#45](https://github.com/drone-runners/drone-runner-docker/pull/45) ([mach6](https://github.com/mach6))
 - feat\(engine\): Add debug logs for Docker.Destroy errors [\#20](https://github.com/drone-runners/drone-runner-docker/pull/20) ([jvrplmlmn](https://github.com/jvrplmlmn))
 
 **Merged pull requests:**
 
-- Fix 3 doc typos in compiler.go [\#45](https://github.com/drone-runners/drone-runner-docker/pull/45) ([mach6](https://github.com/mach6))
+- \(maint\) release prep v1.8.1 [\#47](https://github.com/drone-runners/drone-runner-docker/pull/47) ([tphoney](https://github.com/tphoney))
 
 ## [v1.8.0](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.0) (2021-11-18)
 
