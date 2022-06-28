@@ -5,6 +5,7 @@
 package engine
 
 import (
+	"archive/tar"
 	"context"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,7 @@ import (
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
+	"github.com/joho/godotenv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -222,7 +224,26 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 		}
 	}
 	// wait for the response
-	return e.waitRetry(ctx, step.ID)
+	state, err := e.waitRetry(ctx, step.ID)
+
+	if err == nil {
+		//read file from container before it is removed
+		tarStream, _, contErr := e.client.CopyFromContainer(ctx, step.ID, spec.OutputVariablesFile)
+		if contErr == nil {
+			tr := tar.NewReader(tarStream)
+			if _, err := tr.Next(); err != nil {
+				panic(err)
+			}
+			// read tr into godotenv
+			env, _ := godotenv.Parse(tr)
+
+			spec.OutputVars = env
+
+		}
+
+	}
+
+	return state, err
 }
 
 //

@@ -7,6 +7,7 @@ package compiler
 import (
 	"context"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -120,6 +121,9 @@ type Compiler struct {
 	// Mount is an optional field that overrides the default
 	// workspace volume and mounts to the host path
 	Mount string
+
+	// OutputVariablesFile is the path to a file that will be loaded for each step
+	OutputVariablesFile string
 }
 
 // Compile compiles the configuration file.
@@ -128,13 +132,13 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	os := pipeline.Platform.OS
 
 	// create the workspace paths
-	base, path, full := createWorkspace(pipeline)
+	base, workspacePath, full := createWorkspace(pipeline)
 
 	// reset the workspace path if attempting to mount
 	// volumes that are internal use only.
 	if container.IsRestrictedVolume(full) {
 		base = "/drone/src"
-		path = ""
+		workspacePath = ""
 		full = "/drone/src"
 	}
 
@@ -143,7 +147,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	// full workspace path.
 	if c.Mount != "" {
 		base = full
-		path = ""
+		workspacePath = ""
 	}
 
 	// create system labels
@@ -228,13 +232,16 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}),
 	)
 
+	// create a full path to the output environment variables file, set it for the pipeline
+	envs["DRONE_ENV"] = path.Join(base, c.OutputVariablesFile)
+	spec.OutputVariablesFile = envs["DRONE_ENV"]
 	// create network reference variables
 	envs["DRONE_DOCKER_NETWORK_ID"] = spec.Network.ID
 
 	// create the workspace variables
 	envs["DRONE_WORKSPACE"] = full
 	envs["DRONE_WORKSPACE_BASE"] = base
-	envs["DRONE_WORKSPACE_PATH"] = path
+	envs["DRONE_WORKSPACE_PATH"] = workspacePath
 
 	// create volume reference variables
 	if volume.EmptyDir != nil {

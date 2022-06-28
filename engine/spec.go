@@ -15,11 +15,13 @@ type (
 	// required instructions for reproducible pipeline
 	// execution.
 	Spec struct {
-		Platform Platform  `json:"platform,omitempty"`
-		Steps    []*Step   `json:"steps,omitempty"`
-		Internal []*Step   `json:"internal,omitempty"`
-		Volumes  []*Volume `json:"volumes,omitempty"`
-		Network  Network   `json:"network"`
+		Platform            Platform          `json:"platform,omitempty"`
+		Steps               []*Step           `json:"steps,omitempty"`
+		Internal            []*Step           `json:"internal,omitempty"`
+		Volumes             []*Volume         `json:"volumes,omitempty"`
+		Network             Network           `json:"network"`
+		OutputVars          map[string]string `json:"output_vars,omitempty"`
+		OutputVariablesFile string            `json:"output_variables_file,omitempty"`
 	}
 
 	// Step defines a pipeline step.
@@ -137,6 +139,10 @@ type (
 
 func (s *Spec) StepLen() int              { return len(s.Steps) }
 func (s *Spec) StepAt(i int) runtime.Step { return s.Steps[i] }
+func (s *Spec) OutputVariablesToStep() map[string]string {
+	// called by runner_go execer to return the output variables set in the previous steps.
+	return s.OutputVars
+}
 
 //
 // implements the Secret interface
