@@ -34,6 +34,9 @@ func cloneParams(src manifest.Clone) map[string]string {
 	if depth := src.Depth; depth > 0 {
 		dst["PLUGIN_DEPTH"] = strconv.Itoa(depth)
 	}
+	if retries := src.Retries; retries > 0 {
+		dst["PLUGIN_RETRIES"] = strconv.Itoa(retries)
+	}
 	if skipVerify := src.SkipVerify; skipVerify {
 		dst["GIT_SSL_NO_VERIFY"] = "true"
 		dst["PLUGIN_SKIP_VERIFY"] = "true"
