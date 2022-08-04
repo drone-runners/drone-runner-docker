@@ -17,11 +17,11 @@ import (
 func Script(commands []string) string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintln(buf)
-	fmt.Fprintf(buf, optionScript)
-	fmt.Fprintf(buf, tmateScript)
+	fmt.Fprint(buf, optionScript)
+	fmt.Fprint(buf, tmateScript)
 	fmt.Fprintln(buf)
 	for _, command := range commands {
-		escaped := fmt.Sprintf("%q", command)
+		escaped := fmt.Sprintf("'%s'", command)
 		escaped = strings.Replace(escaped, "$", `\$`, -1)
 		buf.WriteString(fmt.Sprintf(
 			traceScript,
