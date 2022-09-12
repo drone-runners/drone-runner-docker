@@ -27,6 +27,7 @@ type (
 		ID           string            `json:"id,omitempty"`
 		Auth         *Auth             `json:"auth,omitempty"`
 		Command      []string          `json:"args,omitempty"`
+		NanoCPUS     int64             `json:"nanocpus,omitempty"`
 		CPUPeriod    int64             `json:"cpu_period,omitempty"`
 		CPUQuota     int64             `json:"cpu_quota,omitempty"`
 		CPUShares    int64             `json:"cpu_shares,omitempty"`
