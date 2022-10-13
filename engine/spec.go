@@ -59,6 +59,7 @@ type (
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`
+		Outputs      []string          `json:"outputs,omitempty"`
 	}
 
 	// Secret represents a secret variable.
@@ -139,10 +140,6 @@ type (
 
 func (s *Spec) StepLen() int              { return len(s.Steps) }
 func (s *Spec) StepAt(i int) runtime.Step { return s.Steps[i] }
-func (s *Spec) OutputVariablesToStep() map[string]string {
-	// called by runner_go execer to return the output variables set in the previous steps.
-	return s.OutputVars
-}
 
 //
 // implements the Secret interface
@@ -171,4 +168,7 @@ func (s *Step) Clone() runtime.Step {
 	*dst = *s
 	dst.Envs = environ.Combine(s.Envs)
 	return dst
+}
+func (s *Step) GetOutputs() []string {
+	return s.Outputs
 }

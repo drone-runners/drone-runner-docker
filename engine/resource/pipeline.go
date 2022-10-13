@@ -108,6 +108,7 @@ type (
 		Volumes      []*VolumeMount                 `json:"volumes,omitempty"`
 		When         manifest.Conditions            `json:"when,omitempty"`
 		WorkingDir   string                         `json:"working_dir,omitempty" yaml:"working_dir"`
+		Outputs      []string                       `json:"outputs,omitempty"`
 	}
 
 	// Volume that can be mounted by containers.

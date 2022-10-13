@@ -40,3 +40,5 @@ require (
 )
 
 replace github.com/drone/runner-go => /home/tp/workspace/runner-go
+
+replace github.com/drone/drone-go => /home/tp/workspace/drone-go

@@ -225,22 +225,27 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 	}
 	// wait for the response
 	state, err := e.waitRetry(ctx, step.ID)
-
 	if err == nil {
 		//read file from container before it is removed
 		tarStream, _, contErr := e.client.CopyFromContainer(ctx, step.ID, spec.OutputVariablesFile)
 		if contErr == nil {
 			tr := tar.NewReader(tarStream)
-			if _, err := tr.Next(); err != nil {
-				panic(err)
+			if _, tarErr := tr.Next(); tarErr != nil {
+				logger.FromContext(ctx).
+					WithField("step id", step.ID).
+					WithError(tarErr).
+					Errorln("unable to untar output variables file from docker volume")
 			}
 			// read tr into godotenv
-			env, _ := godotenv.Parse(tr)
-
-			spec.OutputVars = env
-
+			env, envErr := godotenv.Parse(tr)
+			if envErr != nil {
+				logger.FromContext(ctx).
+					WithField("step id", step.ID).
+					WithError(envErr).
+					Errorln("unable to read output variables file")
+			}
+			state.OutputVariables = env
 		}
-
 	}
 
 	return state, err
