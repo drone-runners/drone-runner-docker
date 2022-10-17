@@ -6,7 +6,7 @@ RUN tar -xf tmate-2.4.0-static-linux-arm64v8.tar.xz
 RUN mv tmate-2.4.0-static-linux-arm64v8/tmate /bin/
 RUN chmod +x /bin/tmate
 
-FROM scratch
+FROM --platform=linux/arm64 scratch
 EXPOSE 3000
 
 ENV GODEBUG netdns=go
