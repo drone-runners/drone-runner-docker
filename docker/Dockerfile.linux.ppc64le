@@ -6,7 +6,7 @@ RUN tar -xf tmate-2.4.0-static-linux-ppc64le.tar.xz
 RUN mv tmate-2.4.0-static-linux-ppc64le/tmate /bin/
 RUN chmod +x /bin/tmate
 
-FROM --platform=linux/ppc64le scratch
+FROM scratch
 EXPOSE 3000
 
 ENV GODEBUG netdns=go

@@ -6,7 +6,7 @@ RUN tar -xf tmate-2.4.0-static-linux-amd64.tar.xz
 RUN mv tmate-2.4.0-static-linux-amd64/tmate /bin/
 RUN chmod +x /bin/tmate
 
-FROM --platform=linux/amd64 alpine:3
+FROM alpine:3
 EXPOSE 3000
 
 ENV GODEBUG netdns=go
