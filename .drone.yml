@@ -51,6 +51,7 @@ steps:
     repo: drone/drone-runner-docker
     auto_tag: true
     auto_tag_suffix: linux-arm
+    platform: linux/arm/v7
     dockerfile: docker/Dockerfile.linux.arm
     username:
       from_secret: docker_username
@@ -68,6 +69,7 @@ steps:
     repo: drone/drone-runner-docker
     auto_tag: true
     auto_tag_suffix: linux-arm64
+    platform: linux/arm64
     dockerfile: docker/Dockerfile.linux.arm64
     username:
       from_secret: docker_username
@@ -85,6 +87,7 @@ steps:
     repo: drone/drone-runner-docker
     auto_tag: true
     auto_tag_suffix: linux-ppc64le
+    platform: linux/ppc64le
     dockerfile: docker/Dockerfile.linux.ppc64le
     username:
       from_secret: docker_username
