@@ -35,32 +35,22 @@ steps:
     auto_tag: true
     auto_tag_suffix: linux-amd64
     dockerfile: docker/Dockerfile.linux.amd64
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
+    dry_run: true
   when:
     ref:
     - refs/heads/master
     - refs/tags/*
 
-- name: publish_arm
-  image: plugins/docker
-  pull: if-not-exists
-  settings:
-    repo: drone/drone-runner-docker
-    auto_tag: true
-    auto_tag_suffix: linux-arm
-    platform: linux/arm/v7
-    dockerfile: docker/Dockerfile.linux.arm
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
+# - name: publish_arm
+#   image: plugins/docker
+#   pull: if-not-exists
+#   settings:
+#     repo: drone/drone-runner-docker
+#     auto_tag: true
+#     auto_tag_suffix: linux-arm
+#     platform: linux/arm/v7
+#     dockerfile: docker/Dockerfile.linux.arm
+#     dry_run: true
 
 - name: publish_arm64
   image: plugins/docker
@@ -71,10 +61,7 @@ steps:
     auto_tag_suffix: linux-arm64
     platform: linux/arm64
     dockerfile: docker/Dockerfile.linux.arm64
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
+    dry_run: true
   when:
     ref:
     - refs/heads/master
@@ -89,14 +76,7 @@ steps:
     auto_tag_suffix: linux-ppc64le
     platform: linux/ppc64le
     dockerfile: docker/Dockerfile.linux.ppc64le
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
+    dry_run: true
 
 volumes:
 - name: go
