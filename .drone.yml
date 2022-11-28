@@ -36,10 +36,6 @@ steps:
     auto_tag_suffix: linux-amd64
     dockerfile: docker/Dockerfile.linux.amd64
     dry_run: true
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
 
 # - name: publish_arm
 #   image: plugins/docker
@@ -62,10 +58,6 @@ steps:
     platform: linux/arm64
     dockerfile: docker/Dockerfile.linux.arm64
     dry_run: true
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
 
 - name: publish_ppc64le
   image: plugins/docker
