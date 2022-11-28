@@ -32,7 +32,7 @@ steps:
   pull: if-not-exists
   settings:
     repo: drone/drone-runner-docker
-    auto_tag: true
+    auto_tag: false
     auto_tag_suffix: linux-amd64
     dockerfile: docker/Dockerfile.linux.amd64
     dry_run: true
@@ -53,7 +53,7 @@ steps:
   pull: if-not-exists
   settings:
     repo: drone/drone-runner-docker
-    auto_tag: true
+    auto_tag: false
     auto_tag_suffix: linux-arm64
     platform: linux/arm64
     dockerfile: docker/Dockerfile.linux.arm64
@@ -64,7 +64,7 @@ steps:
   pull: if-not-exists
   settings:
     repo: drone/drone-runner-docker
-    auto_tag: true
+    auto_tag: false
     auto_tag_suffix: linux-ppc64le
     platform: linux/ppc64le
     dockerfile: docker/Dockerfile.linux.ppc64le
