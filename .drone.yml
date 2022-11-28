@@ -29,7 +29,9 @@ steps:
 
 - name: publish_amd64
   image: plugins/docker
-  pull: if-not-exists
+  pull: always
+  environment:
+    DOCKER_BUILDKIT: "1"
   settings:
     repo: drone/drone-runner-docker
     auto_tag: false
@@ -55,6 +57,8 @@ steps:
 - name: publish_arm64
   image: plugins/docker
   pull: if-not-exists
+  environment:
+    DOCKER_BUILDKIT: "1"
   settings:
     repo: drone/drone-runner-docker
     auto_tag: false
@@ -70,6 +74,8 @@ steps:
 - name: publish_ppc64le
   image: plugins/docker
   pull: if-not-exists
+  environment:
+    DOCKER_BUILDKIT: "1"
   settings:
     repo: drone/drone-runner-docker
     auto_tag: false
