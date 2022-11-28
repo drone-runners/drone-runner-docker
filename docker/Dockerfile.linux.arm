@@ -1,4 +1,4 @@
-FROM alpine:3 as alpine
+FROM --platform=linux/amd64 alpine:3 as alpine
 RUN apk add -U --no-cache ca-certificates
 
 RUN wget https://github.com/tmate-io/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-arm32v7.tar.xz
