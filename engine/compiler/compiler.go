@@ -13,6 +13,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
+	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
 	"github.com/drone/runner-go/container"
 	"github.com/drone/runner-go/environ"
@@ -147,7 +148,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	}
 
 	// create system labels
-	labels := labels.Combine(
+	stageLabels := labels.Combine(
 		c.Labels,
 		labels.FromRepo(args.Repo),
 		labels.FromBuild(args.Build),
@@ -167,7 +168,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		EmptyDir: &engine.VolumeEmptyDir{
 			ID:     random(),
 			Name:   mount.Name,
-			Labels: labels,
+			Labels: stageLabels,
 		},
 	}
 
@@ -180,14 +181,14 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			ID:     random(),
 			Name:   mount.Name,
 			Path:   c.Mount,
-			Labels: labels,
+			Labels: stageLabels,
 		}
 	}
 
 	spec := &engine.Spec{
 		Network: engine.Network{
 			ID:      random(),
-			Labels:  labels,
+			Labels:  stageLabels,
 			Options: c.NetworkOpts,
 		},
 		Platform: engine.Platform{
@@ -278,7 +279,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
 		step.WorkingDir = full
-		step.Labels = labels
+		step.Labels = stageLabels
 		step.Pull = engine.PullIfNotExists
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
@@ -308,7 +309,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = labels
+		dst.Labels = stageLabels
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -329,7 +330,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		dst := createStep(pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
-		dst.Labels = labels
+		dst.Labels = stageLabels
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
 		spec.Steps = append(spec.Steps, dst)
@@ -355,7 +356,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		// to the end user.
 		spec.Internal = append(spec.Internal, &engine.Step{
 			ID:         random(),
-			Labels:     labels,
+			Labels:     stageLabels,
 			Pull:       engine.PullIfNotExists,
 			Image:      image.Expand(c.Tmate.Image),
 			Entrypoint: []string{"/bin/drone-runner-docker"},
@@ -375,7 +376,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			EmptyDir: &engine.VolumeEmptyDir{
 				ID:     random(),
 				Name:   "_addons",
-				Labels: labels,
+				Labels: stageLabels,
 			},
 		})
 	}
@@ -468,8 +469,13 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	}
 
 	// append global networks to the steps.
-	for _, step := range spec.Steps {
+	// append step labels to steps.
+	for n, step := range spec.Steps {
 		step.Networks = append(step.Networks, c.Networks...)
+		step.Labels = labels.Combine(step.Labels, labels.FromStep(&drone.Step{
+			Number: n + 1,
+			Name:   step.Name,
+		}))
 	}
 
 	// append global volumes to the steps.
@@ -505,7 +511,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 				Name:      v.Name,
 				Medium:    v.EmptyDir.Medium,
 				SizeLimit: int64(v.EmptyDir.SizeLimit),
-				Labels:    labels,
+				Labels:    stageLabels,
 			}
 		} else if v.HostPath != nil {
 			src.HostPath = &engine.VolumeHostPath{

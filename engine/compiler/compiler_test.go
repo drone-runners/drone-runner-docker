@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -139,6 +140,103 @@ func TestCompile_Secrets(t *testing.T) {
 		// unit tests needs to be adjusted accordingly.
 		t.Skipf(diff)
 	}
+}
+
+// This test verifies that step labels are generated correctly
+func TestCompile_StepLabels(t *testing.T) {
+	manifest, _ := manifest.ParseFile("testdata/steps.yml")
+
+	compiler := &Compiler{
+		Environ:  provider.Static(nil),
+		Registry: registry.Static(nil),
+		Secret:   secret.Static(nil),
+		Labels:   map[string]string{"foo": "bar"},
+	}
+	args := runtime.CompilerArgs{
+		Repo: &drone.Repo{
+			Name:      "repo-name",
+			Namespace: "repo-namespace",
+			Slug:      "repo-slug",
+		},
+		Build: &drone.Build{
+			Number: 42,
+		},
+		Stage: &drone.Stage{
+			Name:   "default",
+			Number: 1,
+		},
+		System: &drone.System{
+			Host:    "drone.example.com",
+			Proto:   "https",
+			Version: "1.0.0",
+		},
+		Netrc:    &drone.Netrc{},
+		Manifest: manifest,
+		Pipeline: manifest.Resources[0].(*resource.Pipeline),
+		Secret:   secret.Static(nil),
+	}
+
+	ir := compiler.Compile(nocontext, args).(*engine.Spec)
+
+	gotLabels := []map[string]string{}
+	for _, step := range ir.Steps {
+		stepLabels := step.Labels
+
+		// Remove timestamps from labels, we can't do a direct comparison
+		if gotCreated, err := strconv.Atoi(stepLabels["io.drone.created"]); err != nil || gotCreated == 0 {
+			t.Errorf("Expectec io.drone.created label to be set to a non-zero value. Got %q", stepLabels["io.drone.created"])
+		}
+		delete(stepLabels, "io.drone.created")
+
+		if gotExpires, err := strconv.Atoi(stepLabels["io.drone.expires"]); err != nil || gotExpires == 0 {
+			t.Errorf("Expectec io.drone.expires label to be set to a non-zero value. Got %q", stepLabels["io.drone.expires"])
+		}
+		delete(stepLabels, "io.drone.expires")
+
+		gotLabels = append(gotLabels, stepLabels)
+	}
+
+	wantLabels := []map[string]string{
+		{
+			"foo":                     "bar",
+			"io.drone":                "true",
+			"io.drone.build.number":   "42",
+			"io.drone.protected":      "false",
+			"io.drone.repo.name":      "repo-name",
+			"io.drone.repo.namespace": "repo-namespace",
+			"io.drone.repo.slug":      "repo-slug",
+			"io.drone.stage.name":     "default",
+			"io.drone.stage.number":   "1",
+			"io.drone.step.name":      "build",
+			"io.drone.step.number":    "1",
+			"io.drone.system.host":    "drone.example.com",
+			"io.drone.system.proto":   "https",
+			"io.drone.system.version": "1.0.0",
+			"io.drone.ttl":            "0s",
+		},
+		{
+			"foo":                     "bar",
+			"io.drone":                "true",
+			"io.drone.build.number":   "42",
+			"io.drone.protected":      "false",
+			"io.drone.repo.name":      "repo-name",
+			"io.drone.repo.namespace": "repo-namespace",
+			"io.drone.repo.slug":      "repo-slug",
+			"io.drone.stage.name":     "default",
+			"io.drone.stage.number":   "1",
+			"io.drone.step.name":      "test",
+			"io.drone.step.number":    "2",
+			"io.drone.system.host":    "drone.example.com",
+			"io.drone.system.proto":   "https",
+			"io.drone.system.version": "1.0.0",
+			"io.drone.ttl":            "0s",
+		},
+	}
+
+	if diff := cmp.Diff(gotLabels, wantLabels); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+
 }
 
 // helper function parses and compiles the source file and then
