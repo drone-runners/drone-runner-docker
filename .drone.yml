@@ -1,278 +1,327 @@
 kind: pipeline
-type: docker
-name: linux
+type: vm
+name: testing
+
+pool:
+  use: ubuntu
 
 platform:
   os: linux
   arch: amd64
 
 steps:
-- name: test
-  image: golang:1.16
-  commands:
-  - go test -cover ./...
-  volumes:
-  - name: go
-    path: /go
+  - name: test
+    image: golang:1.16
+    commands:
+      - go test -cover ./...
+    volumes:
+      - name: go
+        path: /go
 
-- name: build
-  image: golang:1.16
-  commands:
-  - sh scripts/build.sh
-  volumes:
-  - name: go
-    path: /go
-  when:
-    event:
-    - push
-    - tag
-
-- name: publish_amd64
-  image: plugins/docker
-  pull: if-not-exists
-  settings:
-    repo: drone/drone-runner-docker
-    auto_tag: true
-    auto_tag_suffix: linux-amd64
-    dockerfile: docker/Dockerfile.linux.amd64
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
-
-- name: publish_arm
-  image: plugins/docker
-  pull: if-not-exists
-  settings:
-    repo: drone/drone-runner-docker
-    auto_tag: true
-    auto_tag_suffix: linux-arm
-    platform: linux/arm/v7
-    dockerfile: docker/Dockerfile.linux.arm
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
-
-- name: publish_arm64
-  image: plugins/docker
-  pull: if-not-exists
-  settings:
-    repo: drone/drone-runner-docker
-    auto_tag: true
-    auto_tag_suffix: linux-arm64
-    platform: linux/arm64
-    dockerfile: docker/Dockerfile.linux.arm64
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
-
-- name: publish_ppc64le
-  image: plugins/docker
-  pull: if-not-exists
-  settings:
-    repo: drone/drone-runner-docker
-    auto_tag: true
-    auto_tag_suffix: linux-ppc64le
-    platform: linux/ppc64le
-    dockerfile: docker/Dockerfile.linux.ppc64le
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-  when:
-    ref:
-    - refs/heads/master
-    - refs/tags/*
+  - name: build
+    image: golang:1.16
+    commands:
+      - sh scripts/build.sh
+    volumes:
+      - name: go
+        path: /go
 
 volumes:
-- name: go
-  temp: {}
+  - name: go
+    temp: {}
 
 ---
+
 kind: pipeline
-type: ssh
-name: windows-1903
-
+type: vm
+name: linux-amd64
 platform:
-  os: windows
-
-server:
-  host:
-    from_secret: windows_server_1903
-  password:
-    from_secret: windows_password
-  user:
-    from_secret: windows_username
+  os: linux
+  arch: amd64
+pool:
+  use: ubuntu
 
 steps:
-- name: build_latest
-  environment:
-    VERSION: 1903
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/latest.ps1
-  when:
-    event: [ push ]
-
-- name: build_tag
-  environment:
-    VERSION: 1903
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/tag.ps1
-  when:
-    event: [ tag ]
+  - name: environment
+    image: golang:1.16
+    pull: always
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go version
+      - go env
+  - name: build
+    image: golang:1.16
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go build -o release/linux/amd64/drone-runner-docker
+  - name: publish
+    image: plugins/docker
+    pull: if-not-exists
+    settings:
+      repo: drone/drone-runner-docker
+      auto_tag: true
+      auto_tag_suffix: linux-amd64
+      dockerfile: docker/Dockerfile.linux.amd64
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      ref:
+        - refs/heads/master
+        - refs/tags/*
 
 depends_on:
-- linux
+  - testing
 
 trigger:
   ref:
-  - refs/heads/master
-  - refs/tags/*
+    - refs/heads/master
+    - refs/tags/**
+    - refs/pull/**
+
+---
+
+
+kind: pipeline
+type: vm
+name: linux-arm64
+platform:
+  os: linux
+  arch: arm64
+pool:
+  use: ubuntu_arm64
+
+steps:
+  - name: environment
+    image: golang:1.16
+    pull: always
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go version
+      - go env
+  - name: build
+    image: golang:1.16
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go build -o release/linux/arm64/drone-runner-docker
+  - name: publish
+    image: plugins/docker
+    pull: if-not-exists
+    settings:
+      repo: drone/drone-runner-docker
+      auto_tag: true
+      auto_tag_suffix: linux-arm64
+      dockerfile: docker/Dockerfile.linux.arm64
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      ref:
+        - refs/heads/master
+        - refs/tags/*
+
+depends_on:
+  - testing
+
+trigger:
+  ref:
+    - refs/heads/master
+    - refs/tags/**
+    - refs/pull/**
+
+---
+
+kind: pipeline
+type: vm
+name: linux-ppc64le
+platform:
+  os: linux
+  arch: amd64
+pool:
+  use: ubuntu
+
+steps:
+  - name: environment
+    image: golang:1.16
+    pull: always
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go version
+      - go env
+  - name: build
+    image: golang:1.16
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go build -o release/linux/ppc64le/drone-runner-docker
+  - name: publish
+    image: plugins/docker
+    pull: if-not-exists
+    settings:
+      repo: drone/drone-runner-docker
+      auto_tag: true
+      auto_tag_suffix: linux-ppc64le
+      platform: linux/ppc64le
+      dockerfile: docker/Dockerfile.linux.ppc64le
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+    when:
+      ref:
+        - refs/heads/master
+        - refs/tags/*
+
+depends_on:
+  - testing
+
+trigger:
+  ref:
+    - refs/heads/master
+    - refs/tags/**
+    - refs/pull/**
 
 ---
 kind: pipeline
-type: ssh
+type: vm
 name: windows-1809
 
 platform:
   os: windows
+  arch: amd64
 
-server:
-  host:
-    from_secret: windows_server_1809
-  password:
-    from_secret: windows_password
-  user:
-    from_secret: windows_username
+pool:
+  use: windows
 
 steps:
-- name: build_latest
-  environment:
-    VERSION: 1809
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/latest.ps1
-  when:
-    event: [ push ]
-
-- name: build_tag
-  environment:
-    VERSION: 1809
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/tag.ps1
-  when:
-    event: [ tag ]
+  - name: environment
+    image: golang:1.16
+    pull: always
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go version
+      - go env
+  - name: build
+    image: golang:1.16
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go build -o release/windows/amd64/drone-runner-docker.exe
+  - name: docker
+    image: plugins/docker
+    settings:
+      dockerfile: docker/Dockerfile.windows.1809
+      repo: drone/drone-runner-docker
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      auto_tag: true
+      auto_tag_suffix: windows-1809-amd64
+      daemon_off: true
+      purge: false
+    when:
+      ref:
+        - refs/heads/master
+        - refs/tags/**
 
 depends_on:
-- linux
+  - testing
 
 trigger:
   ref:
-  - refs/heads/master
-  - refs/tags/*
+    - refs/heads/master
+    - refs/tags/**
+    - refs/pull/**
 
 ---
 kind: pipeline
-type: ssh
-name: windows-1909
+type: vm
+name: windows-ltsc2022
 
 platform:
   os: windows
+  arch: amd64
 
-server:
-  host:
-    from_secret: windows_server_1909
-  password:
-    from_secret: windows_password
-  user:
-    from_secret: windows_username
+pool:
+  use: windows-2022
 
 steps:
-- name: build_latest
-  environment:
-    VERSION: 1909
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/latest.ps1
-  when:
-    event: [ push ]
-
-- name: build_tag
-  environment:
-    VERSION: 1909
-    USERNAME:
-      from_secret: docker_username
-    PASSWORD:
-      from_secret: docker_password
-  commands:
-  - powershell.exe scripts/windows/tag.ps1
-  when:
-    event: [ tag ]
+  - name: environment
+    image: golang:1.16
+    pull: always
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go version
+      - go env
+  - name: build
+    image: golang:1.16
+    environment:
+      CGO_ENABLED: "0"
+    commands:
+      - go build -o release/windows/amd64/drone-runner-docker.exe
+  - name: docker
+    image: plugins/docker
+    settings:
+      dockerfile: docker/Dockerfile.windows.ltsc2022
+      repo: drone/drone-runner-docker
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      auto_tag: true
+      auto_tag_suffix: windows-ltsc2022-amd64
+      daemon_off: true
+      purge: false
+    when:
+      ref:
+        - refs/heads/master
+        - refs/tags/**
 
 depends_on:
-- linux
-
+  - testing
+  
 trigger:
   ref:
-  - refs/heads/master
-  - refs/tags/*
+    - refs/heads/master
+    - refs/tags/**
+    - refs/pull/**
 
 ---
+
 kind: pipeline
 type: docker
 name: manifest
 
 steps:
-- name: manifest
-  image: plugins/manifest
-  settings:
-    spec: docker/manifest.tmpl
-    auto_tag: true
-    ignore_missing: true
-    password:
-      from_secret: docker_password
-    username:
-      from_secret: docker_username
+  - name: manifest
+    image: plugins/manifest
+    settings:
+      spec: docker/manifest.tmpl
+      auto_tag: true
+      ignore_missing: true
+      password:
+        from_secret: docker_password
+      username:
+        from_secret: docker_username
 
 depends_on:
-- windows-1903
-- windows-1809
-- windows-1909
+  - linux-amd64
+  - linux-arm64
+  - linux-ppc64le
+  - windows-1809
+  - windows-ltsc2022
 
 trigger:
   ref:
-  - refs/heads/master
-  - refs/tags/*
-
+    - refs/heads/master
+    - refs/tags/*
