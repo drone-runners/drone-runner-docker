@@ -1,4 +1,4 @@
-FROM alpine:3 as alpine
+FROM  ppc64le/alpine:3 as alpine
 RUN apk add -U --no-cache ca-certificates
 
 RUN wget https://github.com/isuruf/tmate/releases/download/2.4.0/tmate-2.4.0-static-linux-ppc64le.tar.xz
