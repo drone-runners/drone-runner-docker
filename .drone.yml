@@ -136,59 +136,6 @@ trigger:
     - refs/pull/**
 
 ---
-
-kind: pipeline
-type: vm
-name: linux-ppc64le
-platform:
-  os: linux
-  arch: amd64
-pool:
-  use: ubuntu
-
-steps:
-  - name: environment
-    image: golang:1.16
-    pull: always
-    environment:
-      CGO_ENABLED: "0"
-    commands:
-      - go version
-      - go env
-  - name: build
-    image: golang:1.16
-    environment:
-      CGO_ENABLED: "0"
-    commands:
-      - go build -o release/linux/ppc64le/drone-runner-docker
-  - name: publish
-    image: plugins/docker
-    pull: if-not-exists
-    settings:
-      repo: drone/drone-runner-docker
-      auto_tag: true
-      auto_tag_suffix: linux-ppc64le
-      platform: linux/ppc64le
-      dockerfile: docker/Dockerfile.linux.ppc64le
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      ref:
-        - refs/heads/master
-        - refs/tags/*
-
-depends_on:
-  - testing
-
-trigger:
-  ref:
-    - refs/heads/master
-    - refs/tags/**
-    - refs/pull/**
-
----
 kind: pipeline
 type: vm
 name: windows-1809
@@ -317,7 +264,6 @@ steps:
 depends_on:
   - linux-amd64
   - linux-arm64
-  - linux-ppc64le
   - windows-1809
   - windows-ltsc2022
 
