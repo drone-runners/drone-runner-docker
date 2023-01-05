@@ -101,24 +101,30 @@ func TestCloneCreate(t *testing.T) {
 
 func TestCloneImage(t *testing.T) {
 	tests := []struct {
-		in  manifest.Platform
-		out string
+		cloneSettings manifest.Clone
+		platform      manifest.Platform
+		out           string
 	}{
 		{
-			in:  manifest.Platform{},
-			out: "drone/git:latest",
+			platform: manifest.Platform{},
+			out:      "drone/git:latest",
 		},
 		{
-			in:  manifest.Platform{OS: "linux"},
-			out: "drone/git:latest",
+			platform: manifest.Platform{OS: "linux"},
+			out:      "drone/git:latest",
 		},
 		{
-			in:  manifest.Platform{OS: "windows"},
-			out: "drone/git:latest",
+			platform: manifest.Platform{OS: "windows"},
+			out:      "drone/git:latest",
+		},
+		{
+			cloneSettings: manifest.Clone{Image: "foo"},
+			platform:      manifest.Platform{OS: "darwin"},
+			out:           "foo",
 		},
 	}
 	for _, test := range tests {
-		got, want := cloneImage(test.in), test.out
+		got, want := cloneImage(test.cloneSettings, test.platform), test.out
 		if got != want {
 			t.Errorf("Want clone image %q, got %q", want, got)
 		}

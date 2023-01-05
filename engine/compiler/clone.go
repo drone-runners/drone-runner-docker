@@ -18,7 +18,11 @@ const cloneStepName = "clone"
 
 // helper function returns the clone image based on the
 // target operating system.
-func cloneImage(platform manifest.Platform) string {
+func cloneImage(cloneSettings manifest.Clone, platform manifest.Platform) string {
+	if cloneSettings.Image != "" {
+		return cloneSettings.Image
+	}
+
 	switch platform.OS {
 	case "windows":
 		return "drone/git:latest"
@@ -50,7 +54,7 @@ func cloneParams(src manifest.Clone) map[string]string {
 func createClone(src *resource.Pipeline) *engine.Step {
 	return &engine.Step{
 		Name:      cloneStepName,
-		Image:     cloneImage(src.Platform),
+		Image:     cloneImage(src.Clone, src.Platform),
 		RunPolicy: runtime.RunAlways,
 		Envs:      cloneParams(src.Clone),
 	}
