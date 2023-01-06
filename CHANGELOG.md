@@ -1,5 +1,19 @@
 # Changelog
 
+## [v1.8.3](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.3) (2023-01-06)
+
+[Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.8.2...v1.8.3)
+
+**Fixed bugs:**
+
+- \(dron-434\) set platform in docker build step [\#57](https://github.com/drone-runners/drone-runner-docker/pull/57) ([tphoney](https://github.com/tphoney))
+- Revert "Dockerfile: Add target architecture to Docker images" [\#56](https://github.com/drone-runners/drone-runner-docker/pull/56) ([tphoney](https://github.com/tphoney))
+- Dockerfile: Add target architecture to Docker images [\#54](https://github.com/drone-runners/drone-runner-docker/pull/54) ([jnohlgard](https://github.com/jnohlgard))
+
+**Merged pull requests:**
+
+- \(maint\) move to harness.drone.io [\#59](https://github.com/drone-runners/drone-runner-docker/pull/59) ([tphoney](https://github.com/tphoney))
+
 ## [v1.8.2](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.2) (2022-06-14)
 
 [Full Changelog](https://github.com/drone-runners/drone-runner-docker/compare/v1.8.1...v1.8.2)
@@ -7,6 +21,10 @@
 **Implemented enhancements:**
 
 - Add retries option to the clone step [\#44](https://github.com/drone-runners/drone-runner-docker/pull/44) ([julienduchesne](https://github.com/julienduchesne))
+
+**Merged pull requests:**
+
+- release prep for v1.8.2 [\#49](https://github.com/drone-runners/drone-runner-docker/pull/49) ([eoinmcafee00](https://github.com/eoinmcafee00))
 
 ## [v1.8.1](https://github.com/drone-runners/drone-runner-docker/tree/v1.8.1) (2022-04-19)
 
