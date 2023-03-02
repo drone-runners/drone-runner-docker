@@ -7,11 +7,11 @@ package compiler
 import (
 	"context"
 	"os"
-	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
+	"github.com/sirupsen/logrus"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
@@ -96,7 +96,7 @@ type Compiler struct {
 
 	// Volumes provides a set of volumes that should be
 	// mounted to each pipeline container.
-	Volumes map[string]string
+	Volumes []string
 
 	// Clone overrides the default plugin image used
 	// when cloning a repository.
@@ -478,16 +478,21 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}))
 	}
 
+	log := logrus.New()
+
 	// append global volumes to the steps.
-	for k, v := range c.Volumes {
+	for _, pair := range c.Volumes {
+		src, dest, ro, err := resource.ParseVolume(pair)
+		if err != nil {
+			log.Warn(err)
+			continue
+		}
 		id := random()
-		ro := strings.HasSuffix(v, ":ro")
-		v = strings.TrimSuffix(v, ":ro")
 		volume := &engine.Volume{
 			HostPath: &engine.VolumeHostPath{
 				ID:       id,
 				Name:     id,
-				Path:     k,
+				Path:     src,
 				ReadOnly: ro,
 			},
 		}
@@ -495,7 +500,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		for _, step := range spec.Steps {
 			mount := &engine.VolumeMount{
 				Name: id,
-				Path: v,
+				Path: dest,
 			}
 			step.Volumes = append(step.Volumes, mount)
 		}

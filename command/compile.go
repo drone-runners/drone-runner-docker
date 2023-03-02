@@ -32,7 +32,7 @@ type compileCommand struct {
 	Source     *os.File
 	Privileged []string
 	Networks   []string
-	Volumes    map[string]string
+	Volumes    []string
 	Environ    map[string]string
 	Labels     map[string]string
 	Secrets    map[string]string
@@ -144,7 +144,7 @@ func registerCompile(app *kingpin.Application) {
 	c.Environ = map[string]string{}
 	c.Secrets = map[string]string{}
 	c.Labels = map[string]string{}
-	c.Volumes = map[string]string{}
+	c.Volumes = []string{}
 
 	cmd := app.Command("compile", "compile the yaml file").
 		Action(c.run)
@@ -169,7 +169,7 @@ func registerCompile(app *kingpin.Application) {
 		StringsVar(&c.Networks)
 
 	cmd.Flag("volumes", "container volumes").
-		StringMapVar(&c.Volumes)
+		StringsVar(&c.Volumes)
 
 	cmd.Flag("privileged", "privileged docker images").
 		StringsVar(&c.Privileged)

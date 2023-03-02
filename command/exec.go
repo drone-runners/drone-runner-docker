@@ -45,7 +45,7 @@ type execCommand struct {
 	Exclude    []string
 	Privileged []string
 	Networks   []string
-	Volumes    map[string]string
+	Volumes    []string
 	Environ    map[string]string
 	Labels     map[string]string
 	Secrets    map[string]string
@@ -268,7 +268,7 @@ func registerExec(app *kingpin.Application) {
 	c.Environ = map[string]string{}
 	c.Secrets = map[string]string{}
 	c.Labels = map[string]string{}
-	c.Volumes = map[string]string{}
+	c.Volumes = []string{}
 
 	cmd := app.Command("exec", "executes a pipeline").
 		Action(c.run)
@@ -299,7 +299,7 @@ func registerExec(app *kingpin.Application) {
 		StringsVar(&c.Networks)
 
 	cmd.Flag("volumes", "container volumes").
-		StringMapVar(&c.Volumes)
+		StringsVar(&c.Volumes)
 
 	cmd.Flag("privileged", "privileged docker images").
 		StringsVar(&c.Privileged)

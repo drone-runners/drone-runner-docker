@@ -49,7 +49,7 @@ type Config struct {
 		EnvFile     string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
 		Secrets     map[string]string `envconfig:"DRONE_RUNNER_SECRETS"`
 		Labels      map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
-		Volumes     map[string]string `envconfig:"DRONE_RUNNER_VOLUMES"`
+		Volumes     []string          `envconfig:"DRONE_RUNNER_VOLUMES"`
 		Devices     []string          `envconfig:"DRONE_RUNNER_DEVICES"`
 		Networks    []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
 		NetworkOpts map[string]string `envconfig:"DRONE_RUNNER_NETWORK_OPTS"`
