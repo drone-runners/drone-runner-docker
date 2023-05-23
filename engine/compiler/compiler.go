@@ -86,6 +86,10 @@ type Compiler struct {
 	// attached to each pipeline container.
 	Networks []string
 
+	// NetworkEnableIPv6 toggles IPv6 support when
+	// creating the docker network.
+	NetworkEnableIPv6 bool
+
 	// NetworkOpts provides a set of network options that
 	// are used when creating the docker network.
 	NetworkOpts map[string]string
@@ -187,9 +191,10 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID:      random(),
-			Labels:  stageLabels,
-			Options: c.NetworkOpts,
+			ID:         random(),
+			Labels:     stageLabels,
+			Options:    c.NetworkOpts,
+			EnableIPv6: c.NetworkEnableIPv6,
 		},
 		Platform: engine.Platform{
 			OS:      pipeline.Platform.OS,

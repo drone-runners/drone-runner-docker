@@ -42,19 +42,20 @@ type Config struct {
 	}
 
 	Runner struct {
-		Name        string            `envconfig:"DRONE_RUNNER_NAME"`
-		Capacity    int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
-		Procs       int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
-		Environ     map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
-		EnvFile     string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
-		Secrets     map[string]string `envconfig:"DRONE_RUNNER_SECRETS"`
-		Labels      map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
-		Volumes     map[string]string `envconfig:"DRONE_RUNNER_VOLUMES"`
-		Devices     []string          `envconfig:"DRONE_RUNNER_DEVICES"`
-		Networks    []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
-		NetworkOpts map[string]string `envconfig:"DRONE_RUNNER_NETWORK_OPTS"`
-		Privileged  []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
-		Clone       string            `envconfig:"DRONE_RUNNER_CLONE_IMAGE"`
+		Name              string            `envconfig:"DRONE_RUNNER_NAME"`
+		Capacity          int               `envconfig:"DRONE_RUNNER_CAPACITY" default:"2"`
+		Procs             int64             `envconfig:"DRONE_RUNNER_MAX_PROCS"`
+		Environ           map[string]string `envconfig:"DRONE_RUNNER_ENVIRON"`
+		EnvFile           string            `envconfig:"DRONE_RUNNER_ENV_FILE"`
+		Secrets           map[string]string `envconfig:"DRONE_RUNNER_SECRETS"`
+		Labels            map[string]string `envconfig:"DRONE_RUNNER_LABELS"`
+		Volumes           map[string]string `envconfig:"DRONE_RUNNER_VOLUMES"`
+		Devices           []string          `envconfig:"DRONE_RUNNER_DEVICES"`
+		Networks          []string          `envconfig:"DRONE_RUNNER_NETWORKS"`
+		NetworkEnableIPv6 bool              `envconfig:"DRONE_RUNNER_NETWORK_ENABLE_IPV6" default:"false"`
+		NetworkOpts       map[string]string `envconfig:"DRONE_RUNNER_NETWORK_OPTS"`
+		Privileged        []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
+		Clone             string            `envconfig:"DRONE_RUNNER_CLONE_IMAGE"`
 	}
 
 	Platform struct {

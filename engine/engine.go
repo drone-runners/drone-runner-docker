@@ -88,9 +88,10 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		driver = "nat"
 	}
 	_, err := e.client.NetworkCreate(ctx, spec.Network.ID, types.NetworkCreate{
-		Driver:  driver,
-		Options: spec.Network.Options,
-		Labels:  spec.Network.Labels,
+		Driver:     driver,
+		EnableIPv6: spec.Network.EnableIPv6,
+		Options:    spec.Network.Options,
+		Labels:     spec.Network.Labels,
 	})
 
 	// launches the inernal setup steps

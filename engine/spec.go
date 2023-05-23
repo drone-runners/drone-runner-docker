@@ -118,9 +118,10 @@ type (
 
 	// Network that is created and attached to containers
 	Network struct {
-		ID      string            `json:"id,omitempty"`
-		Labels  map[string]string `json:"labels,omitempty"`
-		Options map[string]string `json:"options,omitempty"`
+		EnableIPv6 bool              `json:"enable_ipv6,omitempty"`
+		ID         string            `json:"id,omitempty"`
+		Labels     map[string]string `json:"labels,omitempty"`
+		Options    map[string]string `json:"options,omitempty"`
 	}
 
 	// Auth defines dockerhub authentication credentials.
