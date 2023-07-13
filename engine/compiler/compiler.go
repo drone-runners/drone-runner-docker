@@ -90,6 +90,10 @@ type Compiler struct {
 	// are used when creating the docker network.
 	NetworkOpts map[string]string
 
+	// NetworkIPAMSubnet is used to set the subnet
+	// Used when creating a docker network.
+	NetworkIPAMSubnet string
+
 	// NetrcCloneOnly instructs the compiler to only inject
 	// the netrc file into the clone step.
 	NetrcCloneOnly bool
@@ -187,9 +191,10 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 
 	spec := &engine.Spec{
 		Network: engine.Network{
-			ID:      random(),
-			Labels:  stageLabels,
-			Options: c.NetworkOpts,
+			ID:         random(),
+			Labels:     stageLabels,
+			Options:    c.NetworkOpts,
+			IPMASubnet: c.NetworkIPAMSubnet,
 		},
 		Platform: engine.Platform{
 			OS:      pipeline.Platform.OS,
