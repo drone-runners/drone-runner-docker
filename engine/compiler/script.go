@@ -26,7 +26,34 @@ func setupScript(src *resource.Step, dst *engine.Step, os string) {
 
 // helper function configures the pipeline script for the
 // windows operating system.
-func setupScriptWindows(src *resource.Step, dst *engine.Step) {
+// WIP, BROKEN
+func setupScriptWindowsCmd(src *resource.Step, dst *engine.Step) {
+
+	//dst.Command = []string{
+	//	"setlocal",
+	//	"EnableDelayedExpansion", "&",
+	//	"for", "/f", "%L", "in", `(%DRONE_SCRIPT%)`,
+	//	"do", "(",
+	//	"echo", "+", "%L",
+	//	")", "&",
+	//}
+
+	//dst.Command = []string{"set/p", "_discard=%DRONE_SCRIPT%<nul>build_script.cmd"} // & call build_script.cmd
+	//dst.Command = []string{`set/p_discard=%DRONE_SCRIPT%<nul>build_script.cmd & dir & echo ================== & type build_script.cmd & echo ================== `} // & call build_script.cmd
+	//dst.Command = []string{"<nul", "(set/p_discard=%DRONE_SCRIPT%)>build_script.cmd"}
+
+	//dst.Command = []string{"set"}
+	//dst.Entrypoint = []string{"cmd", "/S", "/c", "<nul", "(set/p_discard=%DRONE_SCRIPT%)"}
+	//dst.Entrypoint = []string{"cmd", "/S", "/c", "<nul", "(set/p_discard=%DRONE_SCRIPT%)>%DRONE_WORKSPACE%\\§§build§§.cmd"}
+	//dst.Entrypoint = []string{"cmd", "/S", "/c", "echo", "%DRONE_WORKSPACE%\\§§build§§.cmd"}
+	//dst.Entrypoint = []string{"cmd", "/S", "/c"}
+	//dst.Command = []string{"<nul", "set", "/p", "_discard=%DRONE_SCRIPT%>%DRONE_WORKSPACE%__build__.cmd"}
+	//dst.Command = []string{"<nul", "(set", "/p", "_discard=%DRONE_SCRIPT%)"}
+	//dst.Command = []string{}
+	dst.Envs["DRONE_SCRIPT"] = wincmd.Script(src.Commands)
+	dst.Envs["SHELL"] = "cmd.exe"
+}
+
 	dst.Entrypoint = []string{"powershell", "-noprofile", "-noninteractive", "-command"}
 	dst.Command = []string{"echo $Env:DRONE_SCRIPT | iex"}
 	dst.Envs["DRONE_SCRIPT"] = powershell.Script(src.Commands)
