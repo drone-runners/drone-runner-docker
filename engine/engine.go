@@ -222,7 +222,7 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 
 			err = e.client.CopyToContainer(ctx, step.ID, "/", bufio.NewReader(tarBuf), types.CopyToContainerOptions{})
 			if err != nil {
-				logrus.Debugln(hdr.Name + ": " + err.Error())
+				logrus.Errorln(hdr.Name + ": " + err.Error())
 			} else {
 				logrus.Debugln("Copied build script: " + hdr.Name)
 			}
