@@ -9,7 +9,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 )
 
 func TestReplace(t *testing.T) {
