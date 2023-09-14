@@ -7,7 +7,7 @@ package compiler
 import (
 	"github.com/drone-runners/drone-runner-docker/engine/compiler/shell"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler/shell/powershell"
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 )
 
 // helper function configures the pipeline script for the

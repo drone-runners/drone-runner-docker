@@ -7,8 +7,8 @@ package compiler
 import (
 	"strings"
 
-	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"

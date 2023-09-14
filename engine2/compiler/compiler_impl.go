@@ -9,8 +9,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	"github.com/drone/drone-go/drone"
@@ -134,7 +134,8 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// extract the pipeline stage and stage spec
 	var stage *harness.Stage
 	for _, resource := range pipeline.Stages {
-		// TODO match by name
+		// TODO  match by id instead of name?
+		// FIXME match by id instead of name?
 		if resource.Name == args.Stage.Name {
 			stage = resource
 			break
@@ -286,7 +287,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		envs = environ.Combine(envs, environ.Netrc(args.Netrc))
 	}
 
-	// TODO re-enable
+	// TODO re-enable matching logic for when clause
 	// match := manifest.Match{
 	// 	Action:   args.Build.Action,
 	// 	Cron:     args.Build.Cron,
@@ -343,15 +344,14 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 			// setupWorkdir(src, dst, "/gitness")
 			spec.Steps = append(spec.Steps, dst)
 
-			// TODO re-enable
+			// TODO re-enable when condition
 			// // if the pipeline step has unmet conditions the step is
 			// // automatically skipped.
 			// if !src.When.Match(match) {
-			// 	// TODO
 			// 	// dst.RunPolicy = runtime.RunNever
 			// }
 
-			// TODO re-enable
+			// TODO do we still need this?
 			// // if the pipeline step has an approved image, it is
 			// // automatically defaulted to run with escalalated
 			// // privileges.
@@ -375,14 +375,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 			// if !src.When.Match(match) {
 			// 	// TODO
 			// 	// dst.RunPolicy = runtime.RunNever
-			// }
-
-			// TODO re-enable
-			// // if the pipeline step has an approved image, it is
-			// // automatically defaulted to run with escalalated
-			// // privileges.
-			// if c.isPrivileged(src) {
-			// 	dst.Privileged = true
 			// }
 		}
 
@@ -420,14 +412,13 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		})
 	}
 
-	// TODO re-enable
-	// if isGraph(spec) == false {
-	// 	configureSerial(spec)
-	// } else if pipeline.Clone.Disable == false {
-	// 	configureCloneDeps(spec)
-	// } else if pipeline.Clone.Disable == true {
-	// 	removeCloneDeps(spec)
-	// }
+	if isGraph(spec) == false {
+		configureSerial(spec)
+	} else if clone_.Disabled == false {
+		configureCloneDeps(spec)
+	} else if clone_.Disabled == true {
+		removeCloneDeps(spec)
+	}
 
 	//
 	// TODO re-enable, find matching secrets and inject
@@ -447,8 +438,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		Build: args.Build,
 	})
 	if err != nil {
-		// TODO (bradrydzewski) return an error to the caller
-		// if the provider returns an error.
+		return nil, err
 	}
 
 	//
@@ -479,21 +469,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 			}
 		}
 	}
-
-	// // HACK: append masked global variables to secrets
-	// // this ensures the environment variable values are
-	// // masked when printed to the console.
-	// masked := provider.FilterMasked(globals)
-	// for _, step := range spec.Steps {
-	// 	for _, g := range masked {
-	// 		step.Secrets = append(step.Secrets, &engine.Secret{
-	// 			Name: g.Name,
-	// 			Data: []byte(g.Data),
-	// 			Mask: g.Mask,
-	// 			Env:  g.Name,
-	// 		})
-	// 	}
-	// }
 
 	// append global resource limits to steps
 	for _, step := range spec.Steps {
@@ -548,30 +523,30 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		}
 	}
 
-	// TODO re-enable volumes
-	// // append volumes
-	// for _, v := range pipeline.Volumes {
-	// 	id := random()
-	// 	src := new(engine.Volume)
-	// 	if v.EmptyDir != nil {
-	// 		src.EmptyDir = &engine.VolumeEmptyDir{
-	// 			ID:        id,
-	// 			Name:      v.Name,
-	// 			Medium:    v.EmptyDir.Medium,
-	// 			SizeLimit: int64(v.EmptyDir.SizeLimit),
-	// 			Labels:    stageLabels,
-	// 		}
-	// 	} else if v.HostPath != nil {
-	// 		src.HostPath = &engine.VolumeHostPath{
-	// 			ID:   id,
-	// 			Name: v.Name,
-	// 			Path: v.HostPath.Path,
-	// 		}
-	// 	} else {
-	// 		continue
-	// 	}
-	// 	spec.Volumes = append(spec.Volumes, src)
-	// }
+	// append volumes
+	for _, v := range stageSpec.Volumes {
+		id := random()
+		src := new(engine.Volume)
+
+		switch vv := v.Spec.(type) {
+		case *harness.VolumeHost:
+			src.HostPath = &engine.VolumeHostPath{
+				ID:   id,
+				Name: v.Name,
+				Path: vv.Path,
+			}
+			spec.Volumes = append(spec.Volumes, src)
+		case *harness.VolumeTemp:
+			src.EmptyDir = &engine.VolumeEmptyDir{
+				ID:        id,
+				Name:      v.Name,
+				Medium:    vv.Medium,
+				SizeLimit: int64(vv.Limit),
+				Labels:    stageLabels,
+			}
+			spec.Volumes = append(spec.Volumes, src)
+		}
+	}
 
 	return spec, nil
 }

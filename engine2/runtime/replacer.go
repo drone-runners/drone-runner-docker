@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 )
 
 // replacer is an io.Writer that finds and masks sensitive data.

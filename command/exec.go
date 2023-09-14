@@ -36,9 +36,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 
-	compiler2 "github.com/drone-runners/drone-runner-docker/engine/experimental/compiler"
-	engine2 "github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
-	runtime2 "github.com/drone-runners/drone-runner-docker/engine/experimental/runtime"
+	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
+	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	harness "github.com/drone/spec/dist/go"
 )
 

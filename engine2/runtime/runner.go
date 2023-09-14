@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/compiler"
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/compiler"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 
 	legacy "github.com/drone/runner-go/pipeline/runtime"
 

@@ -23,7 +23,7 @@ import (
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
-	compiler2 "github.com/drone-runners/drone-runner-docker/engine/experimental/compiler"
+	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
 	harness "github.com/drone/spec/dist/go"
 
 	"gopkg.in/alecthomas/kingpin.v2"

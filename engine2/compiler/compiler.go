@@ -7,7 +7,7 @@ package compiler
 import (
 	"context"
 
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/secret"

@@ -5,7 +5,7 @@
 package compiler
 
 import (
-	"github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	harness "github.com/drone/spec/dist/go"
