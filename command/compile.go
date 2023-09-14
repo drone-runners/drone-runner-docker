@@ -23,6 +23,9 @@ import (
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
+	compiler2 "github.com/drone-runners/drone-runner-docker/engine/experimental/compiler"
+	harness "github.com/drone/spec/dist/go"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -42,7 +45,7 @@ type compileCommand struct {
 	Config     string
 }
 
-func (c *compileCommand) run(*kingpin.ParseContext) error {
+func (c *compileCommand) runOld(*kingpin.ParseContext) error {
 	rawsource, err := ioutil.ReadAll(c.Source)
 	if err != nil {
 		return err
@@ -130,6 +133,68 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Secret:   secret.StaticVars(c.Secrets),
 	}
 	spec := comp.Compile(nocontext, args)
+
+	// encode the pipeline in json format and print to the
+	// console for inspection.
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.Encode(spec)
+	return nil
+}
+
+func (c *compileCommand) run(*kingpin.ParseContext) error {
+	// rawsource, err := ioutil.ReadAll(c.Source)
+	// if err != nil {
+	// 	return err
+	// }
+
+	config, err := harness.Parse(c.Source)
+	if err != nil {
+		return err
+	}
+	c.Source.Close()
+
+	// HACK get the default stage name
+	if c.Stage.Name == "" || c.Stage.Name == "default" {
+		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Name
+	}
+
+	// compile the pipeline to an intermediate representation.
+	comp := &compiler2.CompilerImpl{
+		Environ: provider.Static(c.Environ),
+		Labels:  c.Labels,
+		// TODO re-add
+		// Resources:  c.Resources,
+		// Tmate:      c.Tmate,
+		Privileged: append(c.Privileged, compiler.Privileged...),
+		Networks:   c.Networks,
+		Volumes:    c.Volumes,
+		Secret:     secret.StaticVars(c.Secrets),
+		Registry: registry.Combine(
+			registry.File(c.Config),
+		),
+	}
+
+	// when running a build locally cloning is always
+	// disabled in favor of mounting the source code
+	// from the current working directory.
+	if c.Clone == false {
+		comp.Mount, _ = os.Getwd()
+	}
+
+	args := compiler2.Args{
+		Config: config,
+		Build:  c.Build,
+		Netrc:  c.Netrc,
+		Repo:   c.Repo,
+		Stage:  c.Stage,
+		System: c.System,
+		Secret: secret.StaticVars(c.Secrets),
+	}
+	spec, err := comp.Compile(nocontext, args)
+	if err != nil {
+		return err
+	}
 
 	// encode the pipeline in json format and print to the
 	// console for inspection.

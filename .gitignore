@@ -4,3 +4,4 @@ release/*
 .docker
 .env
 NOTES*
+_NOTES*

@@ -35,6 +35,11 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
+
+	compiler2 "github.com/drone-runners/drone-runner-docker/engine/experimental/compiler"
+	engine2 "github.com/drone-runners/drone-runner-docker/engine/experimental/engine"
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine/experimental/runtime"
+	harness "github.com/drone/spec/dist/go"
 )
 
 type execCommand struct {
@@ -62,7 +67,7 @@ type execCommand struct {
 	PrivateKey string
 }
 
-func (c *execCommand) run(*kingpin.ParseContext) error {
+func (c *execCommand) runOld(*kingpin.ParseContext) error {
 	rawsource, err := ioutil.ReadAll(c.Source)
 	if err != nil {
 		return err
@@ -243,6 +248,166 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 		engine,
 		c.Procs,
 	).Exec(ctx, spec, state)
+
+	if c.Dump {
+		dump(state)
+	}
+	if err != nil {
+		return err
+	}
+	switch state.Stage.Status {
+	case drone.StatusError, drone.StatusFailing, drone.StatusKilled:
+		os.Exit(1)
+	}
+	return nil
+}
+
+func (c *execCommand) run(*kingpin.ParseContext) error {
+	// rawsource, err := ioutil.ReadAll(c.Source)
+	// if err != nil {
+	// 	return err
+	// }
+
+	config, err := harness.Parse(c.Source)
+	if err != nil {
+		return err
+	}
+	c.Source.Close()
+
+	// HACK get the default stage name
+	if c.Stage.Name == "" || c.Stage.Name == "default" {
+		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Name
+	}
+
+	// compile the pipeline to an intermediate representation.
+	comp := &compiler2.CompilerImpl{
+		Environ: provider.Static(c.Environ),
+		Labels:  c.Labels,
+		// TODO re-add
+		// Resources:  c.Resources,
+		// Tmate:      c.Tmate,
+		Privileged: append(c.Privileged, compiler.Privileged...),
+		Networks:   c.Networks,
+		Volumes:    c.Volumes,
+		Secret:     secret.StaticVars(c.Secrets),
+		Registry: registry.Combine(
+			registry.File(c.Config),
+		),
+	}
+
+	// when running a build locally cloning is always
+	// disabled in favor of mounting the source code
+	// from the current working directory.
+	if c.Clone == false {
+		comp.Mount, _ = os.Getwd()
+	}
+
+	args := compiler2.Args{
+		Config: config,
+		Build:  c.Build,
+		Netrc:  c.Netrc,
+		Repo:   c.Repo,
+		Stage:  c.Stage,
+		System: c.System,
+	}
+	plan, err := comp.Compile(nocontext, args)
+	if err != nil {
+		return err
+	}
+
+	// include only steps that are in the include list,
+	// if the list in non-empty.
+	if len(c.Include) > 0 {
+	I:
+		for _, step := range plan.Steps {
+			if step.Name == "clone" {
+				continue
+			}
+			for _, name := range c.Include {
+				if step.Name == name {
+					continue I
+				}
+			}
+			step.RunPolicy = engine2.RunNever
+		}
+	}
+
+	// exclude steps that are in the exclude list,
+	// if the list in non-empty.
+	if len(c.Exclude) > 0 {
+	E:
+		for _, step := range plan.Steps {
+			if step.Name == "clone" {
+				continue
+			}
+			for _, name := range c.Exclude {
+				if step.Name == name {
+					step.RunPolicy = engine2.RunNever
+					continue E
+				}
+			}
+		}
+	}
+
+	// create a step object for each pipeline step.
+	for _, step := range plan.Steps {
+		if step.RunPolicy == engine2.RunNever {
+			continue
+		}
+		c.Stage.Steps = append(c.Stage.Steps, &drone.Step{
+			StageID:   c.Stage.ID,
+			Number:    len(c.Stage.Steps) + 1,
+			Name:      step.Name,
+			Status:    drone.StatusPending,
+			ErrIgnore: step.ErrPolicy == engine2.ErrIgnore,
+		})
+	}
+
+	// configures the pipeline timeout.
+	timeout := time.Duration(c.Repo.Timeout) * time.Minute
+	ctx, cancel := context.WithTimeout(nocontext, timeout)
+	defer cancel()
+
+	// listen for operating system signals and cancel execution
+	// when received.
+	ctx = signal.WithContextFunc(ctx, func() {
+		println("received signal, terminating process")
+		cancel()
+	})
+
+	state := &pipeline.State{
+		Build:  c.Build,
+		Stage:  c.Stage,
+		Repo:   c.Repo,
+		System: c.System,
+	}
+
+	// enable debug logging
+	logrus.SetLevel(logrus.WarnLevel)
+	if c.Debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+	if c.Trace {
+		logrus.SetLevel(logrus.TraceLevel)
+	}
+	logger.Default = logger.Logrus(
+		logrus.NewEntry(
+			logrus.StandardLogger(),
+		),
+	)
+
+	engine, err := engine2.NewEnv(engine2.Opts{})
+	if err != nil {
+		return err
+	}
+
+	err = runtime2.NewExecer(
+		pipeline.NopReporter(),
+		console.New(c.Pretty),
+		pipeline.NopUploader(),
+		engine,
+		c.Procs,
+	).Exec(ctx, plan, state)
 
 	if c.Dump {
 		dump(state)
