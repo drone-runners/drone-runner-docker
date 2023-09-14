@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/command/internal"
@@ -32,7 +33,7 @@ import (
 type compileCommand struct {
 	*internal.Flags
 
-	Source     *os.File
+	Source     string
 	Privileged []string
 	Networks   []string
 	Volumes    map[string]string
@@ -45,10 +46,15 @@ type compileCommand struct {
 	Config     string
 }
 
-func (c *compileCommand) runOld(*kingpin.ParseContext) error {
-	rawsource, err := ioutil.ReadAll(c.Source)
+func (c *compileCommand) run(pctx *kingpin.ParseContext) error {
+	rawsource, err := ioutil.ReadFile(c.Source)
 	if err != nil {
 		return err
+	}
+
+	// if using the v1 yaml, use the new v1 run function
+	if regexp.MustCompilePOSIX(`^spec:`).Match(rawsource) {
+		return c.runv1(pctx)
 	}
 
 	envs := environ.Combine(
@@ -142,18 +148,14 @@ func (c *compileCommand) runOld(*kingpin.ParseContext) error {
 	return nil
 }
 
-func (c *compileCommand) run(*kingpin.ParseContext) error {
-	// rawsource, err := ioutil.ReadAll(c.Source)
-	// if err != nil {
-	// 	return err
-	// }
+func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 
-	config, err := harness.Parse(c.Source)
+	config, err := harness.ParseFile(c.Source)
 	if err != nil {
 		return err
 	}
-	c.Source.Close()
 
+	// FIXME: find a better way to do this
 	// HACK get the default stage name
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
 		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Name
@@ -216,7 +218,7 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("source", "source file location").
 		Default(".drone.yml").
-		FileVar(&c.Source)
+		StringVar(&c.Source)
 
 	cmd.Flag("clone", "enable cloning").
 		BoolVar(&c.Clone)

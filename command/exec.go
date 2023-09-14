@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -45,7 +46,7 @@ import (
 type execCommand struct {
 	*internal.Flags
 
-	Source     *os.File
+	Source     string
 	Include    []string
 	Exclude    []string
 	Privileged []string
@@ -67,10 +68,15 @@ type execCommand struct {
 	PrivateKey string
 }
 
-func (c *execCommand) runOld(*kingpin.ParseContext) error {
-	rawsource, err := ioutil.ReadAll(c.Source)
+func (c *execCommand) run(pctx *kingpin.ParseContext) error {
+	rawsource, err := ioutil.ReadFile(c.Source)
 	if err != nil {
 		return err
+	}
+
+	// if using the v1 yaml, use the new v1 run function
+	if regexp.MustCompilePOSIX(`^spec:`).Match(rawsource) {
+		return c.runv1(pctx)
 	}
 
 	envs := environ.Combine(
@@ -262,17 +268,12 @@ func (c *execCommand) runOld(*kingpin.ParseContext) error {
 	return nil
 }
 
-func (c *execCommand) run(*kingpin.ParseContext) error {
-	// rawsource, err := ioutil.ReadAll(c.Source)
-	// if err != nil {
-	// 	return err
-	// }
+func (c *execCommand) runv1(*kingpin.ParseContext) error {
 
-	config, err := harness.Parse(c.Source)
+	config, err := harness.ParseFile(c.Source)
 	if err != nil {
 		return err
 	}
-	c.Source.Close()
 
 	// HACK get the default stage name
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
@@ -440,7 +441,7 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Arg("source", "source file location").
 		Default(".drone.yml").
-		FileVar(&c.Source)
+		StringVar(&c.Source)
 
 	cmd.Flag("clone", "enable cloning").
 		BoolVar(&c.Clone)
