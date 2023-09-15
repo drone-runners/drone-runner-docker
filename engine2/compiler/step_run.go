@@ -8,6 +8,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
+	"github.com/drone/runner-go/environ"
 	harness "github.com/drone/spec/dist/go"
 )
 
@@ -57,6 +58,17 @@ func createStep(src *harness.Step, spec *harness.StepExec) *engine.Step {
 
 	if dst.Envs == nil {
 		dst.Envs = map[string]string{}
+	}
+
+	// append all matrix parameters as environment
+	// variables into the step
+	if src.Strategy != nil && src.Strategy.Spec != nil {
+		v, ok := src.Strategy.Spec.(*harness.Matrix)
+		if ok {
+			for _, axis := range v.Include {
+				dst.Envs = environ.Combine(dst.Envs, axis)
+			}
+		}
 	}
 
 	// TODO re-enable
