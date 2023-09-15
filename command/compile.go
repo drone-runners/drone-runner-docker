@@ -26,6 +26,8 @@ import (
 
 	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
 	harness "github.com/drone/spec/dist/go"
+	"github.com/drone/spec/dist/go/parse/expand"
+	"github.com/drone/spec/dist/go/parse/normalize"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -155,10 +157,19 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 		return err
 	}
 
+	// expand matrix stages and steps
+	expand.Expand(config)
+
+	// normalize the configuration to ensure
+	// all steps have an identifier
+	normalize.Normalize(config)
+
 	// FIXME: find a better way to do this
 	// HACK get the default stage name
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
-		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Name
+		// use the normalized id to refer to the stage
+		// FIXME: this won't work in some cases, and will cause problems
+		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Id
 	}
 
 	// compile the pipeline to an intermediate representation.

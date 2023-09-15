@@ -13,7 +13,7 @@ require (
 	github.com/drone/envsubst v1.0.3
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/signal v1.0.0
-	github.com/drone/spec v0.0.0-20230913142424-983cda6e1ef2
+	github.com/drone/spec v0.0.0-20230915000029-c8fa73fc9659
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/go-multierror v1.0.0
@@ -51,8 +51,8 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3 // indirect
-	golang.org/x/sys v0.0.0-20190422165155-953cdadca894 // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	google.golang.org/grpc v1.29.1 // indirect

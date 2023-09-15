@@ -6,19 +6,23 @@ package compiler
 
 import (
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
-	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	harness "github.com/drone/spec/dist/go"
 )
 
-func createStepPlugin(src *harness.Step, spec *harness.StepBackground) *engine.Step {
+func createStepPlugin(src *harness.Step, spec *harness.StepPlugin) *engine.Step {
 	dst := &engine.Step{
-		ID:         random(),
-		Name:       src.Name,
-		Image:      image.Expand(spec.Image),
-		Command:    spec.Args,
-		Entrypoint: []string{spec.Entrypoint},
-		Detach:     true,
+		ID:    random(),
+		Name:  src.Id,
+		Image: "alpine",
+
+		// TODO re-enable
+		// Image:      image.Expand(spec.Image),
+		// TODO re-enable
+		// Command:    spec.Args,
+		// TODO re-enable
+		// Entrypoint: []string{spec.Entrypoint},
+		Detach: false,
 		// TODO re-enable
 		// DependsOn:    src.DependsOn,
 		// DNS:          spec.DNS,
@@ -49,6 +53,10 @@ func createStepPlugin(src *harness.Step, spec *harness.StepBackground) *engine.S
 		Volumes:  nil, // set below
 		Devices:  nil, // see below
 		// Resources:    toResources(src), // TODO
+	}
+
+	if dst.Envs == nil {
+		dst.Envs = map[string]string{}
 	}
 
 	// TODO re-enable

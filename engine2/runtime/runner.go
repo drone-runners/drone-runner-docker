@@ -22,6 +22,8 @@ import (
 	"github.com/drone/drone-go/drone"
 
 	harness "github.com/drone/spec/dist/go"
+	"github.com/drone/spec/dist/go/parse/expand"
+	"github.com/drone/spec/dist/go/parse/normalize"
 )
 
 var noContext = context.Background()
@@ -170,6 +172,13 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
+
+	// expand matrix stages and steps
+	expand.Expand(config)
+
+	// normalize the configuration to ensure
+	// all steps have an identifier
+	normalize.Normalize(config)
 
 	// compile the yaml configuration file to an intermediate
 	// representation, and then

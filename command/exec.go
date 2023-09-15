@@ -41,6 +41,8 @@ import (
 	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
 	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	harness "github.com/drone/spec/dist/go"
+	"github.com/drone/spec/dist/go/parse/expand"
+	"github.com/drone/spec/dist/go/parse/normalize"
 )
 
 type execCommand struct {
@@ -275,9 +277,18 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 		return err
 	}
 
+	// expand matrix stages and steps
+	expand.Expand(config)
+
+	// normalize the configuration to ensure
+	// all steps have an identifier
+	normalize.Normalize(config)
+
 	// HACK get the default stage name
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
-		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Name
+		// use the normalized id to refer to the stage
+		// FIXME: this won't work in some cases, and will cause problems
+		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Id
 	}
 
 	// compile the pipeline to an intermediate representation.

@@ -9,13 +9,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
-	"github.com/drone/runner-go/container"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/labels"
@@ -30,17 +28,6 @@ import (
 // random generator function
 var random = func() string {
 	return "drone-" + uniuri.NewLen(20)
-}
-
-// Privileged provides a list of plugins that execute
-// with privileged capabilities in order to run Docker
-// in Docker.
-var Privileged = []string{
-	"plugins/docker",
-	"plugins/acr",
-	"plugins/ecr",
-	"plugins/gcr",
-	"plugins/heroku",
 }
 
 // Resources defines container resource constraints. These
@@ -134,9 +121,8 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// extract the pipeline stage and stage spec
 	var stage *harness.Stage
 	for _, resource := range pipeline.Stages {
-		// TODO  match by id instead of name?
-		// FIXME match by id instead of name?
-		if resource.Name == args.Stage.Name {
+		// FIXME: need to match to stage.uid (which does not exist yet)
+		if resource.Id == args.Stage.Name {
 			stage = resource
 			break
 		}
@@ -155,13 +141,17 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		platform_ = v
 	}
 
+	// extract the pipeline options
+	options_ := new(harness.Default)
+	if v := pipeline.Options; v != nil {
+		options_ = v
+	}
+
 	// extract the clone. use the stage settings, else
 	// fallback to the pipeline-level clone settings.
 	clone_ := new(harness.Clone)
-	if v := pipeline.Options; v != nil {
-		if vv := v.Clone; vv != nil {
-			clone_ = vv
-		}
+	if v := options_.Clone; v != nil {
+		clone_ = v
 	}
 	if v := stageSpec.Clone; v != nil {
 		clone_ = &harness.Clone{
@@ -185,7 +175,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// create the workspace mount
 	mount := &engine.VolumeMount{
 		Name: "_workspace",
-		Path: "/gitness", // TODO handle windows. c://gitness
+		Path: "/gitness", // FIXME: handle windows. c://gitness
 	}
 
 	// create the workspace volume
@@ -233,17 +223,16 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 
 	// create the default environment variables.
 	envs := environ.Combine(
-		// provider.ToMap(
-		// 	provider.FilterUnmasked(globals),
-		// ),
 		args.Build.Params,
-		stageSpec.Envs,
+		options_.Envs,  // environment from pipeline
+		stageSpec.Envs, // environment from stage
 		environ.Proxy(),
 		environ.System(args.System),
 		environ.Repo(args.Repo),
 		environ.Build(args.Build),
 		environ.Stage(args.Stage),
 		environ.Link(args.Repo, args.Build, args.System),
+		environ.Netrc(args.Netrc),
 		clone.Environ(clone.Config{
 			SkipVerify: clone_.Insecure,
 			Trace:      clone_.Trace,
@@ -310,12 +299,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		step.Volumes = append(step.Volumes, mount)
 		spec.Steps = append(spec.Steps, step)
 
-		// always set the .netrc file for the clone step.
-		// note that environment variables are only set
-		// if the .netrc file is not nil (it will always
-		// be nil for public repositories).
-		step.Envs = environ.Combine(step.Envs, environ.Netrc(args.Netrc))
-
 		// if the clone image is customized, override
 		// the default image.
 		if c.Clone != "" {
@@ -332,52 +315,22 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// create steps
 	for _, src := range stageSpec.Steps {
 
-		switch v := src.Spec.(type) {
-		case *harness.StepExec:
-			dst := createStep(src, v)
-			dst.Envs = environ.Combine(envs, dst.Envs)
-			dst.Volumes = append(dst.Volumes, mount)
-			dst.Labels = stageLabels
-			dst.WorkingDir = "/gitness"
-			setupScript(dst, v.Run, platform_.Os.String())
-			// TODO do we need this still?
-			// setupWorkdir(src, dst, "/gitness")
-			spec.Steps = append(spec.Steps, dst)
+		steps_ := convertStep(stage, src)
+		if len(steps_) != 0 {
+			for _, step_ := range steps_ {
+				step_.Envs = environ.Combine(envs, step_.Envs)
+				step_.Volumes = append(step_.Volumes, mount)
+				step_.Labels = stageLabels
+				// TODO re-enable when condition
+				// // if the pipeline step has unmet conditions the step is
+				// // automatically skipped.
+				// if !src.When.Match(match) {
+				// 	// dst.RunPolicy = runtime.RunNever
+				// }
 
-			// TODO re-enable when condition
-			// // if the pipeline step has unmet conditions the step is
-			// // automatically skipped.
-			// if !src.When.Match(match) {
-			// 	// dst.RunPolicy = runtime.RunNever
-			// }
-
-			// TODO do we still need this?
-			// // if the pipeline step has an approved image, it is
-			// // automatically defaulted to run with escalalated
-			// // privileges.
-			// if c.isPrivileged(src) {
-			// 	dst.Privileged = true
-			// }
-		case *harness.StepPlugin:
-		case *harness.StepTemplate:
-		case *harness.StepBackground:
-
-			dst := createStepBackground(src, v)
-			dst.Envs = environ.Combine(envs, dst.Envs)
-			dst.Volumes = append(dst.Volumes, mount)
-			dst.Labels = stageLabels
-			setupScript(dst, v.Run, platform_.Os.String())
-			spec.Steps = append(spec.Steps, dst)
-
-			// TODO re-enable
-			// // if the pipeline step has unmet conditions the step is
-			// // automatically skipped.
-			// if !src.When.Match(match) {
-			// 	// TODO
-			// 	// dst.RunPolicy = runtime.RunNever
-			// }
+				spec.Steps = append(spec.Steps, step_)
+			}
 		}
-
 	}
 
 	// create internal steps if build running in debug mode
@@ -444,7 +397,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	//
 	// TODO re-enable, get registry credentials from secrets
 	//
-
 	// // get registry credentials from secrets
 	// for _, name := range pipeline.PullSecrets {
 	// 	secret, ok := c.findSecret(ctx, args, name)
@@ -550,75 +502,3 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 
 	return spec, nil
 }
-
-func (c *CompilerImpl) isPrivileged(step *resource.Step) bool {
-	// privileged-by-default containers are only
-	// enabled for plugins steps that do not define
-	// commands, command, or entrypoint.
-	if len(step.Commands) > 0 {
-		return false
-	}
-	if len(step.Command) > 0 {
-		return false
-	}
-	if len(step.Entrypoint) > 0 {
-		return false
-	}
-	if len(step.Volumes) > 0 {
-		return false
-	}
-
-	// privileged-by-default mode is disabled if the
-	// pipeline step mounts a volume restricted for
-	// internal use only.
-	// note: this is deprecated.
-	for _, mount := range step.Volumes {
-		if container.IsRestrictedVolume(mount.MountPath) {
-			return false
-		}
-	}
-	// privileged-by-default mode is disabled if the
-	// pipeline step attempts to use an environment
-	// variable restricted for internal use only.
-	if isRestrictedVariable(step.Environment) {
-		return false
-	}
-	// if the container image matches any image
-	// in the whitelist, return true.
-	for _, img := range c.Privileged {
-		a := img
-		b := step.Image
-		if image.Match(a, b) {
-			return true
-		}
-	}
-	return false
-}
-
-// // helper function attempts to find and return the named secret.
-// // from the secret provider.
-// func (c *Compiler) findSecret(ctx context.Context, args runtime.CompilerArgs, name string) (s string, ok bool) {
-// 	if name == "" {
-// 		return
-// 	}
-
-// 	// source secrets from the global secret provider
-// 	// and the repository secret provider.
-// 	provider := secret.Combine(
-// 		args.Secret,
-// 		c.Secret,
-// 	)
-
-// 	// TODO return an error to the caller if the provider
-// 	// returns an error.
-// 	found, _ := provider.Find(ctx, &secret.Request{
-// 		Name:  name,
-// 		Build: args.Build,
-// 		Repo:  args.Repo,
-// 		Conf:  args.Manifest,
-// 	})
-// 	if found == nil {
-// 		return
-// 	}
-// 	return found.Data, true
-// }

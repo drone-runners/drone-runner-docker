@@ -6,34 +6,41 @@ package compiler
 
 import (
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
-	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	harness "github.com/drone/spec/dist/go"
 )
 
-func createStepTemplate(src *harness.Step, spec *harness.StepBackground) *engine.Step {
+func createStepTemplate(src *harness.Step, spec *harness.StepTemplate) *engine.Step {
 	dst := &engine.Step{
-		ID:         random(),
-		Name:       src.Name,
-		Image:      image.Expand(spec.Image),
-		Command:    spec.Args,
-		Entrypoint: []string{spec.Entrypoint},
-		Detach:     true,
+		ID:   random(),
+		Name: src.Id,
+		// TODO re-enable image
+		// Image:   image.Expand(spec.Image),
+		Image: "alpine",
+		// TODO re-enable command
+		// Command: spec.Args,
+		// TODO re-enable entrypoint
+		// Entrypoint: []string{spec.Entrypoint},
+		Detach: false,
 		// TODO re-enable
 		// DependsOn:    src.DependsOn,
 		// DNS:          spec.DNS,
 		// TODO re-enable
 		// DNSSearch:    spec.DNSSearch,
-		Envs: spec.Envs,
+		// TODO re-enable envs
+		// Envs: spec.Envs,
 		// TODO re-enable
 		// ExtraHosts:   spec.ExtraHosts,
 		IgnoreStderr: false,
 		IgnoreStdout: false,
-		Network:      spec.Network,
-		Privileged:   spec.Privileged,
+		// TODO re-enable network
+		// Network:      spec.Network,
+		// TODO re-enable privileged
+		// Privileged:   spec.Privileged,
 		// TODO re-enable
-		// Pull:         convertPullPolicy(src.Pull),
-		User: spec.User,
+		// Pull: convertPullPolicy(spec.Pull),
+		// TODO re-enable user
+		// User: spec.User,
 		// TODO re-enable
 		// Secrets:      convertSecretEnv(src.Environment),
 		// TODO re-enable
@@ -51,6 +58,10 @@ func createStepTemplate(src *harness.Step, spec *harness.StepBackground) *engine
 		// Resources:    toResources(src), // TODO
 	}
 
+	if dst.Envs == nil {
+		dst.Envs = map[string]string{}
+	}
+
 	// TODO re-enable
 	// set container limits
 	// if v := int64(src.MemLimit); v > 0 {
@@ -60,13 +71,14 @@ func createStepTemplate(src *harness.Step, spec *harness.StepBackground) *engine
 	// 	dst.MemSwapLimit = v
 	// }
 
-	// appends the volumes to the container def.
-	for _, vol := range spec.Mount {
-		dst.Volumes = append(dst.Volumes, &engine.VolumeMount{
-			Name: vol.Name,
-			Path: vol.Path,
-		})
-	}
+	// TODO re-enable
+	// // appends the volumes to the container def.
+	// for _, vol := range spec.Mount {
+	// 	dst.Volumes = append(dst.Volumes, &engine.VolumeMount{
+	// 		Name: vol.Name,
+	// 		Path: vol.Path,
+	// 	})
+	// }
 
 	// TODO re-enable
 	// // set the pipeline step run policy. steps run on

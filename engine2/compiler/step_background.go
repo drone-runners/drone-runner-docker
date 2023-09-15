@@ -14,7 +14,7 @@ import (
 func createStepBackground(src *harness.Step, spec *harness.StepBackground) *engine.Step {
 	dst := &engine.Step{
 		ID:         random(),
-		Name:       src.Name,
+		Name:       src.Id,
 		Image:      image.Expand(spec.Image),
 		Command:    spec.Args,
 		Entrypoint: nil,
@@ -31,15 +31,14 @@ func createStepBackground(src *harness.Step, spec *harness.StepBackground) *engi
 		IgnoreStdout: false,
 		Network:      spec.Network,
 		Privileged:   spec.Privileged,
-		// TODO re-enable
-		// Pull:         convertPullPolicy(src.Pull),
-		User: spec.User,
+		Pull:         convertPullPolicy(spec.Pull),
+		User:         spec.User,
 		// TODO re-enable
 		// Secrets:      convertSecretEnv(src.Environment),
 		// TODO re-enable
 		// ShmSize:    int64(spec.ShmSize),
 		// TODO re-enable
-		// WorkingDir: spec.WorkingDir,
+		WorkingDir: spec.Workdir,
 
 		//
 		//
@@ -53,6 +52,10 @@ func createStepBackground(src *harness.Step, spec *harness.StepBackground) *engi
 
 	if spec.Entrypoint != "" {
 		dst.Entrypoint = []string{spec.Entrypoint}
+	}
+
+	if dst.Envs == nil {
+		dst.Envs = map[string]string{}
 	}
 
 	// TODO re-enable

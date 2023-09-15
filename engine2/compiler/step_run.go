@@ -14,12 +14,10 @@ import (
 func createStep(src *harness.Step, spec *harness.StepExec) *engine.Step {
 	dst := &engine.Step{
 		ID:         random(),
-		Name:       src.Name,
+		Name:       src.Id,
 		Image:      image.Expand(spec.Image),
 		Command:    spec.Args,
 		Entrypoint: nil,
-		// TODO re-enable
-		// Detach:       src.Detach,
 		// TODO re-enable
 		// DependsOn:    src.DependsOn,
 		// DNS:          spec.DNS,
@@ -32,9 +30,10 @@ func createStep(src *harness.Step, spec *harness.StepExec) *engine.Step {
 		IgnoreStdout: false,
 		Network:      spec.Network,
 		Privileged:   spec.Privileged,
-		// TODO re-enable
-		// Pull:         convertPullPolicy(src.Pull),
-		User: spec.User,
+		Pull:         convertPullPolicy(spec.Pull),
+		User:         spec.User,
+		// TODO requires implementation
+		// Group: spec.Group,
 		// TODO re-enable
 		// Secrets:      convertSecretEnv(src.Environment),
 		// TODO re-enable
@@ -54,6 +53,10 @@ func createStep(src *harness.Step, spec *harness.StepExec) *engine.Step {
 
 	if spec.Entrypoint != "" {
 		dst.Entrypoint = []string{spec.Entrypoint}
+	}
+
+	if dst.Envs == nil {
+		dst.Envs = map[string]string{}
 	}
 
 	// TODO re-enable
