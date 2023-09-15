@@ -11,6 +11,8 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
+	"go.starlark.net/starlark"
+	"go.starlark.net/starlarkstruct"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
@@ -312,6 +314,20 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		}
 	}
 
+	// collate the input params
+	inputs := map[string]string{}
+	// add the input defaults from the yaml
+	for k, v := range pipeline.Inputs {
+		if v == nil {
+			continue
+		}
+		inputs[k] = v.Default
+	}
+	// add the input defaults from the trigger / user
+	for k, v := range args.Build.Params {
+		inputs[k] = v
+	}
+
 	// create steps
 	for _, src := range stageSpec.Steps {
 
@@ -321,12 +337,28 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				step_.Envs = environ.Combine(envs, step_.Envs)
 				step_.Volumes = append(step_.Volumes, mount)
 				step_.Labels = stageLabels
-				// TODO re-enable when condition
-				// // if the pipeline step has unmet conditions the step is
-				// // automatically skipped.
-				// if !src.When.Match(match) {
-				// 	// dst.RunPolicy = runtime.RunNever
-				// }
+
+				if src.When != nil {
+					if when := src.When.Eval; when != "" {
+						inputs := starlark.StringDict{
+							"repo":   starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(args.Repo)),
+							"build":  starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(args.Build)),
+							"inputs": starlarkstruct.FromStringDict(starlark.String("inputs"), fromInputs(inputs)),
+						}
+
+						onSuccess, onFailure, _ := evalif(when, inputs)
+						switch {
+						case onSuccess && onFailure:
+							step_.RunPolicy = engine.RunAlways
+						case onSuccess:
+							step_.RunPolicy = engine.RunOnSuccess
+						case onFailure:
+							step_.RunPolicy = engine.RunOnFailure
+						default:
+							step_.RunPolicy = engine.RunNever
+						}
+					}
+				}
 
 				spec.Steps = append(spec.Steps, step_)
 			}
