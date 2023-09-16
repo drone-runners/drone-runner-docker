@@ -6,31 +6,66 @@ package compiler
 
 import (
 	"testing"
-
-	"github.com/drone/drone-go/drone"
-	"go.starlark.net/starlark"
-	"go.starlark.net/starlarkstruct"
 )
 
 func TestEvalTrue(t *testing.T) {
-	expr := `failure() or build.branch == "main"`
-	repo := &drone.Repo{}
-	build := &drone.Build{Source: "main", Target: "main"}
-
-	inputs := starlark.StringDict{
-		"repo":   starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo)),
-		"build":  starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(build)),
-		"inputs": starlarkstruct.FromStringDict(starlark.String("build"), fromInputs(map[string]string{"username": "bradrydzewski"})),
+	var tests = []struct {
+		onsuccess bool
+		onfailure bool
+		expr      string
+		data      map[string]interface{}
+	}{
+		{
+			expr:      `branch == "main"`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: true,
+			onfailure: false,
+		},
+		{
+			expr:      `branch != "main"`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: false,
+			onfailure: false,
+		},
+		{
+			expr:      `pipeline.branch == "main"`, // field does not exist
+			data:      map[string]interface{}{"pipeline": map[string]interface{}{}},
+			onsuccess: false,
+			onfailure: false,
+		},
+		{
+			expr:      `branch != "main" || failure()`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: false,
+			onfailure: true,
+		},
+		{
+			expr:      `always()`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: true,
+			onfailure: true,
+		},
+		{
+			expr:      `failure()`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: false,
+			onfailure: true,
+		},
 	}
 
-	onSuccess, onFailure, err := evalif(expr, inputs)
-	if err != nil {
-		t.Error(err)
-	}
-	if got, want := onSuccess, true; got != want {
-		t.Errorf("want on_success %v, got %v", want, got)
-	}
-	if got, want := onFailure, true; got != want {
-		t.Errorf("want on_success %v, got %v", want, got)
+	for _, test := range tests {
+		t.Run(test.expr, func(t *testing.T) {
+			t.Log(test.expr)
+			onsuccess, onfailure, err := evalif(test.expr, test.data)
+			if err != nil {
+				t.Error(err)
+			}
+			if got, want := onsuccess, test.onsuccess; got != want {
+				t.Errorf("want on_success %v, got %v", want, got)
+			}
+			if got, want := onfailure, test.onfailure; got != want {
+				t.Errorf("want on_failure %v, got %v", want, got)
+			}
+		})
 	}
 }

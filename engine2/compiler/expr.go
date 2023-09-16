@@ -5,65 +5,46 @@
 package compiler
 
 import (
+	"github.com/antonmedv/expr"
 	"github.com/drone/drone-go/drone"
-	"go.starlark.net/starlark"
 )
 
 // helper to eval whether a starlark script
 // evaluates to true.
-func evalif(expr string, inputs starlark.StringDict) (bool, bool, error) {
-	var onFailure, onSuccess bool
+func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 	var evalFailure, evalAlways bool
 
-	thread1 := &starlark.Thread{
-		Name: "when",
-		Print: func(thread *starlark.Thread, msg string) {
-			// capture the expression result and
-			// test if truthy.
-			switch msg {
-			case "True", "true", "1":
-				onSuccess = true
-			}
-		},
-	}
-
-	thread2 := &starlark.Thread{
-		Name: "when",
-		Print: func(thread *starlark.Thread, msg string) {
-			// capture the expression result and
-			// test if truthy.
-			switch msg {
-			case "True", "true", "1":
-				onFailure = true
-			}
-		},
-	}
-
 	var isSuccess bool
-	predeclared := starlark.StringDict{
-		"success": starlark.NewBuiltin("success", func(*starlark.Thread, *starlark.Builtin, starlark.Tuple, []starlark.Tuple) (starlark.Value, error) {
-			return starlark.Bool(isSuccess), nil
-		}),
-		"failure": starlark.NewBuiltin("failure", func(*starlark.Thread, *starlark.Builtin, starlark.Tuple, []starlark.Tuple) (starlark.Value, error) {
+	builtins := map[string]interface{}{
+		"success": func() bool {
+			return isSuccess
+		},
+		"failure": func() bool {
 			evalFailure = true
-			return starlark.Bool(!isSuccess), nil
-		}),
-		"always": starlark.NewBuiltin("always", func(*starlark.Thread, *starlark.Builtin, starlark.Tuple, []starlark.Tuple) (starlark.Value, error) {
+			return !isSuccess
+		},
+		"always": func() bool {
 			evalAlways = true
-			return starlark.Bool(true), nil
-		}),
+			return true
+		},
 	}
 
 	// add input args to the predefined
 	// variables list.
 	for k, v := range inputs {
-		predeclared[k] = v
+		builtins[k] = v
+	}
+
+	// compile the program
+	program, err := expr.Compile(code, expr.Env(builtins))
+	if err != nil {
+		return false, false, err
 	}
 
 	// first evaluate the expression assuming
 	// the pipeline is in a passing state.
 	isSuccess = true
-	_, err1 := starlark.ExecFile(thread1, "when.star", "print("+expr+")", predeclared)
+	onSuccess, err1 := expr.Run(program, builtins)
 	if err1 != nil {
 		return false, false, err1
 	}
@@ -71,76 +52,64 @@ func evalif(expr string, inputs starlark.StringDict) (bool, bool, error) {
 	// then evaluate the expression assuming
 	// the pipeline is in a failing state.
 	isSuccess = false
-	_, err2 := starlark.ExecFile(thread2, "when.star", "print("+expr+")", predeclared)
-	if err2 != nil {
+	onFailure, err2 := expr.Run(program, builtins)
+	if err1 != nil {
 		return false, false, err2
 	}
-	return onSuccess || evalAlways, (onFailure && evalFailure) || evalAlways, nil
+
+	// if the user invoked always() we should
+	// return true for both success and failure.
+	if evalAlways {
+		return true, true, nil
+	}
+
+	return onSuccess == true, (onFailure == true && evalFailure), nil
 }
 
-func fromBuild(v *drone.Build) starlark.StringDict {
-	return starlark.StringDict{
-		"event":         starlark.String(v.Event),
-		"action":        starlark.String(v.Action),
-		"cron":          starlark.String(v.Cron),
-		"environment":   starlark.String(v.Deploy),
-		"link":          starlark.String(v.Link),
-		"branch":        starlark.String(v.Target),
-		"source":        starlark.String(v.Source),
-		"before":        starlark.String(v.Before),
-		"after":         starlark.String(v.After),
-		"target":        starlark.String(v.Target),
-		"ref":           starlark.String(v.Ref),
-		"commit":        starlark.String(v.After),
-		"title":         starlark.String(v.Title),
-		"message":       starlark.String(v.Message),
-		"source_repo":   starlark.String(v.Fork),
-		"author_login":  starlark.String(v.Author),
-		"author_name":   starlark.String(v.AuthorName),
-		"author_email":  starlark.String(v.AuthorEmail),
-		"author_avatar": starlark.String(v.AuthorAvatar),
-		"sender":        starlark.String(v.Sender),
-		"debug":         starlark.Bool(v.Debug),
-		"params":        fromMap(v.Params),
+func fromBuild(v *drone.Build) map[string]interface{} {
+	return map[string]interface{}{
+		"event":         v.Event,
+		"action":        v.Action,
+		"cron":          v.Cron,
+		"environment":   v.Deploy,
+		"link":          v.Link,
+		"branch":        v.Target,
+		"source":        v.Source,
+		"before":        v.Before,
+		"after":         v.After,
+		"target":        v.Target,
+		"ref":           v.Ref,
+		"commit":        v.After,
+		"title":         v.Title,
+		"message":       v.Message,
+		"source_repo":   v.Fork,
+		"author_login":  v.Author,
+		"author_name":   v.AuthorName,
+		"author_email":  v.AuthorEmail,
+		"author_avatar": v.AuthorAvatar,
+		"sender":        v.Sender,
+		"debug":         v.Debug,
+		"params":        v.Params,
 	}
 }
 
-func fromRepo(v *drone.Repo) starlark.StringDict {
-	return starlark.StringDict{
-		"uid":                  starlark.String(v.UID),
-		"name":                 starlark.String(v.Name),
-		"namespace":            starlark.String(v.Namespace),
-		"slug":                 starlark.String(v.Slug),
-		"git_http_url":         starlark.String(v.HTTPURL),
-		"git_ssh_url":          starlark.String(v.SSHURL),
-		"link":                 starlark.String(v.Link),
-		"branch":               starlark.String(v.Branch),
-		"config":               starlark.String(v.Config),
-		"private":              starlark.Bool(v.Private),
-		"visibility":           starlark.String(v.Visibility),
-		"active":               starlark.Bool(v.Active),
-		"trusted":              starlark.Bool(v.Trusted),
-		"protected":            starlark.Bool(v.Protected),
-		"ignore_forks":         starlark.Bool(v.IgnoreForks),
-		"ignore_pull_requests": starlark.Bool(v.IgnorePulls),
+func fromRepo(v *drone.Repo) map[string]interface{} {
+	return map[string]interface{}{
+		"uid":                  v.UID,
+		"name":                 v.Name,
+		"namespace":            v.Namespace,
+		"slug":                 v.Slug,
+		"git_http_url":         v.HTTPURL,
+		"git_ssh_url":          v.SSHURL,
+		"link":                 v.Link,
+		"branch":               v.Branch,
+		"config":               v.Config,
+		"private":              v.Private,
+		"visibility":           v.Visibility,
+		"active":               v.Active,
+		"trusted":              v.Trusted,
+		"protected":            v.Protected,
+		"ignore_forks":         v.IgnoreForks,
+		"ignore_pull_requests": v.IgnorePulls,
 	}
-}
-
-func fromInputs(m map[string]string) starlark.StringDict {
-	out := map[string]starlark.Value{}
-	for k, v := range m {
-		out[k] = starlark.String(v)
-	}
-	return out
-}
-
-func fromMap(m map[string]string) *starlark.Dict {
-	dict := new(starlark.Dict)
-	for k, v := range m {
-		dict.SetKey(
-			starlark.String(k),
-			starlark.String(v),
-		)
-	}
-	return dict
 }

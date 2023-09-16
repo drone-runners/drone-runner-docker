@@ -11,8 +11,6 @@ import (
 
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
-	"go.starlark.net/starlark"
-	"go.starlark.net/starlarkstruct"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/clone"
@@ -340,10 +338,10 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 
 				if src.When != nil {
 					if when := src.When.Eval; when != "" {
-						inputs := starlark.StringDict{
-							"repo":   starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(args.Repo)),
-							"build":  starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(args.Build)),
-							"inputs": starlarkstruct.FromStringDict(starlark.String("inputs"), fromInputs(inputs)),
+						inputs := map[string]interface{}{
+							"repo":   fromRepo(args.Repo),
+							"build":  fromBuild(args.Build),
+							"inputs": inputs,
 						}
 
 						onSuccess, onFailure, _ := evalif(when, inputs)
