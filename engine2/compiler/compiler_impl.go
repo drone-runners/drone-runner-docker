@@ -17,6 +17,7 @@ import (
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/drone/runner-go/labels"
+	"github.com/drone/runner-go/manifest"
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
@@ -215,14 +216,18 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		Volumes: []*engine.Volume{volume},
 	}
 
-	// // list the global environment variables
-	// globals, _ := c.Environ.List(ctx, &provider.Request{
-	// 	Build: args.Build,
-	// 	Repo:  args.Repo,
-	// })
+	// list the global environment variables
+	// TODO we can probably deprecate and remove this
+	globals, _ := c.Environ.List(ctx, &provider.Request{
+		Build: args.Build,
+		Repo:  args.Repo,
+	})
 
 	// create the default environment variables.
 	envs := environ.Combine(
+		provider.ToMap(
+			provider.FilterUnmasked(globals),
+		),
 		args.Build.Params,
 		options_.Envs,  // environment from pipeline
 		stageSpec.Envs, // environment from stage
@@ -276,18 +281,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		envs = environ.Combine(envs, environ.Netrc(args.Netrc))
 	}
 
-	// TODO re-enable matching logic for when clause
-	// match := manifest.Match{
-	// 	Action:   args.Build.Action,
-	// 	Cron:     args.Build.Cron,
-	// 	Ref:      args.Build.Ref,
-	// 	Repo:     args.Repo.Slug,
-	// 	Instance: args.System.Host,
-	// 	Target:   args.Build.Deploy,
-	// 	Event:    args.Build.Event,
-	// 	Branch:   args.Build.Target,
-	// }
-
 	// create the clone step
 	if clone_.Disabled == false {
 		step := createClone(platform_, clone_)
@@ -313,7 +306,17 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	}
 
 	// collate the input params
-	inputs := map[string]string{}
+	inputs := map[string]interface{}{
+		"repo":  fromRepo(args.Repo),
+		"build": fromBuild(args.Build),
+		"secrets": map[string]interface{}{
+			"get": func(name string) string {
+				s, _ := c.findSecret(
+					context.Background(), args, name)
+				return s
+			},
+		},
+	}
 	// add the input defaults from the yaml
 	for k, v := range pipeline.Inputs {
 		if v == nil {
@@ -332,18 +335,31 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		steps_ := convertStep(stage, src)
 		if len(steps_) != 0 {
 			for _, step_ := range steps_ {
+
+				// add secret function.
+				// register secrets with the step so we know
+				// to mask them.
+				inputs["secrets"] = map[string]interface{}{
+					"get": func(name string) string {
+						s, ok := c.findSecret(context.Background(), args, name)
+						if ok {
+							// regsiter secret so we know to mask
+							step_.Secrets = append(step_.Secrets, &engine.Secret{
+								Name: name,
+								Data: []byte(s),
+								Mask: true,
+							})
+						}
+						return s
+					},
+				}
+
 				step_.Envs = environ.Combine(envs, step_.Envs)
 				step_.Volumes = append(step_.Volumes, mount)
 				step_.Labels = stageLabels
 
 				if src.When != nil {
 					if when := src.When.Eval; when != "" {
-						inputs := map[string]interface{}{
-							"repo":   fromRepo(args.Repo),
-							"build":  fromBuild(args.Build),
-							"inputs": inputs,
-						}
-
 						onSuccess, onFailure, _ := evalif(when, inputs)
 						switch {
 						case onSuccess && onFailure:
@@ -531,4 +547,32 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	}
 
 	return spec, nil
+}
+
+// helper function attempts to find and return the named secret.
+// from the secret provider.
+func (c *CompilerImpl) findSecret(ctx context.Context, args Args, name string) (s string, ok bool) {
+	if name == "" {
+		return
+	}
+
+	// source secrets from the global secret provider
+	// and the repository secret provider.
+	provider := secret.Combine(
+		args.Secret,
+		c.Secret,
+	)
+
+	// TODO return an error to the caller if the provider
+	// returns an error.
+	found, _ := provider.Find(ctx, &secret.Request{
+		Name:  name,
+		Build: args.Build,
+		Repo:  args.Repo,
+		Conf:  &manifest.Manifest{}, // TODO remove me
+	})
+	if found == nil {
+		return
+	}
+	return found.Data, true
 }

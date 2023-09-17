@@ -5,14 +5,18 @@
 package compiler
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/antonmedv/expr"
 	"github.com/drone/drone-go/drone"
 )
 
-// helper to eval whether a starlark script
-// evaluates to true.
+// helper function a when clause.
 func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
-	var evalFailure, evalAlways bool
+	var evalFailure, evalAlways, onFailure, onSuccess bool
 
 	var isSuccess bool
 	builtins := map[string]interface{}{
@@ -27,6 +31,15 @@ func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 			evalAlways = true
 			return true
 		},
+	}
+
+	// trim trailing whitespace
+	code = strings.TrimSpace(code)
+
+	// trim ${{ }} wrappers if they exist
+	if strings.HasPrefix(code, "${{") {
+		code = strings.TrimPrefix(code, "${{")
+		code = strings.TrimSuffix(code, "}}")
 	}
 
 	// add input args to the predefined
@@ -44,7 +57,7 @@ func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 	// first evaluate the expression assuming
 	// the pipeline is in a passing state.
 	isSuccess = true
-	onSuccess, err1 := expr.Run(program, builtins)
+	output1, err1 := expr.Run(program, builtins)
 	if err1 != nil {
 		return false, false, err1
 	}
@@ -52,7 +65,7 @@ func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 	// then evaluate the expression assuming
 	// the pipeline is in a failing state.
 	isSuccess = false
-	onFailure, err2 := expr.Run(program, builtins)
+	output2, err2 := expr.Run(program, builtins)
 	if err1 != nil {
 		return false, false, err2
 	}
@@ -63,7 +76,49 @@ func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 		return true, true, nil
 	}
 
-	return onSuccess == true, (onFailure == true && evalFailure), nil
+	// coerce the outputs to bool
+	onSuccess = coerceBool(output1)
+	onFailure = coerceBool(output2)
+
+	return onSuccess, (onFailure && evalFailure), nil
+}
+
+// expand string
+func expand(code string, inputs map[string]interface{}) string {
+	pattern := regexp.MustCompile(`\${{(.*)}}`)
+	return pattern.ReplaceAllStringFunc(code, func(s string) string {
+		s = strings.TrimSpace(s)
+		s = strings.TrimPrefix(s, "${{")
+		s = strings.TrimSuffix(s, "}}")
+		out, _ := evalstr(s, inputs)
+		return out
+	})
+}
+
+// helper fucntion evaluates a string expression
+func evalstr(code string, inputs map[string]interface{}) (string, error) {
+	v, err := eval(code, inputs)
+	return coerceString(v), err
+}
+
+// helper function evaluates an expression
+func eval(code string, inputs map[string]interface{}) (interface{}, error) {
+	builtins := map[string]interface{}{}
+
+	// add input args to the predefined
+	// variables list.
+	for k, v := range inputs {
+		builtins[k] = v
+	}
+
+	// compile the program
+	program, err := expr.Compile(code, expr.Env(builtins))
+	if err != nil {
+		return nil, err
+	}
+
+	// evaluate the expression
+	return expr.Run(program, builtins)
 }
 
 func fromBuild(v *drone.Build) map[string]interface{} {
@@ -112,4 +167,110 @@ func fromRepo(v *drone.Repo) map[string]interface{} {
 		"ignore_forks":         v.IgnoreForks,
 		"ignore_pull_requests": v.IgnorePulls,
 	}
+}
+
+//
+// coercion
+//
+
+// helper function to coerce a value to true
+func coerceBool(v interface{}) bool {
+	if v == nil || v == "<nil>" {
+		return false
+	}
+	switch vv := v.(type) {
+	case string:
+		return vv != ""
+	case int:
+		return vv != 0
+	case int8:
+		return vv != 0
+	case int16:
+		return vv != 0
+	case int32:
+		return vv != 0
+	case int64:
+		return vv != 0
+	case uint:
+		return vv != 0
+	case uint8:
+		return vv != 0
+	case uint16:
+		return vv != 0
+	case uint32:
+		return vv != 0
+	case uint64:
+		return vv != 0
+	case float32:
+		return vv != 0
+	case float64:
+		return vv != 0
+	case complex128:
+		return vv != 0
+	case complex64:
+		return vv != 0
+	case bool:
+		return vv
+	case []string:
+		return len(vv) != 0
+	case map[string]string:
+		return len(vv) != 0
+	case map[string]interface{}:
+		return len(vv) != 0
+	}
+	return v != nil
+}
+
+// helper function to coerce a value to string
+func coerceString(v interface{}) string {
+	if v == nil || v == "<nil>" {
+		return ""
+	}
+	switch vv := v.(type) {
+	case string:
+		return vv
+	case int:
+		return strconv.Itoa(vv)
+	case int8:
+		return fmt.Sprint(vv)
+	case int16:
+		return fmt.Sprint(vv)
+	case int32:
+		return fmt.Sprint(vv)
+	case int64:
+		return fmt.Sprint(vv)
+	case uint:
+		return fmt.Sprint(vv)
+	case uint8:
+		return fmt.Sprint(vv)
+	case uint16:
+		return fmt.Sprint(vv)
+	case uint32:
+		return fmt.Sprint(vv)
+	case uint64:
+		return fmt.Sprint(vv)
+	case float32:
+		return fmt.Sprint(vv)
+	case float64:
+		return fmt.Sprint(vv)
+	case complex128:
+		return fmt.Sprint(vv)
+	case complex64:
+		return fmt.Sprint(vv)
+	case bool:
+		return fmt.Sprint(vv)
+	case []string:
+		if len(vv) != 0 {
+			return fmt.Sprint(vv)
+		}
+	case map[string]string:
+		if len(vv) != 0 {
+			return fmt.Sprint(vv)
+		}
+	case map[string]interface{}:
+		if len(vv) != 0 {
+			return fmt.Sprint(vv)
+		}
+	}
+	return ""
 }

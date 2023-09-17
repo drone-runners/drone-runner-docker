@@ -8,6 +8,18 @@ import (
 	"testing"
 )
 
+func TestExpand(t *testing.T) {
+	inputs := map[string]interface{}{
+		"pipeline": map[string]interface{}{
+			"number": 13213,
+		},
+	}
+	s := expand("golang:1.0.0-build.${{pipeline.number}}", inputs)
+	if got, want := s, "golang:1.0.0-build.13213"; got != want {
+		t.Errorf("want expanded variable %s, got %s", want, got)
+	}
+}
+
 func TestEvalTrue(t *testing.T) {
 	var tests = []struct {
 		onsuccess bool
@@ -17,6 +29,12 @@ func TestEvalTrue(t *testing.T) {
 	}{
 		{
 			expr:      `branch == "main"`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: true,
+			onfailure: false,
+		},
+		{
+			expr:      `${{ branch == "main" }}`,
 			data:      map[string]interface{}{"branch": "main"},
 			onsuccess: true,
 			onfailure: false,
@@ -50,6 +68,20 @@ func TestEvalTrue(t *testing.T) {
 			data:      map[string]interface{}{"branch": "main"},
 			onsuccess: false,
 			onfailure: true,
+		},
+		// returns non-empty string, which is coerced to true
+		{
+			expr:      `branch`,
+			data:      map[string]interface{}{"branch": "main"},
+			onsuccess: true,
+			onfailure: false,
+		},
+		// returns empty string, which is coerced to false
+		{
+			expr:      `branch`,
+			data:      map[string]interface{}{"branch": ""},
+			onsuccess: false,
+			onfailure: false,
 		},
 	}
 
