@@ -6,7 +6,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -54,6 +53,9 @@ type Runner struct {
 	// Execer is responsible for executing intermediate
 	// representation of the pipeline and returns its results.
 	Exec func(context.Context, *engine.Spec, *pipeline.State) error
+
+	// Resolver resolves templates and plugins
+	Resolver func(name, kind, typ, version string) (*harness.Config, error)
 
 	// LegacyRunner is used to run a legacy yaml configuration
 	// file from drone.
@@ -182,12 +184,10 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	expand.Expand(config)
 
 	// expand templates and plugins
-	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
-		// TODO replace with a proper resolver implementation
-		return nil, fmt.Errorf("cannot find %s %s", kind, name)
-	}
-	if err := resolver.Resolve(config, resolve); err != nil {
-		return err
+	if err := resolver.Resolve(config, s.Resolver); err != nil {
+		log.WithError(err).Error("cannot load template or plugin")
+		state.FailAll(err)
+		return s.Reporter.ReportStage(noContext, state)
 	}
 
 	secrets := map[string]string{}
