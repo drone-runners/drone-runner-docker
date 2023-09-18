@@ -6,6 +6,7 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,9 +26,13 @@ import (
 	"github.com/drone/runner-go/secret"
 
 	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
+	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	harness "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
+	"github.com/drone/spec/dist/go/parse/resolver"
+	"github.com/drone/spec/dist/go/parse/script"
+	"github.com/drone/spec/dist/go/parse/walk"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -157,8 +162,60 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 		return err
 	}
 
+	//
 	// expand matrix stages and steps
+	//
+
 	expand.Expand(config)
+
+	//
+	// expand templates and plugins
+	//
+
+	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
+		// TODO implement me
+		return nil, errors.New("not found")
+	}
+	if err := resolver.Resolve(config, resolve); err != nil {
+		return err
+	}
+
+	//
+	// expand name and identifier fields.
+	// other fields are expanded at execution time.
+	//
+	// NOTE this is a huge hack
+
+	inputParams := map[string]interface{}{}
+	inputParams["repo"] = inputs.Repo(c.Repo)
+	inputParams["build"] = inputs.Build(c.Build)
+	walk.Walk(config, func(v interface{}) error {
+		switch vv := v.(type) {
+		case *harness.Pipeline:
+			inputParams["inputs"] = inputs.Inputs(vv.Inputs, c.Build.Params)
+		case *harness.Step:
+			if vv.Strategy != nil && vv.Strategy.Spec != nil {
+				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
+					for _, axis := range matrix.Include {
+						inputParams["matrix"] = axis
+					}
+				}
+			}
+			vv.Id = script.Expand(vv.Id, inputParams)
+			vv.Name = script.Expand(vv.Name, inputParams)
+		case *harness.Stage:
+			if vv.Strategy != nil && vv.Strategy.Spec != nil {
+				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
+					for _, axis := range matrix.Include {
+						inputParams["matrix"] = axis
+					}
+				}
+			}
+			vv.Id = script.Expand(vv.Id, inputParams)
+			vv.Name = script.Expand(vv.Name, inputParams)
+		}
+		return nil
+	})
 
 	// normalize the configuration to ensure
 	// all steps have an identifier

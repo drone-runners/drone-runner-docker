@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/drone-runners/drone-runner-docker/engine2/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	"github.com/drone-runners/drone-runner-docker/internal/docker/image"
 
 	"github.com/drone/drone-go/drone"
@@ -307,8 +308,9 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 
 	// collate the input params
 	inputs := map[string]interface{}{
-		"repo":  fromRepo(args.Repo),
-		"build": fromBuild(args.Build),
+		"repo":   inputs.Repo(args.Repo),
+		"build":  inputs.Build(args.Build),
+		"inputs": inputs.Inputs(pipeline.Inputs, args.Build.Params),
 		"secrets": map[string]interface{}{
 			"get": func(name string) string {
 				s, _ := c.findSecret(
@@ -316,17 +318,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				return s
 			},
 		},
-	}
-	// add the input defaults from the yaml
-	for k, v := range pipeline.Inputs {
-		if v == nil {
-			continue
-		}
-		inputs[k] = v.Default
-	}
-	// add the input defaults from the trigger / user
-	for k, v := range args.Build.Params {
-		inputs[k] = v
 	}
 
 	// create steps

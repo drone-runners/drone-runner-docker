@@ -39,10 +39,13 @@ import (
 
 	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
 	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
+	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	harness "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
+	"github.com/drone/spec/dist/go/parse/script"
+	"github.com/drone/spec/dist/go/parse/walk"
 )
 
 type execCommand struct {
@@ -279,6 +282,47 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 
 	// expand matrix stages and steps
 	expand.Expand(config)
+
+	// expand expressions for the stage and step
+	// name and identifier fields only.
+	inputParams := map[string]interface{}{}
+	inputParams["repo"] = inputs.Repo(c.Repo)
+	inputParams["build"] = inputs.Build(c.Build)
+	walk.Walk(config, func(v interface{}) error {
+		switch vv := v.(type) {
+		case *harness.Pipeline:
+			inputParams["inputs"] = inputs.Inputs(vv.Inputs, c.Build.Params)
+		case *harness.Step:
+			if vv.Strategy != nil && vv.Strategy.Spec != nil {
+				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
+					for _, axis := range matrix.Include {
+						inputParams["matrix"] = axis
+					}
+				}
+			}
+			vv.Id = script.Expand(vv.Id, inputParams)
+			vv.Name = script.Expand(vv.Name, inputParams)
+			// TODO timeout?, failure?
+		case *harness.Stage:
+			if vv.Strategy != nil && vv.Strategy.Spec != nil {
+				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
+					for _, axis := range matrix.Include {
+						inputParams["matrix"] = axis
+					}
+				}
+			}
+			vv.Id = script.Expand(vv.Id, inputParams)
+			vv.Name = script.Expand(vv.Name, inputParams)
+			// TODO expand clone, platform, delegate?, failure?
+
+		}
+		return nil
+	})
+
+	//
+	//
+	//
+	script.ExpandConfig(config, inputParams)
 
 	// normalize the configuration to ensure
 	// all steps have an identifier
