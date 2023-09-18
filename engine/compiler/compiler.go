@@ -90,6 +90,10 @@ type Compiler struct {
 	// are used when creating the docker network.
 	NetworkOpts map[string]string
 
+	// ExtraHosts provides a set of hostname mappings that
+	// should be setup for each pipeline container.
+	ExtraHosts []string
+
 	// NetrcCloneOnly instructs the compiler to only inject
 	// the netrc file into the clone step.
 	NetrcCloneOnly bool
@@ -278,6 +282,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		step := createClone(pipeline)
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
+		step.ExtraHosts = append(step.ExtraHosts, c.ExtraHosts...)
 		step.WorkingDir = full
 		step.Labels = stageLabels
 		step.Pull = engine.PullIfNotExists
@@ -309,6 +314,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		dst.Detach = true
 		dst.Envs = environ.Combine(envs, dst.Envs)
 		dst.Volumes = append(dst.Volumes, mount)
+		dst.ExtraHosts = append(dst.ExtraHosts, c.ExtraHosts...)
 		dst.Labels = stageLabels
 		setupScript(src, dst, os)
 		setupWorkdir(src, dst, full)
@@ -329,6 +335,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	for _, src := range pipeline.Steps {
 		dst := createStep(pipeline, src)
 		dst.Envs = environ.Combine(envs, dst.Envs)
+		dst.ExtraHosts = append(dst.ExtraHosts, c.ExtraHosts...)
 		dst.Volumes = append(dst.Volumes, mount)
 		dst.Labels = stageLabels
 		setupScript(src, dst, os)
