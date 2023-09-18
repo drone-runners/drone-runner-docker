@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -41,10 +42,11 @@ import (
 	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
 	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
+	script "github.com/drone-runners/drone-runner-docker/engine2/script"
 	harness "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
-	"github.com/drone/spec/dist/go/parse/script"
+	"github.com/drone/spec/dist/go/parse/resolver"
 	"github.com/drone/spec/dist/go/parse/walk"
 )
 
@@ -62,6 +64,8 @@ type execCommand struct {
 	Secrets    map[string]string
 	Resources  compiler.Resources
 	Tmate      compiler.Tmate
+	Templates  string
+	Plugins    string
 	Clone      bool
 	Config     string
 	Pretty     bool
@@ -283,44 +287,45 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 	// expand matrix stages and steps
 	expand.Expand(config)
 
-	// expand expressions for the stage and step
-	// name and identifier fields only.
+	// expand templates and plugins
+	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
+		var path string
+		switch kind {
+		case "template":
+			path = filepath.Join(c.Templates, name+".yaml")
+		case "plugin":
+			path = filepath.Join(c.Plugins, name+".yaml")
+		}
+		return harness.ParseFile(path)
+	}
+	if err := resolver.Resolve(config, resolve); err != nil {
+		return err
+	}
+
+	// create the expressions context that is used
+	// to evaluate expressions in the yaml.
 	inputParams := map[string]interface{}{}
 	inputParams["repo"] = inputs.Repo(c.Repo)
 	inputParams["build"] = inputs.Build(c.Build)
+	inputParams["matrix"] = map[string]interface{}{}
+	inputParams["inputs"] = map[string]interface{}{}
+	inputParams["secrets"] = map[string]interface{}{
+		"get": func(s string) string {
+			v, _ := c.Secrets[s]
+			return v
+		},
+	}
+	// extract the inputs and add to the expression contrext
 	walk.Walk(config, func(v interface{}) error {
 		switch vv := v.(type) {
 		case *harness.Pipeline:
 			inputParams["inputs"] = inputs.Inputs(vv.Inputs, c.Build.Params)
-		case *harness.Step:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
-			// TODO timeout?, failure?
-		case *harness.Stage:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
-			// TODO expand clone, platform, delegate?, failure?
-
 		}
 		return nil
 	})
 
 	//
-	//
+	// expand input parameters
 	//
 	script.ExpandConfig(config, inputParams)
 
@@ -503,6 +508,12 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)
+
+	cmd.Flag("templates", "template directory").
+		StringVar(&c.Templates)
+
+	cmd.Flag("plugins", "plugins directory").
+		StringVar(&c.Plugins)
 
 	cmd.Flag("include", "include pipeline steps").
 		StringsVar(&c.Include)

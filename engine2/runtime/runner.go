@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	harness "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
+	"github.com/drone/spec/dist/go/parse/resolver"
 	"github.com/drone/spec/dist/go/parse/script"
 	"github.com/drone/spec/dist/go/parse/walk"
 )
@@ -179,39 +181,46 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// expand matrix stages and steps
 	expand.Expand(config)
 
-	// expand expressions for the stage and step
-	// name and identifier fields only.
+	// expand templates and plugins
+	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
+		// TODO replace with a proper resolver implementation
+		return nil, fmt.Errorf("cannot find %s %s", kind, name)
+	}
+	if err := resolver.Resolve(config, resolve); err != nil {
+		return err
+	}
+
+	secrets := map[string]string{}
+	for _, s := range data.Secrets {
+		secrets[s.Name] = s.Data
+	}
+
+	// create the expressions context that is used
+	// to evaluate expressions in the yaml.
 	inputParams := map[string]interface{}{}
 	inputParams["repo"] = inputs.Repo(data.Repo)
 	inputParams["build"] = inputs.Build(data.Build)
-	// TODO add inputsParams["stage"]
+	inputParams["matrix"] = map[string]interface{}{}
+	inputParams["inputs"] = map[string]interface{}{}
+	inputParams["secrets"] = map[string]interface{}{
+		"get": func(s string) string {
+			v, _ := secrets[s]
+			return v
+		},
+	}
+	// extract the inputs and add to the expression contrext
 	walk.Walk(config, func(v interface{}) error {
 		switch vv := v.(type) {
 		case *harness.Pipeline:
 			inputParams["inputs"] = inputs.Inputs(vv.Inputs, data.Build.Params)
-		case *harness.Step:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
-		case *harness.Stage:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
 		}
 		return nil
 	})
+
+	//
+	// expand input parameters
+	//
+	script.ExpandConfig(config, inputParams)
 
 	// normalize the configuration to ensure
 	// all steps have an identifier
