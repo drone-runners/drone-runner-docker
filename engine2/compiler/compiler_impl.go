@@ -86,6 +86,10 @@ type CompilerImpl struct {
 	// mounted to each pipeline container.
 	Volumes map[string]string
 
+	// ExtraHosts provides a set of hostname mappings that
+	// should be setup for each pipeline container.
+	ExtraHosts []string
+
 	// Clone overrides the default plugin image used
 	// when cloning a repository.
 	Clone string
@@ -287,6 +291,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		step := createClone(platform_, clone_)
 		step.ID = random()
 		step.Envs = environ.Combine(envs, step.Envs)
+		step.ExtraHosts = append(step.ExtraHosts, c.ExtraHosts...)
 		step.WorkingDir = "/gitness"
 		step.Labels = stageLabels
 		step.Pull = engine.PullIfNotExists
@@ -348,6 +353,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				step_.Envs = environ.Combine(envs, step_.Envs)
 				step_.Volumes = append(step_.Volumes, mount)
 				step_.Labels = stageLabels
+				step_.ExtraHosts = append(step_.ExtraHosts, c.ExtraHosts...)
 
 				if src.When != nil {
 					if when := src.When.Eval; when != "" {
