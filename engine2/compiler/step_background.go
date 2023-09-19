@@ -59,6 +59,21 @@ func createStepBackground(src *harness.Step, spec *harness.StepBackground) *engi
 		dst.Envs = map[string]string{}
 	}
 
+	if container := spec.Container; container != nil {
+		dst.Image = image.Expand(container.Image)
+		dst.Command = container.Args
+		dst.Network = container.Network
+		dst.Privileged = container.Privileged
+		dst.Pull = convertPullPolicy(container.Pull)
+		dst.User = container.User
+		// dst.Group = container.Group
+
+		if container.Entrypoint != "" {
+			dst.Entrypoint = []string{container.Entrypoint}
+		}
+
+	}
+
 	// append all matrix parameters as environment
 	// variables into the step
 	if src.Strategy != nil && src.Strategy.Spec != nil {

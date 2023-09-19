@@ -14,7 +14,7 @@ require (
 	github.com/drone/envsubst v1.0.3
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/signal v1.0.0
-	github.com/drone/spec v0.0.0-20230918220055-b61fc77555aa
+	github.com/drone/spec v0.0.0-20230919004456-7455b8913ff5
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/go-multierror v1.0.0

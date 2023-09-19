@@ -65,6 +65,8 @@ github.com/drone/spec v0.0.0-20230918031032-07d0f2594649 h1:e22spVEjx7WNwRnKXIZ4
 github.com/drone/spec v0.0.0-20230918031032-07d0f2594649/go.mod h1:KyQZA9qwuscbbM7yTrtZg25Wammoc5GKwaRem8kDA5k=
 github.com/drone/spec v0.0.0-20230918220055-b61fc77555aa h1:C+zVpMjbVFauZCekgDYG/LlZexZ8A1kesZfl4/G2COE=
 github.com/drone/spec v0.0.0-20230918220055-b61fc77555aa/go.mod h1:KyQZA9qwuscbbM7yTrtZg25Wammoc5GKwaRem8kDA5k=
+github.com/drone/spec v0.0.0-20230919004456-7455b8913ff5 h1:NgAseJNQpJE3XtgJUPu4x7x5fcBjqZ3oKHDJfwBYdWk=
+github.com/drone/spec v0.0.0-20230919004456-7455b8913ff5/go.mod h1:KyQZA9qwuscbbM7yTrtZg25Wammoc5GKwaRem8kDA5k=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
