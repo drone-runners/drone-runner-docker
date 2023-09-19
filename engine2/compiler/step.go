@@ -25,7 +25,13 @@ func convertStep(stage *harness.Stage, step *harness.Step) []*engine.Step {
 		dst.WorkingDir = "/gitness"
 		setupScript(dst, v.Run, "linux")
 		return []*engine.Step{dst}
-
+	case *harness.StepRun:
+		dst := createRunStep(step, v)
+		dst.WorkingDir = "/gitness"
+		if len(v.Script) > 0 {
+			setupScript(dst, v.Script[0], "linux")
+		}
+		return []*engine.Step{dst}
 	case *harness.StepBackground:
 		dst := createStepBackground(step, v)
 		setupScript(dst, v.Run, "linux")

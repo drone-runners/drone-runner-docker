@@ -209,8 +209,8 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 			Options: c.NetworkOpts,
 		},
 		Platform: engine.Platform{
-			OS:   platform_.Os.String(),
-			Arch: platform_.Arch.String(),
+			OS:   platform_.Os,
+			Arch: platform_.Arch,
 			// Variant: platform_.Variant,
 			// Version: platform_.Version,
 		},
@@ -371,7 +371,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	}
 
 	// create internal steps if build running in debug mode
-	if c.Tmate.Enabled && args.Build.Debug && platform_.Os.String() != "windows" {
+	if c.Tmate.Enabled && args.Build.Debug && platform_.Os != "windows" {
 		// first we need to add an internal setup step to the pipeline
 		// to copy over the tmate binary. Internal steps are not visible
 		// to the end user.

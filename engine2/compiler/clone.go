@@ -30,7 +30,7 @@ func createClone(platform *harness.Platform, clone *harness.Clone) *engine.Step 
 // helper function returns the clone image based on the
 // target operating system.
 func cloneImage(platform *harness.Platform) string {
-	switch platform.Os.String() {
+	switch platform.Os {
 	case "windows":
 		return "drone/git:latest"
 	default:

@@ -185,10 +185,43 @@ func ExpandStep(step *schema.Step, inputs map[string]interface{}) {
 		}
 
 	case *schema.StepGroup:
+		for _, vv := range spec.Steps {
+			ExpandStep(vv, inputs)
+		}
 	case *schema.StepParallel:
+		for _, vv := range spec.Steps {
+			ExpandStep(vv, inputs)
+		}
 	case *schema.StepRun:
+		for i, s := range spec.Script {
+			spec.Script[i] = Expand(s, inputs)
+		}
+		for k, v := range spec.Envs {
+			spec.Envs[k] = Expand(v, inputs)
+		}
+		if spec.Reports != nil {
+			for _, report := range spec.Reports {
+				for i, s := range report.Path {
+					report.Path[i] = Expand(s, inputs)
+				}
+			}
+		}
+		if container := spec.Container; container != nil {
+			container.Image = Expand(container.Image, inputs)
+			container.Connector = Expand(container.Connector, inputs)
+			container.Entrypoint = Expand(container.Entrypoint, inputs)
+			for i, s := range container.Args {
+				container.Args[i] = Expand(s, inputs)
+			}
+		}
 	case *schema.StepPlugin:
+		// NOTE
+		// this case should never happen. we find and replace
+		// all plugins with the plugin steps.
 	case *schema.StepTemplate:
+		// NOTE
+		// this case should never happen. we find and replace
+		// all templates with the template steps.
 	case *schema.StepTest:
 	}
 }
