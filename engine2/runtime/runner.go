@@ -22,12 +22,11 @@ import (
 
 	"github.com/drone/drone-go/drone"
 
+	"github.com/drone-runners/drone-runner-docker/engine2/script"
 	harness "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
 	"github.com/drone/spec/dist/go/parse/resolver"
-
-	script "github.com/drone-runners/drone-runner-docker/engine2/script"
 	"github.com/drone/spec/dist/go/parse/walk"
 )
 
