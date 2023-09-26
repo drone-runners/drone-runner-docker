@@ -150,7 +150,13 @@ func ExpandStep(step *schema.Step, inputs map[string]interface{}) {
 		if ok {
 			mm, ok := m.(map[string]interface{})
 			if ok {
-				mm[k] = v
+				if s, isstr := v.(string); isstr {
+					// if the pipeline defines a template or plugin,
+					// and uses an expression as the input, expand now
+					mm[k] = Expand(s, inputs)
+				} else {
+					mm[k] = v
+				}
 			}
 		}
 	}
