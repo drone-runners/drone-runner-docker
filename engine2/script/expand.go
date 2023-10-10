@@ -21,7 +21,7 @@ import (
 	schema "github.com/drone/spec/dist/go"
 )
 
-var pattern = regexp.MustCompile(`\${{(.*)}}`)
+var pattern = regexp.MustCompile(`\${{(.*?)}}`)
 
 // Expand expands the script inside the text snippet.
 func Expand(code string, inputs map[string]interface{}) string {
