@@ -27,3 +27,18 @@ func TestExpand(t *testing.T) {
 		t.Errorf("want expanded variable %s, got %s", want, got)
 	}
 }
+
+func TestExpandMultiple(t *testing.T) {
+	inputs := map[string]interface{}{
+		"pipeline": map[string]interface{}{
+			"number": 13213,
+		},
+		"inputs": map[string]interface{}{
+			"version": "1.0.0",
+		},
+	}
+	s := Expand("golang:${{inputs.version}}-build.${{pipeline.number}}", inputs)
+	if got, want := s, "golang:1.0.0-build.13213"; got != want {
+		t.Errorf("want expanded variable %s, got %s", want, got)
+	}
+}
