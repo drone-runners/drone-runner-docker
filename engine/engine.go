@@ -7,7 +7,6 @@ package engine
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -30,12 +29,14 @@ import (
 // Opts configures the Docker engine.
 type Opts struct {
 	HidePull bool
+	TTY      bool
 }
 
 // Docker implements a Docker pipeline engine.
 type Docker struct {
 	client   client.APIClient
 	hidePull bool
+	TTY      bool
 }
 
 // New returns a new engine.
@@ -43,6 +44,7 @@ func New(client client.APIClient, opts Opts) *Docker {
 	return &Docker{
 		client:   client,
 		hidePull: opts.HidePull,
+		TTY:      opts.TTY,
 	}
 }
 
@@ -95,7 +97,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 
 	// launches the inernal setup steps
 	for _, step := range spec.Internal {
-		if err := e.create(ctx, spec, step, ioutil.Discard); err != nil {
+		if err := e.create(ctx, spec, step, io.Discard); err != nil {
 			logger.FromContext(ctx).
 				WithError(err).
 				WithField("container", step.ID).
@@ -246,7 +248,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		rc, pullerr := e.client.ImagePull(ctx, step.Image, pullopts)
 		if pullerr == nil {
 			if e.hidePull {
-				io.Copy(ioutil.Discard, rc)
+				io.Copy(io.Discard, rc)
 			} else {
 				jsonmessage.Copy(rc, output)
 			}
@@ -258,7 +260,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 	}
 
 	_, err := e.client.ContainerCreate(ctx,
-		toConfig(spec, step),
+		toConfig(spec, step, e.TTY),
 		toHostConfig(spec, step),
 		toNetConfig(spec, step),
 		step.ID,
@@ -273,7 +275,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		}
 
 		if e.hidePull {
-			io.Copy(ioutil.Discard, rc)
+			io.Copy(io.Discard, rc)
 		} else {
 			jsonmessage.Copy(rc, output)
 		}
@@ -282,7 +284,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		// once the image is successfully pulled we attempt to
 		// re-create the container.
 		_, err = e.client.ContainerCreate(ctx,
-			toConfig(spec, step),
+			toConfig(spec, step, e.TTY),
 			toHostConfig(spec, step),
 			toNetConfig(spec, step),
 			step.ID,
@@ -376,7 +378,11 @@ func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (lo
 		return nil, err
 	}
 
-	stdcopy.StdCopy(output, output, logs)
+	if e.TTY {
+		io.Copy(output, logs)
+	} else {
+		stdcopy.StdCopy(output, output, logs)
+	}
 
 	return logs, nil
 }
@@ -397,7 +403,12 @@ func (e *Docker) tail(ctx context.Context, id string, output io.Writer) error {
 	}
 
 	go func() {
-		stdcopy.StdCopy(output, output, logs)
+		if e.TTY {
+			io.Copy(output, logs)
+		} else {
+			stdcopy.StdCopy(output, output, logs)
+		}
+
 		logs.Close()
 	}()
 	return nil

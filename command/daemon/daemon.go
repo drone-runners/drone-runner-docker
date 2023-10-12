@@ -83,6 +83,7 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 
 	opts := engine.Opts{
 		HidePull: !config.Docker.Stream,
+		TTY:      config.Docker.TTY,
 	}
 	engine, err := engine.NewEnv(opts)
 	if err != nil {
