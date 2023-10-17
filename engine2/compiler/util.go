@@ -140,7 +140,7 @@ func convertPullPolicy(s string) engine.PullPolicy {
 
 // helper function returns true if the environment variable
 // is restricted for internal-use only.
-func isRestrictedVariable(env map[string]*manifest.Variable) bool {
+func isRestrictedVariable(env map[string]string) bool {
 	for _, name := range restrictedVars {
 		if _, ok := env[name]; ok {
 			return true

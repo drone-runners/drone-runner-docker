@@ -354,6 +354,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				step_.Volumes = append(step_.Volumes, mount)
 				step_.Labels = stageLabels
 				step_.ExtraHosts = append(step_.ExtraHosts, c.ExtraHosts...)
+				step_.Privileged = c.isPrivileged(step_)
 
 				if src.When != nil {
 					if when := src.When.Eval; when != "" {
@@ -544,6 +545,36 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	}
 
 	return spec, nil
+}
+
+// isPrivileged checks whether the privileged flag should be set to true for the step or not.
+func (c *CompilerImpl) isPrivileged(step *engine.Step) bool {
+	// privileged-by-default containers are only
+	// enabled for plugins steps that do not define
+	// commands, command, or entrypoint.
+	if len(step.Command) > 0 {
+		return false
+	}
+	if len(step.Entrypoint) > 0 {
+		return false
+	}
+
+	// privileged-by-default mode is disabled if the
+	// pipeline step attempts to use an environment
+	// variable restricted for internal use only.
+	if isRestrictedVariable(step.Envs) {
+		return false
+	}
+	// if the container image matches any image
+	// in the whitelist, return true.
+	for _, img := range c.Privileged {
+		a := img
+		b := step.Image
+		if image.Match(a, b) {
+			return true
+		}
+	}
+	return false
 }
 
 // helper function attempts to find and return the named secret.
