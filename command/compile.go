@@ -30,19 +30,20 @@ import (
 type compileCommand struct {
 	*internal.Flags
 
-	Source      *os.File
-	Privileged  []string
-	Networks    []string
-	Volumes     map[string]string
-	Environ     map[string]string
-	Labels      map[string]string
-	Secrets     map[string]string
-	Resources   compiler.Resources
-	Tmate       compiler.Tmate
-	Clone       bool
-	Config      string
-	StopSignal  string
-	StopTimeout time.Duration
+	Source         *os.File
+	Privileged     []string
+	Networks       []string
+	Volumes        map[string]string
+	Environ        map[string]string
+	Labels         map[string]string
+	Secrets        map[string]string
+	Resources      compiler.Resources
+	Tmate          compiler.Tmate
+	Clone          bool
+	Config         string
+	StopSignal     string
+	StopTimeout    time.Duration
+	StopTimeoutMax time.Duration
 }
 
 func (c *compileCommand) run(*kingpin.ParseContext) error {
@@ -102,16 +103,17 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Environ:     provider.Static(c.Environ),
-		Labels:      c.Labels,
-		Resources:   c.Resources,
-		Tmate:       c.Tmate,
-		Privileged:  append(c.Privileged, compiler.Privileged...),
-		Networks:    c.Networks,
-		Volumes:     c.Volumes,
-		StopSignal:  c.StopSignal,
-		StopTimeout: c.StopTimeout,
-		Secret:      secret.StaticVars(c.Secrets),
+		Environ:        provider.Static(c.Environ),
+		Labels:         c.Labels,
+		Resources:      c.Resources,
+		Tmate:          c.Tmate,
+		Privileged:     append(c.Privileged, compiler.Privileged...),
+		Networks:       c.Networks,
+		Volumes:        c.Volumes,
+		StopSignal:     c.StopSignal,
+		StopTimeout:    c.StopTimeout,
+		StopTimeoutMax: c.StopTimeoutMax,
+		Secret:         secret.StaticVars(c.Secrets),
 		Registry: registry.Combine(
 			registry.File(c.Config),
 		),
@@ -202,6 +204,9 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("stop-timeout", "docker stop timeout").
 		DurationVar(&c.StopTimeout)
+
+	cmd.Flag("stop-timeout-max", "docker stop timeout max value").
+		DurationVar(&c.StopTimeoutMax)
 
 	cmd.Flag("stop-signal", "docker stop signal").
 		StringVar(&c.StopSignal)

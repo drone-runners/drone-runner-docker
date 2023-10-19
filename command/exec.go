@@ -40,28 +40,29 @@ import (
 type execCommand struct {
 	*internal.Flags
 
-	Source      *os.File
-	Include     []string
-	Exclude     []string
-	Privileged  []string
-	Networks    []string
-	Volumes     map[string]string
-	Environ     map[string]string
-	Labels      map[string]string
-	Secrets     map[string]string
-	Resources   compiler.Resources
-	Tmate       compiler.Tmate
-	Clone       bool
-	Config      string
-	Pretty      bool
-	Procs       int64
-	Debug       bool
-	Trace       bool
-	Dump        bool
-	PublicKey   string
-	PrivateKey  string
-	StopSignal  string
-	StopTimeout time.Duration
+	Source         *os.File
+	Include        []string
+	Exclude        []string
+	Privileged     []string
+	Networks       []string
+	Volumes        map[string]string
+	Environ        map[string]string
+	Labels         map[string]string
+	Secrets        map[string]string
+	Resources      compiler.Resources
+	Tmate          compiler.Tmate
+	Clone          bool
+	Config         string
+	Pretty         bool
+	Procs          int64
+	Debug          bool
+	Trace          bool
+	Dump           bool
+	PublicKey      string
+	PrivateKey     string
+	StopSignal     string
+	StopTimeout    time.Duration
+	StopTimeoutMax time.Duration
 }
 
 func (c *execCommand) run(*kingpin.ParseContext) error {
@@ -121,16 +122,17 @@ func (c *execCommand) run(*kingpin.ParseContext) error {
 
 	// compile the pipeline to an intermediate representation.
 	comp := &compiler.Compiler{
-		Environ:     provider.Static(c.Environ),
-		Labels:      c.Labels,
-		Resources:   c.Resources,
-		Tmate:       c.Tmate,
-		Privileged:  append(c.Privileged, compiler.Privileged...),
-		Networks:    c.Networks,
-		Volumes:     c.Volumes,
-		Secret:      secret.StaticVars(c.Secrets),
-		StopSignal:  c.StopSignal,
-		StopTimeout: c.StopTimeout,
+		Environ:        provider.Static(c.Environ),
+		Labels:         c.Labels,
+		Resources:      c.Resources,
+		Tmate:          c.Tmate,
+		Privileged:     append(c.Privileged, compiler.Privileged...),
+		Networks:       c.Networks,
+		Volumes:        c.Volumes,
+		Secret:         secret.StaticVars(c.Secrets),
+		StopSignal:     c.StopSignal,
+		StopTimeout:    c.StopTimeout,
+		StopTimeoutMax: c.StopTimeoutMax,
 		Registry: registry.Combine(
 			registry.File(c.Config),
 		),
@@ -368,6 +370,9 @@ func registerExec(app *kingpin.Application) {
 
 	cmd.Flag("stop-timeout", "docker stop timeout").
 		DurationVar(&c.StopTimeout)
+
+	cmd.Flag("stop-timeout-max", "docker stop timeout max value").
+		DurationVar(&c.StopTimeoutMax)
 
 	cmd.Flag("stop-signal", "docker stop signal").
 		StringVar(&c.StopSignal)

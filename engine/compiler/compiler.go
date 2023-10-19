@@ -131,6 +131,11 @@ type Compiler struct {
 	// docker stop timeout duration. Note that this must be
 	// set in conjunction with the stop signal.
 	StopTimeout time.Duration
+
+	// StopTimeoutMax is an optional field that sets the maximum
+	// docker stop timeout. Note that this must be set to enable
+	// stop timeouts.
+	StopTimeoutMax time.Duration
 }
 
 // Compile compiles the configuration file.
@@ -495,11 +500,12 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 		if step.StopTimeout == 0 {
 			step.StopTimeout = c.StopTimeout
-		} else if step.StopTimeout > c.StopTimeout {
-			// if the user configures a timeout that is
-			// greater than the global timeout, the user
-			// timeout is overriden.
-			step.StopTimeout = time.Minute
+		}
+		// if the user configures a timeout that is
+		// greater than the global timeout, the user
+		// timeout is overriden.
+		if step.StopTimeout > c.StopTimeoutMax {
+			step.StopTimeout = c.StopTimeoutMax
 		}
 	}
 
