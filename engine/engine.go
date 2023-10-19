@@ -137,6 +137,16 @@ func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 
 	// stop all containers
 	for _, step := range append(spec.Steps, spec.Internal...) {
+		// if the user specifies an alternate signal that is not SIGKILL
+		// we use "docker stop" for the specified timeout period.
+		if step.StopSignal != "" && step.StopSignal != "9" {
+			// TODO the "docker stop" command accepts a signal parameter
+			// but the current version of the API defaults to SIGTERM. It
+			// is possible a newer version of the Go library would expose
+			// this parameter, at which point we can use step.StopSignal.
+			e.client.ContainerStop(ctx, step.ID, &step.StopTimeout)
+		}
+
 		if err := e.client.ContainerKill(ctx, step.ID, "9"); err != nil && !client.IsErrNotFound(err) && !errdefs.IsConflict(err) {
 			logger.FromContext(ctx).
 				WithError(err).
