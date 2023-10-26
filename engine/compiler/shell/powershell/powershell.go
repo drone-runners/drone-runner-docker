@@ -39,7 +39,7 @@ if ($Env:DRONE_NETRC_MACHINE) {
 machine $Env:DRONE_NETRC_MACHINE
 login $Env:DRONE_NETRC_USERNAME
 password $Env:DRONE_NETRC_PASSWORD
-"@ > (Join-Path $Env:USERPROFILE '_netrc');
+"@ > (Join-Path $Env:USERPROFILE '.netrc');
 }
 [Environment]::SetEnvironmentVariable("DRONE_NETRC_USERNAME", $null);
 [Environment]::SetEnvironmentVariable("DRONE_NETRC_PASSWORD", $null);
