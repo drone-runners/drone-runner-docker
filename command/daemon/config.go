@@ -73,6 +73,7 @@ type Config struct {
 	Resources struct {
 		Memory     int64    `envconfig:"DRONE_MEMORY_LIMIT"`
 		MemorySwap int64    `envconfig:"DRONE_MEMORY_SWAP_LIMIT"`
+		NanoCPUS   int64    `envconfig:"DRONE_NANOCPUS"`
 		CPUQuota   int64    `envconfig:"DRONE_CPU_QUOTA"`
 		CPUPeriod  int64    `envconfig:"DRONE_CPU_PERIOD"`
 		CPUShares  int64    `envconfig:"DRONE_CPU_SHARES"`

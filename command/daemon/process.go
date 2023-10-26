@@ -82,6 +82,7 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
 				MemorySwap: config.Resources.MemorySwap,
+				NanoCPUS:   config.Resources.NanoCPUS,
 				CPUQuota:   config.Resources.CPUQuota,
 				CPUPeriod:  config.Resources.CPUPeriod,
 				CPUShares:  config.Resources.CPUShares,

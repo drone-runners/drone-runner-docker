@@ -304,6 +304,9 @@ func registerExec(app *kingpin.Application) {
 	cmd.Flag("privileged", "privileged docker images").
 		StringsVar(&c.Privileged)
 
+	cmd.Flag("nanocpus", "container cpus").
+		Int64Var(&c.Resources.NanoCPUS)
+
 	cmd.Flag("cpu-period", "container cpu period").
 		Int64Var(&c.Resources.CPUPeriod)
 

@@ -75,6 +75,7 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 	}
 	if isUnlimited(step) == false {
 		config.Resources = container.Resources{
+			NanoCPUs:   step.NanoCPUS,
 			CPUPeriod:  step.CPUPeriod,
 			CPUQuota:   step.CPUQuota,
 			CpusetCpus: strings.Join(step.CPUSet, ","),
@@ -262,6 +263,7 @@ func toEnv(env map[string]string) []string {
 // returns true if the container has no resource limits.
 func isUnlimited(res *Step) bool {
 	return len(res.CPUSet) == 0 &&
+		res.NanoCPUS == 0 &&
 		res.CPUPeriod == 0 &&
 		res.CPUQuota == 0 &&
 		res.CPUShares == 0 &&

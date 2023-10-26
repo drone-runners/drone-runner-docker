@@ -50,6 +50,7 @@ var Privileged = []string{
 type Resources struct {
 	Memory     int64
 	MemorySwap int64
+	NanoCPUS   int64
 	CPUQuota   int64
 	CPUPeriod  int64
 	CPUShares  int64
@@ -463,6 +464,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		if step.ShmSize == 0 {
 			step.ShmSize = c.Resources.ShmSize
 		}
+		step.NanoCPUS = c.Resources.NanoCPUS
 		step.CPUPeriod = c.Resources.CPUPeriod
 		step.CPUQuota = c.Resources.CPUQuota
 		step.CPUShares = c.Resources.CPUShares
