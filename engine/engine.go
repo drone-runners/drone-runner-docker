@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"time"
 
@@ -87,10 +88,21 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 	if spec.Platform.OS == "windows" {
 		driver = "nat"
 	}
+	var ipma *network.IPAM = nil
+	if _, _, err := net.ParseCIDR(spec.Network.IPMASubnet); err == nil {
+		ipma = &network.IPAM{
+			Config: []network.IPAMConfig{
+				{
+					Subnet: spec.Network.IPMASubnet,
+				},
+			},
+		}
+	}
 	_, err := e.client.NetworkCreate(ctx, spec.Network.ID, types.NetworkCreate{
 		Driver:  driver,
 		Options: spec.Network.Options,
 		Labels:  spec.Network.Labels,
+		IPAM:    ipma,
 	})
 
 	// launches the inernal setup steps
