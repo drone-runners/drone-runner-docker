@@ -4,7 +4,11 @@
 
 package resource
 
-import "github.com/drone/runner-go/manifest"
+import (
+	"time"
+
+	"github.com/drone/runner-go/manifest"
+)
 
 var (
 	_ manifest.Resource          = (*Pipeline)(nil)
@@ -104,6 +108,8 @@ type (
 		Settings     map[string]*manifest.Parameter `json:"settings,omitempty"`
 		Shell        string                         `json:"shell,omitempty"`
 		ShmSize      manifest.BytesSize             `json:"shm_size,omitempty" yaml:"shm_size"`
+		StopSignal   string                         `json:"stop_signal,omitempty"  yaml:"stop_signal"`
+		StopTimeout  time.Duration                  `json:"stop_timeout,omitempty" yaml:"stop_timeout"`
 		User         string                         `json:"user,omitempty"`
 		Volumes      []*VolumeMount                 `json:"volumes,omitempty"`
 		When         manifest.Conditions            `json:"when,omitempty"`

@@ -3,4 +3,5 @@ drone-runner-docker.exe
 release/*
 .docker
 .env
+_NOTES*
 NOTES*

@@ -5,6 +5,8 @@
 package engine
 
 import (
+	"time"
+
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/pipeline/runtime"
 )
@@ -54,6 +56,8 @@ type (
 		RunPolicy    runtime.RunPolicy `json:"run_policy,omitempty"`
 		Secrets      []*Secret         `json:"secrets,omitempty"`
 		ShmSize      int64             `json:"shm_size,omitempty"`
+		StopSignal   string            `json:"stop_signal,omitempty"`
+		StopTimeout  time.Duration     `json:"stop_timeout,omitempty"`
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`
