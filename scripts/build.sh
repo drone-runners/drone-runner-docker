@@ -15,5 +15,8 @@ GOOS=linux GOARCH=arm64 go build -o release/linux/arm64/drone-runner-docker
 GOOS=linux GOARCH=arm   go build -o release/linux/arm/drone-runner-docker
 GOOS=linux GOARCH=ppc64le go build -o release/linux/ppc64le/drone-runner-docker
 
+# mac
+GOOS=darwin GOARCH=amd64 go build -o release/mac/drone-docker-runner
+
 # windows
 GOOS=windows go build -o release/windows/amd64/drone-runner-docker.exe
