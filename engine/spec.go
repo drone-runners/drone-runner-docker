@@ -15,11 +15,13 @@ type (
 	// required instructions for reproducible pipeline
 	// execution.
 	Spec struct {
-		Platform Platform  `json:"platform,omitempty"`
-		Steps    []*Step   `json:"steps,omitempty"`
-		Internal []*Step   `json:"internal,omitempty"`
-		Volumes  []*Volume `json:"volumes,omitempty"`
-		Network  Network   `json:"network"`
+		Platform            Platform          `json:"platform,omitempty"`
+		Steps               []*Step           `json:"steps,omitempty"`
+		Internal            []*Step           `json:"internal,omitempty"`
+		Volumes             []*Volume         `json:"volumes,omitempty"`
+		Network             Network           `json:"network"`
+		OutputVars          map[string]string `json:"output_vars,omitempty"`
+		OutputVariablesFile string            `json:"output_variables_file,omitempty"`
 	}
 
 	// Step defines a pipeline step.
@@ -57,6 +59,7 @@ type (
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`
+		Outputs      []string          `json:"outputs,omitempty"`
 	}
 
 	// Secret represents a secret variable.
@@ -165,4 +168,7 @@ func (s *Step) Clone() runtime.Step {
 	*dst = *s
 	dst.Envs = environ.Combine(s.Envs)
 	return dst
+}
+func (s *Step) GetOutputs() []string {
+	return s.Outputs
 }

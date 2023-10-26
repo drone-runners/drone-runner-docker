@@ -6,6 +6,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -44,7 +45,10 @@ type daemonCommand struct {
 
 func (c *daemonCommand) run(*kingpin.ParseContext) error {
 	// load environment variables from file.
-	godotenv.Load(c.envfile)
+	loadEnvErr := godotenv.Load(c.envfile)
+	if loadEnvErr != nil {
+		return fmt.Errorf("failed to load env file '%s': %s", c.envfile, loadEnvErr)
+	}
 
 	// load the configuration from the environment
 	config, err := fromEnviron()
@@ -128,12 +132,13 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 			config.Limit.Trusted,
 		),
 		Compiler: &compiler.Compiler{
-			Clone:          config.Runner.Clone,
-			Privileged:     append(config.Runner.Privileged, compiler.Privileged...),
-			Networks:       config.Runner.Networks,
-			NetworkOpts:    config.Runner.NetworkOpts,
-			NetrcCloneOnly: config.Netrc.CloneOnly,
-			Volumes:        config.Runner.Volumes,
+			Clone:               config.Runner.Clone,
+			Privileged:          append(config.Runner.Privileged, compiler.Privileged...),
+			Networks:            config.Runner.Networks,
+			NetworkOpts:         config.Runner.NetworkOpts,
+			NetrcCloneOnly:      config.Netrc.CloneOnly,
+			OutputVariablesFile: config.Runner.OutputVariablesFile,
+			Volumes:             config.Runner.Volumes,
 			Resources: compiler.Resources{
 				Memory:     config.Resources.Memory,
 				MemorySwap: config.Resources.MemorySwap,

@@ -5,6 +5,7 @@
 package engine
 
 import (
+	"archive/tar"
 	"context"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,7 @@ import (
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
+	"github.com/joho/godotenv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -222,7 +224,31 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 		}
 	}
 	// wait for the response
-	return e.waitRetry(ctx, step.ID)
+	state, err := e.waitRetry(ctx, step.ID)
+	if err == nil {
+		//read file from container before it is removed
+		tarStream, _, contErr := e.client.CopyFromContainer(ctx, step.ID, spec.OutputVariablesFile)
+		if contErr == nil {
+			tr := tar.NewReader(tarStream)
+			if _, tarErr := tr.Next(); tarErr != nil {
+				logger.FromContext(ctx).
+					WithField("step id", step.ID).
+					WithError(tarErr).
+					Errorln("unable to untar output variables file from docker volume")
+			}
+			// read tr into godotenv
+			env, envErr := godotenv.Parse(tr)
+			if envErr != nil {
+				logger.FromContext(ctx).
+					WithField("step id", step.ID).
+					WithError(envErr).
+					Errorln("unable to read output variables file")
+			}
+			state.OutputVariables = env
+		}
+	}
+
+	return state, err
 }
 
 //
