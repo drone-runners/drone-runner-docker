@@ -42,6 +42,7 @@ var Privileged = []string{
 	"plugins/ecr",
 	"plugins/gcr",
 	"plugins/heroku",
+	"plugins/gar",
 }
 
 // Resources defines container resource constraints. These
