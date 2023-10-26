@@ -89,6 +89,16 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 		config.Binds = toVolumeSlice(spec, step)
 		config.Mounts = toVolumeMounts(spec, step)
 	}
+
+	if step.NVidia != nil {
+		config.DeviceRequests = []container.DeviceRequest{{
+			DeviceIDs:    []string{step.NVidia.Device},
+			Capabilities: [][]string{{"gpu"}},
+			Options: map[string]string{
+				"capabilities": step.NVidia.Capabilities,
+			},
+		}}
+	}
 	return config
 }
 

@@ -49,6 +49,7 @@ type (
 		Name         string            `json:"name,omitempty"`
 		Network      string            `json:"network,omitempty"`
 		Networks     []string          `json:"networks,omitempty"`
+		NVidia       *NVidia           `json:"nvidia,omitempty"`
 		Privileged   bool              `json:"privileged,omitempty"`
 		Pull         PullPolicy        `json:"pull,omitempty"`
 		RunPolicy    runtime.RunPolicy `json:"run_policy,omitempty"`
@@ -57,6 +58,12 @@ type (
 		User         string            `json:"user,omitempty"`
 		Volumes      []*VolumeMount    `json:"volumes,omitempty"`
 		WorkingDir   string            `json:"working_dir,omitempty"`
+	}
+
+	// NVidia defines the NVidia mount settings.
+	NVidia struct {
+		Device       string `json:"device,omitempty"`
+		Capabilities string `json:"capabilities,omitempty"`
 	}
 
 	// Secret represents a secret variable.
