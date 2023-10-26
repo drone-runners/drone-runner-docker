@@ -13,7 +13,7 @@ import (
 )
 
 // returns a container configuration.
-func toConfig(spec *Spec, step *Step) *container.Config {
+func toConfig(spec *Spec, step *Step, TTY bool) *container.Config {
 	config := &container.Config{
 		Image:        step.Image,
 		Labels:       step.Labels,
@@ -22,7 +22,7 @@ func toConfig(spec *Spec, step *Step) *container.Config {
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
-		Tty:          false,
+		Tty:          TTY,
 		OpenStdin:    false,
 		StdinOnce:    false,
 		ArgsEscaped:  false,
