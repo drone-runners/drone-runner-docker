@@ -241,7 +241,6 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		environ.Repo(args.Repo),
 		environ.Build(args.Build),
 		environ.Stage(args.Stage),
-		environ.Link(args.Repo, args.Build, args.System),
 		environ.Netrc(args.Netrc),
 		clone.Environ(clone.Config{
 			SkipVerify: clone_.Insecure,
