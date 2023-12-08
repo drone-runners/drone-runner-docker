@@ -6,6 +6,7 @@ package resource
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/drone/runner-go/manifest"
 
@@ -47,10 +48,10 @@ func lint(pipeline *Pipeline) error {
 			return errors.New("Linter: invalid or missing step name")
 		}
 		if len(step.Name) > 100 {
-			return errors.New("Linter: step name cannot exceed 100 characters")
+			return fmt.Errorf("Linter: step name (%s) cannot exceed 100 characters", step.Name)
 		}
 		if _, ok := names[step.Name]; ok {
-			return errors.New("Linter: duplicate step name")
+			return fmt.Errorf("Linter: duplicate step name (%s)", step.Name)
 		}
 		names[step.Name] = struct{}{}
 	}

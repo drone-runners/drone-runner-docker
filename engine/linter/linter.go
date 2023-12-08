@@ -15,10 +15,6 @@ import (
 	"github.com/drone/runner-go/manifest"
 )
 
-// ErrDuplicateStepName is returned when two Pipeline steps
-// have the same name.
-var ErrDuplicateStepName = errors.New("linter: duplicate step names")
-
 // Opts provides linting options.
 type Opts struct {
 	Trusted bool
@@ -53,22 +49,6 @@ func checkPipeline(pipeline *resource.Pipeline, trusted bool) error {
 	return nil
 }
 
-// func checkNames(pipeline *resource.Pipeline) error {
-// 	names := map[string]struct{}{}
-// 	if !pipeline.Clone.Disable {
-// 		names["clone"] = struct{}{}
-// 	}
-// 	steps := append(pipeline.Services, pipeline.Steps...)
-// 	for _, step := range steps {
-// 		_, ok := names[step.Name]
-// 		if ok {
-// 			return ErrDuplicateStepName
-// 		}
-// 		names[step.Name] = struct{}{}
-// 	}
-// 	return nil
-// }
-
 func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 	steps := append(pipeline.Services, pipeline.Steps...)
 	names := map[string]struct{}{}
@@ -83,7 +63,7 @@ func checkSteps(pipeline *resource.Pipeline, trusted bool) error {
 		// unique list of names
 		_, ok := names[step.Name]
 		if ok {
-			return ErrDuplicateStepName
+			return fmt.Errorf("linter: duplicate step names (%s)", step.Name)
 		}
 		names[step.Name] = struct{}{}
 
