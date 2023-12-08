@@ -5,6 +5,8 @@
 package resource
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/drone/runner-go/manifest"
@@ -48,7 +50,7 @@ func TestParse(t *testing.T) {
 			Clone: manifest.Clone{
 				Depth: 50,
 			},
-			Deps: []string{"dependency"},
+			Deps:        []string{"dependency"},
 			PullSecrets: []string{"dockerconfigjson"},
 			Trigger: manifest.Conditions{
 				Branch: manifest.Condition{
@@ -169,5 +171,24 @@ func TestLint(t *testing.T) {
 	p.Steps = []*Step{{Name: "build"}, {Name: ""}}
 	if err := lint(p); err == nil {
 		t.Errorf("Expect error when empty name")
+	}
+
+	aVeryLongName := "a-" + strings.Repeat("very-", 100) + "long-name"
+	p.Steps = []*Step{{Name: aVeryLongName}}
+	err := lint(p)
+	if err == nil {
+		t.Errorf("Expect error when a name exceeds 100 characters")
+	}
+	if err.Error() != fmt.Sprintf("Linter: step name (%s) cannot exceed 100 characters", aVeryLongName) {
+		t.Errorf("Expected error about a very long name, got: %s", err.Error())
+	}
+
+	p.Steps = []*Step{{Name: "build"}, {Name: "build"}}
+	err = lint(p)
+	if err == nil {
+		t.Errorf("Expect error when duplicate name")
+	}
+	if err.Error() != "Linter: duplicate step name (build)" {
+		t.Errorf("Expected duplicate step name error, got: %s", err.Error())
 	}
 }
