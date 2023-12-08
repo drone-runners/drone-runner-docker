@@ -227,6 +227,12 @@ func toMount(source *Volume, target *VolumeMount) mount.Mount {
 			SizeBytes: source.EmptyDir.SizeLimit,
 			Mode:      0700,
 		}
+
+		// The directory /dev/shm is always "drwxrwxrwt root root" as it relies
+		// on the sticky bit.
+		if to.Target == "/dev/shm" {
+			to.TmpfsOptions.Mode = 1777;
+		}
 	}
 	return to
 }
