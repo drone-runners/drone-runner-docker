@@ -18,6 +18,7 @@ import (
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -71,7 +72,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		if vol.EmptyDir == nil {
 			continue
 		}
-		_, err := e.client.VolumeCreate(ctx, volume.VolumeCreateBody{
+		_, err := e.client.VolumeCreate(ctx, volume.CreateOptions{
 			Name:   vol.EmptyDir.ID,
 			Driver: "local",
 			Labels: vol.EmptyDir.Labels,
@@ -129,7 +130,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 func (e *Docker) Destroy(ctx context.Context, specv runtime.Spec) error {
 	spec := specv.(*Spec)
 
-	removeOpts := types.ContainerRemoveOptions{
+	removeOpts := container.RemoveOptions{
 		Force:         true,
 		RemoveLinks:   false,
 		RemoveVolumes: true,
@@ -261,6 +262,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		toConfig(spec, step),
 		toHostConfig(spec, step),
 		toNetConfig(spec, step),
+		&ocispec.Platform{},
 		step.ID,
 	)
 
@@ -285,6 +287,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 			toConfig(spec, step),
 			toHostConfig(spec, step),
 			toNetConfig(spec, step),
+			&ocispec.Platform{},
 			step.ID,
 		)
 	}
@@ -310,7 +313,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 
 // helper function emulates the `docker start` command.
 func (e *Docker) start(ctx context.Context, id string) error {
-	return e.client.ContainerStart(ctx, id, types.ContainerStartOptions{})
+	return e.client.ContainerStart(ctx, id, container.StartOptions{})
 }
 
 // helper function emulates the `docker wait` command, blocking
@@ -359,7 +362,7 @@ func (e *Docker) wait(ctx context.Context, id string) (*runtime.State, error) {
 
 // helper function emulates the `docker logs -f` command, streaming all container logs until the container stops.
 func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (logs io.ReadCloser, err error) {
-	opts := types.ContainerLogsOptions{
+	opts := container.LogsOptions{
 		Follow:     true,
 		ShowStdout: true,
 		ShowStderr: true,
@@ -383,7 +386,7 @@ func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (lo
 
 // helper function emulates the `docker logs -f` command, streaming all container logs until the container stops.
 func (e *Docker) tail(ctx context.Context, id string, output io.Writer) error {
-	opts := types.ContainerLogsOptions{
+	opts := container.LogsOptions{
 		Follow:     true,
 		ShowStdout: true,
 		ShowStderr: true,
