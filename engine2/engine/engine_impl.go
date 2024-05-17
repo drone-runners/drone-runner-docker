@@ -25,6 +25,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 // Opts configures the Docker engine.
@@ -70,7 +71,7 @@ func (e *Docker) Setup(ctx context.Context, spec *Spec) error {
 		if vol.EmptyDir == nil {
 			continue
 		}
-		_, err := e.client.VolumeCreate(ctx, volume.VolumeCreateBody{
+		_, err := e.client.VolumeCreate(ctx, volume.CreateOptions{
 			Name:   vol.EmptyDir.ID,
 			Driver: "local",
 			Labels: vol.EmptyDir.Labels,
@@ -127,7 +128,7 @@ func (e *Docker) Setup(ctx context.Context, spec *Spec) error {
 // Destroy the pipeline environment.
 func (e *Docker) Destroy(ctx context.Context, spec *Spec) error {
 
-	removeOpts := types.ContainerRemoveOptions{
+	removeOpts := container.RemoveOptions{
 		Force:         true,
 		RemoveLinks:   false,
 		RemoveVolumes: true,
@@ -257,6 +258,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		toConfig(spec, step),
 		toHostConfig(spec, step),
 		toNetConfig(spec, step),
+		&ocispec.Platform{},
 		step.ID,
 	)
 
@@ -281,6 +283,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 			toConfig(spec, step),
 			toHostConfig(spec, step),
 			toNetConfig(spec, step),
+			&ocispec.Platform{},
 			step.ID,
 		)
 	}
@@ -306,7 +309,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 
 // helper function emulates the `docker start` command.
 func (e *Docker) start(ctx context.Context, id string) error {
-	return e.client.ContainerStart(ctx, id, types.ContainerStartOptions{})
+	return e.client.ContainerStart(ctx, id, container.StartOptions{})
 }
 
 // helper function emulates the `docker wait` command, blocking
@@ -356,7 +359,7 @@ func (e *Docker) wait(ctx context.Context, id string) (*State, error) {
 // helper function emulates the `docker logs -f` command, streaming all
 // container logs until the container stops.
 func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (logs io.ReadCloser, err error) {
-	opts := types.ContainerLogsOptions{
+	opts := container.LogsOptions{
 		Follow:     true,
 		ShowStdout: true,
 		ShowStderr: true,
@@ -382,7 +385,7 @@ func (e *Docker) deferTail(ctx context.Context, id string, output io.Writer) (lo
 // container logs until the container stops.
 // DEPRECATED?
 func (e *Docker) tail(ctx context.Context, id string, output io.Writer) error {
-	opts := types.ContainerLogsOptions{
+	opts := container.LogsOptions{
 		Follow:     true,
 		ShowStdout: true,
 		ShowStderr: true,
