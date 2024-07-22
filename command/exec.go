@@ -38,16 +38,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 
-	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
-	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
-	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
-	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
-	script "github.com/drone-runners/drone-runner-docker/engine2/script"
-	harness "github.com/drone/spec/dist/go"
-	"github.com/drone/spec/dist/go/parse/expand"
-	"github.com/drone/spec/dist/go/parse/normalize"
-	"github.com/drone/spec/dist/go/parse/resolver"
-	"github.com/drone/spec/dist/go/parse/walk"
+	harness "github.com/bradrydzewski/spec/yaml"
+	"github.com/bradrydzewski/spec/yaml/utils/expand"
+	"github.com/bradrydzewski/spec/yaml/utils/normalize"
+	"github.com/bradrydzewski/spec/yaml/utils/resolver"
+	"github.com/bradrydzewski/spec/yaml/utils/walk"
+	compiler3 "github.com/drone-runners/drone-runner-docker/engine3/compiler"
+	engine3 "github.com/drone-runners/drone-runner-docker/engine3/engine"
+	"github.com/drone-runners/drone-runner-docker/engine3/inputs"
+	runtime3 "github.com/drone-runners/drone-runner-docker/engine3/runtime"
+	script "github.com/drone-runners/drone-runner-docker/engine3/script"
 )
 
 type execCommand struct {
@@ -84,7 +84,7 @@ func (c *execCommand) run(pctx *kingpin.ParseContext) error {
 	}
 
 	// if using the v1 yaml, use the new v1 run function
-	if regexp.MustCompilePOSIX(`^spec:`).Match(rawsource) {
+	if regexp.MustCompilePOSIX(`^pipeline:`).Match(rawsource) {
 		return c.runv1(pctx)
 	}
 
@@ -288,15 +288,13 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 	expand.Expand(config)
 
 	// expand templates and plugins
-	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
-		var path string
-		switch kind {
-		case "template":
-			path = filepath.Join(c.Templates, name+".yaml")
-		case "plugin":
-			path = filepath.Join(c.Plugins, name+".yaml")
+	resolve := func(name string) (*harness.Template, error) {
+		path := filepath.Join(c.Templates, name+".yaml")
+		schema, err := harness.ParseFile(path)
+		if err != nil {
+			return nil, err
 		}
-		return harness.ParseFile(path)
+		return schema.Template, nil
 	}
 	if err := resolver.Resolve(config, resolve); err != nil {
 		return err
@@ -311,7 +309,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 	inputParams["inputs"] = map[string]interface{}{}
 	inputParams["secrets"] = map[string]interface{}{
 		"get": func(s string) string {
-			v, _ := c.Secrets[s]
+			v := c.Secrets[s]
 			return v
 		},
 	}
@@ -337,11 +335,11 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
 		// use the normalized id to refer to the stage
 		// FIXME: this won't work in some cases, and will cause problems
-		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Id
+		c.Stage.Name = config.Pipeline.Stages[0].Id
 	}
 
 	// compile the pipeline to an intermediate representation.
-	comp := &compiler2.CompilerImpl{
+	comp := &compiler3.CompilerImpl{
 		Environ: provider.Static(c.Environ),
 		Labels:  c.Labels,
 		// TODO re-add
@@ -363,7 +361,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 		comp.Mount, _ = os.Getwd()
 	}
 
-	args := compiler2.Args{
+	args := compiler3.Args{
 		Config: config,
 		Build:  c.Build,
 		Netrc:  c.Netrc,
@@ -389,7 +387,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 					continue I
 				}
 			}
-			step.RunPolicy = engine2.RunNever
+			step.RunPolicy = engine3.RunNever
 		}
 	}
 
@@ -403,7 +401,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 			}
 			for _, name := range c.Exclude {
 				if step.Name == name {
-					step.RunPolicy = engine2.RunNever
+					step.RunPolicy = engine3.RunNever
 					continue E
 				}
 			}
@@ -412,7 +410,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 
 	// create a step object for each pipeline step.
 	for _, step := range plan.Steps {
-		if step.RunPolicy == engine2.RunNever {
+		if step.RunPolicy == engine3.RunNever {
 			continue
 		}
 		c.Stage.Steps = append(c.Stage.Steps, &drone.Step{
@@ -420,7 +418,7 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 			Number:    len(c.Stage.Steps) + 1,
 			Name:      step.Name,
 			Status:    drone.StatusPending,
-			ErrIgnore: step.ErrPolicy == engine2.ErrIgnore,
+			ErrIgnore: step.ErrPolicy == engine3.ErrIgnore,
 		})
 	}
 
@@ -457,12 +455,12 @@ func (c *execCommand) runv1(*kingpin.ParseContext) error {
 		),
 	)
 
-	engine, err := engine2.NewEnv(engine2.Opts{})
+	engine, err := engine3.NewEnv(engine3.Opts{})
 	if err != nil {
 		return err
 	}
 
-	err = runtime2.NewExecer(
+	err = runtime3.NewExecer(
 		pipeline.NopReporter(),
 		console.New(c.Pretty),
 		pipeline.NopUploader(),

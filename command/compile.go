@@ -6,10 +6,10 @@ package command
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -25,14 +25,13 @@ import (
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
-	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
-	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
-	harness "github.com/drone/spec/dist/go"
-	"github.com/drone/spec/dist/go/parse/expand"
-	"github.com/drone/spec/dist/go/parse/normalize"
-	"github.com/drone/spec/dist/go/parse/resolver"
-	"github.com/drone/spec/dist/go/parse/script"
-	"github.com/drone/spec/dist/go/parse/walk"
+	harness "github.com/bradrydzewski/spec/yaml"
+	"github.com/bradrydzewski/spec/yaml/utils/expand"
+	"github.com/bradrydzewski/spec/yaml/utils/normalize"
+	"github.com/bradrydzewski/spec/yaml/utils/resolver"
+	compiler3 "github.com/drone-runners/drone-runner-docker/engine3/compiler"
+	"github.com/drone-runners/drone-runner-docker/engine3/inputs"
+	"github.com/drone-runners/drone-runner-docker/engine3/script"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -48,6 +47,7 @@ type compileCommand struct {
 	Labels     map[string]string
 	Secrets    map[string]string
 	Resources  compiler.Resources
+	Templates  string
 	Tmate      compiler.Tmate
 	Clone      bool
 	Config     string
@@ -60,7 +60,7 @@ func (c *compileCommand) run(pctx *kingpin.ParseContext) error {
 	}
 
 	// if using the v1 yaml, use the new v1 run function
-	if regexp.MustCompilePOSIX(`^spec:`).Match(rawsource) {
+	if regexp.MustCompilePOSIX(`^pipeline:`).Match(rawsource) {
 		return c.runv1(pctx)
 	}
 
@@ -172,9 +172,14 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 	// expand templates and plugins
 	//
 
-	resolve := func(name, kind, typ, version string) (*harness.Config, error) {
-		// TODO implement me
-		return nil, errors.New("not found")
+	// expand templates and plugins
+	resolve := func(name string) (*harness.Template, error) {
+		path := filepath.Join(c.Templates, name+".yaml")
+		schema, err := harness.ParseFile(path)
+		if err != nil {
+			return nil, err
+		}
+		return schema.Template, nil
 	}
 	if err := resolver.Resolve(config, resolve); err != nil {
 		return err
@@ -189,33 +194,10 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 	inputParams := map[string]interface{}{}
 	inputParams["repo"] = inputs.Repo(c.Repo)
 	inputParams["build"] = inputs.Build(c.Build)
-	walk.Walk(config, func(v interface{}) error {
-		switch vv := v.(type) {
-		case *harness.Pipeline:
-			inputParams["inputs"] = inputs.Inputs(vv.Inputs, c.Build.Params)
-		case *harness.Step:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
-		case *harness.Stage:
-			if vv.Strategy != nil && vv.Strategy.Spec != nil {
-				if matrix, ok := vv.Strategy.Spec.(*harness.Matrix); ok {
-					for _, axis := range matrix.Include {
-						inputParams["matrix"] = axis
-					}
-				}
-			}
-			vv.Id = script.Expand(vv.Id, inputParams)
-			vv.Name = script.Expand(vv.Name, inputParams)
-		}
-		return nil
-	})
+	if config.Pipeline.Inputs != nil {
+		inputParams = inputs.Inputs(config.Pipeline.Inputs, c.Build.Params)
+	}
+	script.ExpandConfig(config, inputParams)
 
 	// normalize the configuration to ensure
 	// all steps have an identifier
@@ -226,11 +208,11 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 	if c.Stage.Name == "" || c.Stage.Name == "default" {
 		// use the normalized id to refer to the stage
 		// FIXME: this won't work in some cases, and will cause problems
-		c.Stage.Name = config.Spec.(*harness.Pipeline).Stages[0].Id
+		c.Stage.Name = config.Pipeline.Stages[0].Id
 	}
 
 	// compile the pipeline to an intermediate representation.
-	comp := &compiler2.CompilerImpl{
+	comp := &compiler3.CompilerImpl{
 		Environ: provider.Static(c.Environ),
 		Labels:  c.Labels,
 		// TODO re-add
@@ -252,7 +234,7 @@ func (c *compileCommand) runv1(*kingpin.ParseContext) error {
 		comp.Mount, _ = os.Getwd()
 	}
 
-	args := compiler2.Args{
+	args := compiler3.Args{
 		Config: config,
 		Build:  c.Build,
 		Netrc:  c.Netrc,
@@ -293,6 +275,9 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("secrets", "secret parameters").
 		StringMapVar(&c.Secrets)
+
+	cmd.Flag("templates", "template directory").
+		StringVar(&c.Templates)
 
 	cmd.Flag("environ", "environment variables").
 		StringMapVar(&c.Environ)
