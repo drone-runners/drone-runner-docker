@@ -104,7 +104,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 
 	// if we are dealing with the legacy drone yaml, use
 	// the legacy drone engine.
-	if !regexp.MustCompilePOSIX(`^spec:`).Match(data.Config.Data) {
+	if !regexp.MustCompilePOSIX(`^pipeline:`).Match(data.Config.Data) {
 		return s.LegacyRunner.RunAccepted(ctx, stage.ID)
 	}
 
