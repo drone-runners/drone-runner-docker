@@ -21,6 +21,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	dockerimage "github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
@@ -228,7 +229,7 @@ func (e *Docker) Run(ctx context.Context, spec *Spec, step *Step, output io.Writ
 
 func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.Writer) error {
 	// create pull options with encoded authorization credentials.
-	pullopts := types.ImagePullOptions{}
+	pullopts := dockerimage.PullOptions{}
 	if step.Auth != nil {
 		pullopts.RegistryAuth = auths.Header(
 			step.Auth.Username,
