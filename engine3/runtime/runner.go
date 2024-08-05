@@ -54,7 +54,7 @@ type Runner struct {
 	Exec func(context.Context, *engine.Spec, *pipeline.State) error
 
 	// Resolver resolves templates and plugins
-	Resolver func(name, kind, typ, version string, id int64) (*harness.Schema, error)
+	Resolver func(name string, id int64) (*harness.Template, error)
 
 	// LegacyRunner is used to run a legacy yaml configuration
 	// file from drone.
@@ -184,7 +184,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	// expand templates and plugins
 	lookupFunc := func(name string) (*harness.Template, error) {
-		return nil, nil //s.Resolver(name, kind, typ, version, state.Build.ID)
+		return s.Resolver(name, state.Build.ID)
 	}
 
 	// expand templates and plugins
