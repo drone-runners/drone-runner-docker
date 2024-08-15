@@ -48,9 +48,12 @@ func New(client client.APIClient, opts Opts) *Docker {
 	}
 }
 
-// NewEnv returns a new Engine from the environment.
-func NewEnv(opts Opts) (*Docker, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+// NewEnv returns a new Engine from the environment with optional overrides.
+func NewEnv(opts Opts, overrides ...client.Opt) (*Docker, error) {
+	options := append([]client.Opt{client.FromEnv}, overrides...)
+	cli, err := client.NewClientWithOpts(
+		options...,
+	)
 	if err != nil {
 		return nil, err
 	}
