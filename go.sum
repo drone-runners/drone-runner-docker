@@ -19,6 +19,8 @@ github.com/bradrydzewski/spec v1.0.1-0.20240721144557-91d495656d51 h1:OEeFYAZDWD
 github.com/bradrydzewski/spec v1.0.1-0.20240721144557-91d495656d51/go.mod h1:eSR6Yeu3LV1i8FnXq4IE2e9GgofEDQwWD64gofT80ng=
 github.com/bradrydzewski/spec v1.0.2 h1:spQ8nLjsV4IFieEqHAnob5S4Vfx+0EQG/L91mVVr3Eg=
 github.com/bradrydzewski/spec v1.0.2/go.mod h1:ZrrxQBqUvBoqAaH9ClsskjE3LPMHra+NbKdqDIQqRNQ=
+github.com/bradrydzewski/spec v1.0.3-0.20240809163303-3abd8862502c h1:cLSoU+fFaoTSVBO+OkE+tbBoHAcCpAJMAEyZ+ROTIzQ=
+github.com/bradrydzewski/spec v1.0.3-0.20240809163303-3abd8862502c/go.mod h1:ZrrxQBqUvBoqAaH9ClsskjE3LPMHra+NbKdqDIQqRNQ=
 github.com/buildkite/yaml v2.1.0+incompatible h1:xirI+ql5GzfikVNDmt+yeiXpf/v1Gt03qXTtT5WXdr8=
 github.com/buildkite/yaml v2.1.0+incompatible/go.mod h1:UoU8vbcwu1+vjZq01+KrpSeLBgQQIjL/H7Y6KwikUrI=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
