@@ -392,14 +392,14 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		removeCloneDeps(spec)
 	}
 
-	//Here we are injecting secrets created in one step to other steps because we create the secret in one step will cat/print the same secret in other step then masking won't work.
+	//Here we are injecting secrets created in one step to other steps because if we create the secret in one step and do cat/print the same secret in other step then masking won't work and secret will be exposed.
 	secretEnv := make(map[string][]byte)
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
-				secretEnv[s.Name+"$"+s.Env] = []byte(secret) //We are doing this because we want to retain Environment variable where the secrets belong to.
+				secretEnv[s.Name+"$"+s.Env] = []byte(secret) //We are doing this because we want to retain Environment variable where a secret belong to.
 			}
 		}
 	}
@@ -415,7 +415,8 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			}
 			fmt.Println("Name of step is ", step.Name)
 			if !isPresent(step.Secrets, e) {
-				//Here we are doing this because if we create the secret with same environment in other step then it may get overriden and usecase may break, so existing secret is not getting affected.
+				//Here we are doing this because if we create the secret with same environment variable name in other step as environment variables are getting injected in container
+				//then it may get overriden and usecase may break, so existing secret is not getting affected thus backward compatibility is ensured.
 				e.Env = "DRONE_PREFIX_" + e.Name
 				step.Secrets = append(step.Secrets, e)
 			}
