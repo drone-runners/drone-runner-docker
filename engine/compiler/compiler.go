@@ -5,7 +5,9 @@
 package compiler
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -390,11 +392,32 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		removeCloneDeps(spec)
 	}
 
+	//Here we are injecting secrets created in one step to other steps because we create the secret in one step will cat/print the same secret in other step then masking won't work.
+	secretEnv := make(map[string][]byte)
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
+				secretEnv[s.Name+"$"+s.Env] = []byte(secret) //We are doing this because we want to retain Environment variable where the secrets belong to.
+			}
+		}
+	}
+
+	for key, value := range secretEnv {
+		for _, step := range spec.Steps {
+			parts := strings.Split(key, "$") //Splitting by string contains name and environment variable.
+			e := &engine.Secret{
+				Name: parts[0], //Name
+				Data: value,
+				Mask: true,
+				Env:  parts[1], //Env var
+			}
+			fmt.Println("Name of step is ", step.Name)
+			if !isPresent(step.Secrets, e) {
+				//Here we are doing this because if we create the secret with same environment in other step then it may get overriden and usecase may break, so existing secret is not getting affected.
+				e.Env = "DRONE_PREFIX_" + e.Name
+				step.Secrets = append(step.Secrets, e)
 			}
 		}
 	}
@@ -527,6 +550,15 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	}
 
 	return spec
+}
+
+func isPresent(slice []*engine.Secret, e *engine.Secret) bool {
+	for _, item := range slice {
+		if item.Name == e.Name && bytes.Equal(item.Data, e.Data) && item.Env == e.Env && item.Mask == e.Mask {
+			return true
+		}
+	}
+	return false
 }
 
 // feature toggle that disables the check that restricts
