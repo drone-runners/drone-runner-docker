@@ -414,6 +414,8 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 				Env:  parts[1], //Env var
 			}
 			fmt.Println("Name of step is ", step.Name)
+
+			//We are ensuring that same secret won't be pushed twice in same step.
 			if !isPresent(step.Secrets, e) {
 				//Here we are doing this because if we create the secret with same environment variable name in other step as environment variables are getting injected in container
 				//then it may get overriden and usecase may break, so existing secret is not getting affected thus backward compatibility is ensured.
