@@ -390,12 +390,25 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		removeCloneDeps(spec)
 	}
 
+	// Creating an object to store a secret data which which will be injected across all steps for masking.
+	var secretData [][]byte
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
+				secretData = append(secretData, []byte(secret))
 			}
+		}
+	}
+
+	for _, value := range secretData {
+		for _, step := range spec.Steps {
+			e := &engine.Secret{
+				Data: value,
+				Mask: true,
+			}
+			step.Secrets = append(step.Secrets, e)
 		}
 	}
 
@@ -525,7 +538,6 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 		spec.Volumes = append(spec.Volumes, src)
 	}
-
 	return spec
 }
 
