@@ -5,7 +5,6 @@
 package compiler
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"strings"
@@ -392,45 +391,24 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 	}
 
 	// Creating an object to store a secret data which which will be injected across all steps for masking.
-	// We are creating Map<string, list<[]string>> because there may be multiple secrets names associated with same env var.
-	// User can create the same env var with different secret refernce in other steps so we are storing all secret names associated with environment variable.
-	secretEnv := make(map[string][]string)
-	secretData := make(map[string][]byte)
+	var secretData [][]byte
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
-				secretEnv[s.Env] = append(secretEnv[s.Env], s.Name)
-				secretData[s.Name] = []byte(secret)
+				secretData = append(secretData, []byte(secret))
 			}
 		}
 	}
 
-	for key, value := range secretEnv {
+	for _, value := range secretData {
 		for _, step := range spec.Steps {
-			for _, name := range value {
-				e := &engine.Secret{
-					Name: name,
-					Data: secretData[name],
-					Mask: true,
-					Env:  key,
-				}
-
-				//We are ensuring that same secret won't be pushed twice in same step.
-				if !isPresent(step.Secrets, e) {
-					// Here we are doing this because if we create the secret with same environment variable name in other step and environment variables are getting injected in container
-					// then it may get overriden and usecase may break, so existing secret env var is not getting affected thus backward compatibility is ensured.
-					// Example:
-					//  Step Name | Env Name | Secret ref
-					//   step 1   |  MY_SEC  |  check
-					//   step 2   |  MY_SEC  |  FOO
-					// If we don't add prefix in e.Env then MY_SEC env var declared in step 2 will be overriden by the secret refernce provided in step 1 and we don't want
-					// environment variable declared in step 2 to be affected thus we are making this change to retain the secret env var declared in step 2.
-					e.Env = "DRONE_SECRETS_" + step.Name + "_" + e.Name
-					step.Secrets = append(step.Secrets, e)
-				}
+			e := &engine.Secret{
+				Data: value,
+				Mask: true,
 			}
+			step.Secrets = append(step.Secrets, e)
 		}
 	}
 
@@ -561,15 +539,6 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		spec.Volumes = append(spec.Volumes, src)
 	}
 	return spec
-}
-
-func isPresent(slice []*engine.Secret, e *engine.Secret) bool {
-	for _, item := range slice {
-		if item.Name == e.Name && bytes.Equal(item.Data, e.Data) && item.Env == e.Env && item.Mask == e.Mask {
-			return true
-		}
-	}
-	return false
 }
 
 // feature toggle that disables the check that restricts

@@ -32,7 +32,9 @@ func toConfig(spec *Spec, step *Step) *container.Config {
 		config.Env = toEnv(step.Envs)
 	}
 	for _, sec := range step.Secrets {
-		config.Env = append(config.Env, sec.Env+"="+string(sec.Data))
+		if sec.Env != "" {
+			config.Env = append(config.Env, sec.Env+"="+string(sec.Data))
+		}
 	}
 
 	if len(step.Entrypoint) != 0 {
