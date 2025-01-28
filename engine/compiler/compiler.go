@@ -427,7 +427,7 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 					//   step 2   |  MY_SEC  |  FOO
 					// If we don't add prefix in e.Env then MY_SEC env var declared in step 2 will be overriden by the secret refernce provided in step 1 and we don't want
 					// environment variable declared in step 2 to be affected thus we are making this change to retain the secret env var declared in step 2.
-					e.Env = "DRONE_PREFIX_" + e.Name
+					e.Env = "DRONE_SECRETS_" + step.Name + "_" + e.Name
 					step.Secrets = append(step.Secrets, e)
 				}
 			}
