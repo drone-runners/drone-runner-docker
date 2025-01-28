@@ -7,7 +7,6 @@ package compiler
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -392,35 +391,45 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		removeCloneDeps(spec)
 	}
 
-	//Here we are injecting secrets created in one step to other steps because if we create the secret in one step and do cat/print the same secret in other step then masking won't work and secret will be exposed.
-	secretEnv := make(map[string][]byte)
+	// Creating an object to store a secret data which which will be injected across all steps for masking.
+	// We are creating Map<string, list<[]string>> because there may be multiple secrets names associated with same env var.
+	// User can create the same env var with different secret refernce in other steps so we are storing all secret names associated with environment variable.
+	secretEnv := make(map[string][]string)
+	secretData := make(map[string][]byte)
 	for _, step := range spec.Steps {
 		for _, s := range step.Secrets {
 			secret, ok := c.findSecret(ctx, args, s.Name)
 			if ok {
 				s.Data = []byte(secret)
-				secretEnv[s.Name+"$"+s.Env] = []byte(secret) //We are doing this because we want to retain Environment variable where a secret belong to.
+				secretEnv[s.Env] = append(secretEnv[s.Env], s.Name)
+				secretData[s.Name] = []byte(secret)
 			}
 		}
 	}
 
 	for key, value := range secretEnv {
 		for _, step := range spec.Steps {
-			parts := strings.Split(key, "$") //Splitting by string contains name and environment variable.
-			e := &engine.Secret{
-				Name: parts[0], //Name
-				Data: value,
-				Mask: true,
-				Env:  parts[1], //Env var
-			}
-			fmt.Println("Name of step is ", step.Name)
+			for _, name := range value {
+				e := &engine.Secret{
+					Name: name,
+					Data: secretData[name],
+					Mask: true,
+					Env:  key,
+				}
 
-			//We are ensuring that same secret won't be pushed twice in same step.
-			if !isPresent(step.Secrets, e) {
-				//Here we are doing this because if we create the secret with same environment variable name in other step as environment variables are getting injected in container
-				//then it may get overriden and usecase may break, so existing secret is not getting affected thus backward compatibility is ensured.
-				e.Env = "DRONE_PREFIX_" + e.Name
-				step.Secrets = append(step.Secrets, e)
+				//We are ensuring that same secret won't be pushed twice in same step.
+				if !isPresent(step.Secrets, e) {
+					// Here we are doing this because if we create the secret with same environment variable name in other step and environment variables are getting injected in container
+					// then it may get overriden and usecase may break, so existing secret env var is not getting affected thus backward compatibility is ensured.
+					// Example:
+					//  Step Name | Env Name | Secret ref
+					//   step 1   |  MY_SEC  |  check
+					//   step 2   |  MY_SEC  |  FOO
+					// If we don't add prefix in e.Env then MY_SEC env var declared in step 2 will be overriden by the secret refernce provided in step 1 and we don't want
+					// environment variable declared in step 2 to be affected thus we are making this change to retain the secret env var declared in step 2.
+					e.Env = "DRONE_PREFIX_" + e.Name
+					step.Secrets = append(step.Secrets, e)
+				}
 			}
 		}
 	}
@@ -551,7 +560,6 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		}
 		spec.Volumes = append(spec.Volumes, src)
 	}
-
 	return spec
 }
 
