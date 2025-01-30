@@ -32,6 +32,7 @@ type compileCommand struct {
 	Source     *os.File
 	Privileged []string
 	Networks   []string
+	Devices    []string
 	Volumes    map[string]string
 	Environ    map[string]string
 	Labels     map[string]string
@@ -105,6 +106,7 @@ func (c *compileCommand) run(*kingpin.ParseContext) error {
 		Tmate:      c.Tmate,
 		Privileged: append(c.Privileged, compiler.Privileged...),
 		Networks:   c.Networks,
+		Devices:    c.Devices,
 		Volumes:    c.Volumes,
 		Secret:     secret.StaticVars(c.Secrets),
 		Registry: registry.Combine(
@@ -167,6 +169,9 @@ func registerCompile(app *kingpin.Application) {
 
 	cmd.Flag("networks", "container networks").
 		StringsVar(&c.Networks)
+
+	cmd.Flag("devices", "container devices").
+		StringsVar(&c.Devices)
 
 	cmd.Flag("volumes", "container volumes").
 		StringMapVar(&c.Volumes)
