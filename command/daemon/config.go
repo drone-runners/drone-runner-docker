@@ -14,8 +14,9 @@ import (
 
 // Config stores the system configuration.
 type Config struct {
-	Debug bool `envconfig:"DRONE_DEBUG"`
-	Trace bool `envconfig:"DRONE_TRACE"`
+	Debug   bool `envconfig:"DRONE_DEBUG"`
+	Trace   bool `envconfig:"DRONE_TRACE"`
+	LogJSON bool `envconfig:"DRONE_LOG_JSON"`
 
 	Client struct {
 		Address    string `ignored:"true"`
