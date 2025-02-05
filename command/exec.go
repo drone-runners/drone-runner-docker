@@ -371,6 +371,9 @@ func registerExec(app *kingpin.Application) {
 			),
 		).BoolVar(&c.Pretty)
 
+	cmd.Flag("max-procs", "limits the number of concurrent steps the runner can execute simultaneously").
+		Int64Var(&c.Procs)
+
 	// shared pipeline flags
 	c.Flags = internal.ParseFlags(cmd)
 }
