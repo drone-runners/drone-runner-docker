@@ -5,6 +5,9 @@
 package engine
 
 import (
+	"archive/tar"
+	"bufio"
+	"bytes"
 	"context"
 	"io"
 	"io/ioutil"
@@ -18,6 +21,7 @@ import (
 	"github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/registry/auths"
+	"github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -197,6 +201,32 @@ func (e *Docker) Run(ctx context.Context, specv runtime.Spec, stepv runtime.Step
 	err := e.create(ctx, spec, step, output)
 	if err != nil {
 		return nil, errors.TrimExtraInfo(err)
+	}
+
+	// Copy init script to container only on windows
+	if spec.Platform.OS == "windows" && step.Envs["SHELL"] == "cmd.exe" {
+		if step.Name != "clone" {
+			fileContent := []byte(step.Envs["DRONE_SCRIPT"])
+
+			hdr := &tar.Header{
+				Name: "/drone/drone-build-script.cmd",
+				Size: int64(len(fileContent)),
+			}
+
+			tarBuf := new(bytes.Buffer)
+			tw := tar.NewWriter(tarBuf)
+
+			tw.WriteHeader(hdr)
+			io.Copy(tw, bytes.NewReader(fileContent))
+			tw.Close()
+
+			err = e.client.CopyToContainer(ctx, step.ID, "/", bufio.NewReader(tarBuf), types.CopyToContainerOptions{})
+			if err != nil {
+				logrus.Errorln(hdr.Name + ": " + err.Error())
+			} else {
+				logrus.Debugln("Copied build script: " + hdr.Name)
+			}
+		}
 	}
 	// start the container
 	err = e.start(ctx, step.ID)
