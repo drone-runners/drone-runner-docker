@@ -27,7 +27,11 @@ func setupScript(src *resource.Step, dst *engine.Step, os string) {
 // helper function configures the pipeline script for the
 // windows operating system.
 func setupScriptWindows(src *resource.Step, dst *engine.Step) {
-	dst.Entrypoint = []string{"powershell", "-noprofile", "-noninteractive", "-command"}
+	sh := "powershell"
+	if len(src.Shell) != 0 {
+		sh = src.Shell
+	}
+	dst.Entrypoint = []string{sh, "-noprofile", "-noninteractive", "-command"}
 	dst.Command = []string{"echo $Env:DRONE_SCRIPT | iex"}
 	dst.Envs["DRONE_SCRIPT"] = powershell.Script(src.Commands)
 	dst.Envs["SHELL"] = "powershell.exe"
@@ -36,7 +40,11 @@ func setupScriptWindows(src *resource.Step, dst *engine.Step) {
 // helper function configures the pipeline script for the
 // linux operating system.
 func setupScriptPosix(src *resource.Step, dst *engine.Step) {
-	dst.Entrypoint = []string{"/bin/sh", "-c"}
+	sh := "/bin/sh"
+	if len(src.Shell) != 0 {
+		sh = src.Shell
+	}
+	dst.Entrypoint = []string{sh, "-c"}
 	dst.Command = []string{`echo "$DRONE_SCRIPT" | /bin/sh`}
 	dst.Envs["DRONE_SCRIPT"] = shell.Script(src.Commands)
 }
