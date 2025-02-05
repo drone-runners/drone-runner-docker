@@ -24,6 +24,7 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/joho/godotenv v1.3.0
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.8
