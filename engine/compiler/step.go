@@ -36,6 +36,8 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		User:         src.User,
 		Secrets:      convertSecretEnv(src.Environment),
 		ShmSize:      int64(src.ShmSize),
+		StopSignal:   src.StopSignal,
+		StopTimeout:  src.StopTimeout,
 		WorkingDir:   src.WorkingDir,
 
 		//

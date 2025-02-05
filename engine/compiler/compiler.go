@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
@@ -122,6 +123,20 @@ type Compiler struct {
 	// Mount is an optional field that overrides the default
 	// workspace volume and mounts to the host path
 	Mount string
+
+	// StopSignal is an optional field that sets the default
+	// docker stop signal. The default value is SIGKILL.
+	StopSignal string
+
+	// StopTimeout is an optional field that sets the default
+	// docker stop timeout duration. Note that this must be
+	// set in conjunction with the stop signal.
+	StopTimeout time.Duration
+
+	// StopTimeoutMax is an optional field that sets the maximum
+	// docker stop timeout. Note that this must be set to enable
+	// stop timeouts.
+	StopTimeoutMax time.Duration
 }
 
 // Compile compiles the configuration file.
@@ -490,6 +505,22 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			Number: n + 1,
 			Name:   step.Name,
 		}))
+	}
+
+	// append global step signal settings
+	for _, step := range spec.Steps {
+		if step.StopSignal == "" {
+			step.StopSignal = c.StopSignal
+		}
+		if step.StopTimeout == 0 {
+			step.StopTimeout = c.StopTimeout
+		}
+		// if the user configures a timeout that is
+		// greater than the global timeout, the user
+		// timeout is overriden.
+		if step.StopTimeout > c.StopTimeoutMax {
+			step.StopTimeout = c.StopTimeoutMax
+		}
 	}
 
 	// append global volumes to the steps.
