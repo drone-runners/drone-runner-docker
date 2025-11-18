@@ -71,7 +71,7 @@ func (e *Docker) Setup(ctx context.Context, specv runtime.Spec) error {
 		if vol.EmptyDir == nil {
 			continue
 		}
-		_, err := e.client.VolumeCreate(ctx, volume.VolumeCreateBody{
+		_, err := e.client.VolumeCreate(ctx, volume.CreateOptions{
 			Name:   vol.EmptyDir.ID,
 			Driver: "local",
 			Labels: vol.EmptyDir.Labels,
@@ -261,6 +261,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 		toConfig(spec, step),
 		toHostConfig(spec, step),
 		toNetConfig(spec, step),
+		nil,
 		step.ID,
 	)
 
@@ -285,6 +286,7 @@ func (e *Docker) create(ctx context.Context, spec *Spec, step *Step, output io.W
 			toConfig(spec, step),
 			toHostConfig(spec, step),
 			toNetConfig(spec, step),
+			nil,
 			step.ID,
 		)
 	}
