@@ -242,6 +242,30 @@ func TestCompile_StepLabels(t *testing.T) {
 // helper function parses and compiles the source file and then
 // compares to a golden json file.
 func testCompile(t *testing.T, source, golden string) *engine.Spec {
+	compiler := &Compiler{
+		Environ:  provider.Static(nil),
+		Registry: registry.Static(nil),
+		Secret: secret.StaticVars(map[string]string{
+			"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
+			"password":    "password",
+			"my_username": "octocat",
+		}),
+	}
+	args := runtime.CompilerArgs{
+		Repo:   &drone.Repo{},
+		Build:  &drone.Build{Target: "master"},
+		Stage:  &drone.Stage{},
+		System: &drone.System{},
+		Netrc:  &drone.Netrc{Machine: "github.com", Login: "octocat", Password: "correct-horse-battery-staple"},
+		Secret: secret.Static(nil),
+	}
+
+	return testCompileWithCompiler(t, source, golden, compiler, args)
+}
+
+// helper function parses and compiles the source file and then
+// compares to a golden json file.
+func testCompileWithCompiler(t *testing.T, source, golden string, compiler *Compiler, args runtime.CompilerArgs) *engine.Spec {
 	// replace the default random function with one that
 	// is deterministic, for testing purposes.
 	random = notRandom
@@ -258,25 +282,8 @@ func testCompile(t *testing.T, source, golden string) *engine.Spec {
 		return nil
 	}
 
-	compiler := &Compiler{
-		Environ:  provider.Static(nil),
-		Registry: registry.Static(nil),
-		Secret: secret.StaticVars(map[string]string{
-			"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
-			"password":    "password",
-			"my_username": "octocat",
-		}),
-	}
-	args := runtime.CompilerArgs{
-		Repo:     &drone.Repo{},
-		Build:    &drone.Build{Target: "master"},
-		Stage:    &drone.Stage{},
-		System:   &drone.System{},
-		Netrc:    &drone.Netrc{Machine: "github.com", Login: "octocat", Password: "correct-horse-battery-staple"},
-		Manifest: manifest,
-		Pipeline: manifest.Resources[0].(*resource.Pipeline),
-		Secret:   secret.Static(nil),
-	}
+	args.Manifest = manifest
+	args.Pipeline = manifest.Resources[0].(*resource.Pipeline)
 
 	got := compiler.Compile(nocontext, args)
 
@@ -346,4 +353,26 @@ func TestIsPrivileged(t *testing.T) {
 	if !c.isPrivileged(&resource.Step{Image: "foo"}) {
 		t.Errorf("Enable privileged mode for privileged image")
 	}
+}
+
+func TestDns(t *testing.T) {
+	compiler := &Compiler{
+		Environ:  provider.Static(nil),
+		Registry: registry.Static(nil),
+		DNS:      []string{"222.222.222.111"},
+		Secret: secret.StaticVars(map[string]string{
+			"token":       "3DA541559918A808C2402BBA5012F6C60B27661C",
+			"password":    "password",
+			"my_username": "octocat",
+		}),
+	}
+	args := runtime.CompilerArgs{
+		Repo:   &drone.Repo{},
+		Build:  &drone.Build{Target: "master"},
+		Stage:  &drone.Stage{},
+		System: &drone.System{},
+		Netrc:  &drone.Netrc{Machine: "github.com", Login: "octocat", Password: "correct-horse-battery-staple"},
+		Secret: secret.Static(nil),
+	}
+	testCompileWithCompiler(t, "testdata/dns.yml", "testdata/dns.json", compiler, args)
 }

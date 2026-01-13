@@ -95,6 +95,9 @@ type Compiler struct {
 	// the netrc file into the clone step.
 	NetrcCloneOnly bool
 
+	// DNS providers should set up a set of DNS to each pipeline container
+	DNS []string
+
 	// Volumes provides a set of volumes that should be
 	// mounted to each pipeline container.
 	Volumes map[string]string
@@ -537,6 +540,13 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 			continue
 		}
 		spec.Volumes = append(spec.Volumes, src)
+	}
+
+	// append global dns to the steps
+	if len(c.DNS) > 0 {
+		for _, step := range spec.Steps {
+			step.DNS = append(step.DNS, c.DNS...)
+		}
 	}
 	return spec
 }

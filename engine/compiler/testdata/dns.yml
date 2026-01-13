@@ -1,0 +1,15 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: build
+  image: golang
+  dns: [ 1.2.3.4, 5.6.7.8 ]
+  commands:
+  - go build
+
+- name: test
+  image: golang
+  commands:
+  - go test

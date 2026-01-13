@@ -55,6 +55,7 @@ type Config struct {
 		NetworkOpts map[string]string `envconfig:"DRONE_RUNNER_NETWORK_OPTS"`
 		Privileged  []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
 		Clone       string            `envconfig:"DRONE_RUNNER_CLONE_IMAGE"`
+		DNS         []string          `envconfig:"DRONE_RUNNER_DNS"`
 	}
 
 	Platform struct {
