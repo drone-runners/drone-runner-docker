@@ -188,15 +188,16 @@ func TestLint(t *testing.T) {
 		// 	message: "linter: duplicate step names",
 		// },
 		// {
-		// 	path:    "testdata/duplicate_step_service.yml",
-		// 	invalid: true,
-		// 	message: "linter: duplicate step names",
-		// },
-		// {
 		// 	path:    "testdata/missing_name.yml",
 		// 	invalid: true,
 		// 	message: "linter: invalid or missing name",
 		// },
+
+		{
+			path:    "testdata/duplicate_step_service.yml",
+			invalid: true,
+			message: "linter: duplicate step names (test)",
+		},
 
 		{
 			path:    "testdata/missing_dep.yml",
