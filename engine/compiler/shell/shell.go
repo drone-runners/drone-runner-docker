@@ -9,7 +9,8 @@ package shell
 import (
 	"bytes"
 	"fmt"
-	"strings"
+
+	sq "github.com/kballard/go-shellquote"
 )
 
 // Script converts a slice of individual shell commands to
@@ -17,15 +18,13 @@ import (
 func Script(commands []string) string {
 	buf := new(bytes.Buffer)
 	fmt.Fprintln(buf)
-	fmt.Fprintf(buf, optionScript)
-	fmt.Fprintf(buf, tmateScript)
+	fmt.Fprint(buf, optionScript)
+	fmt.Fprint(buf, tmateScript)
 	fmt.Fprintln(buf)
 	for _, command := range commands {
-		escaped := fmt.Sprintf("%q", command)
-		escaped = strings.Replace(escaped, "$", `\$`, -1)
 		buf.WriteString(fmt.Sprintf(
 			traceScript,
-			escaped,
+			sq.Join(command),
 			command,
 		))
 	}
