@@ -56,6 +56,14 @@ func createStep(spec *resource.Pipeline, src *resource.Step) *engine.Step {
 		dst.MemSwapLimit = v
 	}
 
+	// appends the GPU to the container def.
+	if src.NVidia != nil {
+		dst.NVidia = &engine.NVidia{
+			Device:       src.NVidia.Device,
+			Capabilities: src.NVidia.Capabilities,
+		}
+	}
+
 	// appends the volumes to the container def.
 	for _, vol := range src.Volumes {
 		dst.Volumes = append(dst.Volumes, &engine.VolumeMount{

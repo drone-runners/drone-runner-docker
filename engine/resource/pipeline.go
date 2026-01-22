@@ -99,6 +99,7 @@ type (
 		MemSwapLimit manifest.BytesSize             `json:"memswap_limit,omitempty" yaml:"memswap_limit"`
 		Network      string                         `json:"network_mode,omitempty" yaml:"network_mode"`
 		Name         string                         `json:"name,omitempty"`
+		NVidia       *NVidia                        `json:"nvidia,omitempty"`
 		Privileged   bool                           `json:"privileged,omitempty"`
 		Pull         string                         `json:"pull,omitempty"`
 		Settings     map[string]*manifest.Parameter `json:"settings,omitempty"`
@@ -108,6 +109,13 @@ type (
 		Volumes      []*VolumeMount                 `json:"volumes,omitempty"`
 		When         manifest.Conditions            `json:"when,omitempty"`
 		WorkingDir   string                         `json:"working_dir,omitempty" yaml:"working_dir"`
+	}
+
+	// NVidia describes the mapping of GPUs
+	// device within a container.
+	NVidia struct {
+		Device       string `json:"device,omitempty"`
+		Capabilities string `json:"capabilities,omitempty"`
 	}
 
 	// Volume that can be mounted by containers.
