@@ -8,6 +8,7 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler/shell"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler/shell/powershell"
+	"github.com/drone-runners/drone-runner-docker/engine/compiler/shell/wincmd"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 )
 
@@ -17,7 +18,7 @@ func setupScript(src *resource.Step, dst *engine.Step, os string) {
 	if len(src.Commands) > 0 {
 		switch os {
 		case "windows":
-			setupScriptWindows(src, dst)
+			setupScriptWindowsCmd(src, dst)
 		default:
 			setupScriptPosix(src, dst)
 		}
@@ -26,11 +27,30 @@ func setupScript(src *resource.Step, dst *engine.Step, os string) {
 
 // helper function configures the pipeline script for the
 // windows operating system.
-func setupScriptWindows(src *resource.Step, dst *engine.Step) {
+// WIP, BROKEN
+func setupScriptWindowsCmd(src *resource.Step, dst *engine.Step) {
+	dst.Entrypoint = []string{"cmd", "/S", "/c"}
+	dst.Command = []string{`\drone\drone-build-script.cmd`}
+	dst.Envs["DRONE_SCRIPT"] = wincmd.Script(src.Commands)
+	dst.Envs["SHELL"] = "cmd.exe"
+}
+
+// helper function configures the pipeline script for the
+// windows operating system.
+func setupScriptWindowsPowershell(src *resource.Step, dst *engine.Step) {
 	dst.Entrypoint = []string{"powershell", "-noprofile", "-noninteractive", "-command"}
 	dst.Command = []string{"echo $Env:DRONE_SCRIPT | iex"}
 	dst.Envs["DRONE_SCRIPT"] = powershell.Script(src.Commands)
 	dst.Envs["SHELL"] = "powershell.exe"
+}
+
+// helper function configures the pipeline script for the
+// windows operating system.
+func setupScriptWindowsPwsh(src *resource.Step, dst *engine.Step) {
+	dst.Entrypoint = []string{"pwsh", "-noprofile", "-noninteractive", "-command"}
+	dst.Command = []string{"echo $Env:DRONE_SCRIPT | iex"}
+	dst.Envs["DRONE_SCRIPT"] = powershell.Script(src.Commands)
+	dst.Envs["SHELL"] = "pwsh.exe"
 }
 
 // helper function configures the pipeline script for the
