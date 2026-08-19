@@ -63,6 +63,11 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 	if spec.Platform.OS == "windows" {
 		config.Privileged = false
 	}
+	// set the container isolation technology, used on
+	// windows to run containers with hyper-v isolation.
+	if step.Isolation != "" {
+		config.Isolation = container.Isolation(step.Isolation)
+	}
 	if len(step.Network) > 0 {
 		config.NetworkMode = container.NetworkMode(step.Network)
 	}
@@ -77,6 +82,7 @@ func toHostConfig(spec *Spec, step *Step) *container.HostConfig {
 	}
 	if isUnlimited(step) == false {
 		config.Resources = container.Resources{
+			CPUCount:   step.CPUCount,
 			CPUPeriod:  step.CPUPeriod,
 			CPUQuota:   step.CPUQuota,
 			CpusetCpus: strings.Join(step.CPUSet, ","),
@@ -264,6 +270,7 @@ func toEnv(env map[string]string) []string {
 // returns true if the container has no resource limits.
 func isUnlimited(res *Step) bool {
 	return len(res.CPUSet) == 0 &&
+		res.CPUCount == 0 &&
 		res.CPUPeriod == 0 &&
 		res.CPUQuota == 0 &&
 		res.CPUShares == 0 &&

@@ -57,6 +57,18 @@ type Resources struct {
 	ShmSize    int64
 }
 
+// Hyperv defines Hyper-V isolation settings for Windows
+// containers. Images in the list are run with Hyper-V
+// isolation, which allows containers built for older Windows
+// kernel versions to run on newer hosts. Memory and CPUCount
+// override the conservative Hyper-V defaults (1GB, 2 CPUs)
+// for matching containers.
+type Hyperv struct {
+	Images   []string
+	Memory   int64
+	CPUCount int64
+}
+
 // Tmate defines tmate settings.
 type Tmate struct {
 	Image          string
@@ -106,6 +118,11 @@ type Compiler struct {
 	// Resources provides global resource constraints
 	// applies to pipeline containers.
 	Resources Resources
+
+	// Hyperv provides a list of docker images that are
+	// run with Hyper-V isolation on Windows hosts, along
+	// with optional resource limits for those containers.
+	Hyperv Hyperv
 
 	// Tate provides global configuration options for tmate
 	// live debugging.
@@ -480,6 +497,26 @@ func (c *Compiler) Compile(ctx context.Context, args runtime.CompilerArgs) runti
 		step.CPUQuota = c.Resources.CPUQuota
 		step.CPUShares = c.Resources.CPUShares
 		step.CPUSet = c.Resources.CPUSet
+	}
+
+	// run steps with hyper-v isolation if the image matches
+	// the hyper-v image list. this is used on windows hosts
+	// to run containers built for older kernel versions.
+	if spec.Platform.OS == "windows" && len(c.Hyperv.Images) > 0 {
+		for _, step := range spec.Steps {
+			if !image.Match(step.Image, c.Hyperv.Images...) {
+				continue
+			}
+			step.Isolation = "hyperv"
+			// hyper-v containers default to 1GB memory and
+			// 2 CPUs; override with the configured limits.
+			if c.Hyperv.Memory > 0 {
+				step.MemLimit = c.Hyperv.Memory
+			}
+			if c.Hyperv.CPUCount > 0 {
+				step.CPUCount = c.Hyperv.CPUCount
+			}
+		}
 	}
 
 	// append global networks to the steps.

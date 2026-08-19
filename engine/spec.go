@@ -27,6 +27,7 @@ type (
 		ID           string            `json:"id,omitempty"`
 		Auth         *Auth             `json:"auth,omitempty"`
 		Command      []string          `json:"args,omitempty"`
+		CPUCount     int64             `json:"cpu_count,omitempty"`
 		CPUPeriod    int64             `json:"cpu_period,omitempty"`
 		CPUQuota     int64             `json:"cpu_quota,omitempty"`
 		CPUShares    int64             `json:"cpu_shares,omitempty"`
@@ -43,6 +44,7 @@ type (
 		IgnoreStdout bool              `json:"ignore_stderr,omitempty"`
 		IgnoreStderr bool              `json:"ignore_stdout,omitempty"`
 		Image        string            `json:"image,omitempty"`
+		Isolation    string            `json:"isolation,omitempty"`
 		Labels       map[string]string `json:"labels,omitempty"`
 		MemSwapLimit int64             `json:"memswap_limit,omitempty"`
 		MemLimit     int64             `json:"mem_limit,omitempty"`

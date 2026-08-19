@@ -142,6 +142,60 @@ func TestCompile_Secrets(t *testing.T) {
 	}
 }
 
+// This test verifies that steps whose image matches the
+// hyper-v image list run with hyper-v isolation and the
+// configured resource limits, and other steps do not.
+func TestCompile_Hyperv(t *testing.T) {
+	manifest, _ := manifest.ParseFile("testdata/hyperv.yml")
+
+	compiler := &Compiler{
+		Environ:  provider.Static(nil),
+		Registry: registry.Static(nil),
+		Secret:   secret.Static(nil),
+		Hyperv: Hyperv{
+			Images:   []string{"sdarwin/dronevs2015"},
+			Memory:   8589934592,
+			CPUCount: 2,
+		},
+	}
+	args := runtime.CompilerArgs{
+		Repo:     &drone.Repo{},
+		Build:    &drone.Build{},
+		Stage:    &drone.Stage{},
+		System:   &drone.System{},
+		Netrc:    &drone.Netrc{},
+		Manifest: manifest,
+		Pipeline: manifest.Resources[0].(*resource.Pipeline),
+		Secret:   secret.Static(nil),
+	}
+
+	ir := compiler.Compile(nocontext, args).(*engine.Spec)
+	for _, step := range ir.Steps {
+		switch step.Name {
+		case "legacy":
+			if step.Isolation != "hyperv" {
+				t.Errorf("Expect hyperv isolation for matching image")
+			}
+			if step.MemLimit != 8589934592 {
+				t.Errorf("Expect hyperv memory limit for matching image")
+			}
+			if step.CPUCount != 2 {
+				t.Errorf("Expect hyperv cpu count for matching image")
+			}
+		default:
+			if step.Isolation != "" {
+				t.Errorf("Expect no isolation for step %s", step.Name)
+			}
+			if step.MemLimit != 0 {
+				t.Errorf("Expect no memory limit for step %s", step.Name)
+			}
+			if step.CPUCount != 0 {
+				t.Errorf("Expect no cpu count for step %s", step.Name)
+			}
+		}
+	}
+}
+
 // This test verifies that step labels are generated correctly
 func TestCompile_StepLabels(t *testing.T) {
 	manifest, _ := manifest.ParseFile("testdata/steps.yml")
