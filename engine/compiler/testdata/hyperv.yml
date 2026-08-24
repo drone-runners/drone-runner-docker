@@ -1,0 +1,18 @@
+kind: pipeline
+type: docker
+name: default
+
+platform:
+  os: windows
+  arch: amd64
+
+steps:
+- name: legacy
+  image: sdarwin/dronevs2015:1
+  commands:
+  - echo hello
+
+- name: modern
+  image: sdarwin/dronevs2026:2
+  commands:
+  - echo hello

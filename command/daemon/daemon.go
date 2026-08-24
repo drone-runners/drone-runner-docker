@@ -143,6 +143,11 @@ func (c *daemonCommand) run(*kingpin.ParseContext) error {
 				CPUSet:     config.Resources.CPUSet,
 				ShmSize:    config.Resources.ShmSize,
 			},
+			Hyperv: compiler.Hyperv{
+				Images:   config.Runner.HypervImages,
+				Memory:   config.Runner.HypervMemory,
+				CPUCount: config.Runner.HypervCPUCount,
+			},
 			Tmate: compiler.Tmate{
 				Image:          config.Tmate.Image,
 				Enabled:        config.Tmate.Enabled,

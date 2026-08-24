@@ -55,6 +55,15 @@ type Config struct {
 		NetworkOpts map[string]string `envconfig:"DRONE_RUNNER_NETWORK_OPTS"`
 		Privileged  []string          `envconfig:"DRONE_RUNNER_PRIVILEGED_IMAGES"`
 		Clone       string            `envconfig:"DRONE_RUNNER_CLONE_IMAGE"`
+
+		// HypervImages provides a list of docker images that
+		// are run with Hyper-V isolation on Windows hosts.
+		// HypervMemory (bytes) and HypervCPUCount override the
+		// Hyper-V container defaults (1GB, 2 CPUs) for these
+		// images.
+		HypervImages   []string `envconfig:"DRONE_RUNNER_HYPERV_IMAGES"`
+		HypervMemory   int64    `envconfig:"DRONE_RUNNER_HYPERV_MEMORY"`
+		HypervCPUCount int64    `envconfig:"DRONE_RUNNER_HYPERV_CPU_COUNT"`
 	}
 
 	Platform struct {

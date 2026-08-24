@@ -88,6 +88,11 @@ func (c *processCommand) run(*kingpin.ParseContext) error {
 				CPUSet:     config.Resources.CPUSet,
 				ShmSize:    config.Resources.ShmSize,
 			},
+			Hyperv: compiler.Hyperv{
+				Images:   config.Runner.HypervImages,
+				Memory:   config.Runner.HypervMemory,
+				CPUCount: config.Runner.HypervCPUCount,
+			},
 			Environ: provider.Combine(
 				provider.Static(config.Runner.Environ),
 				provider.External(
